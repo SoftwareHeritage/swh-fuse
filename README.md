@@ -1,5 +1,6 @@
-swh-py-template
-===============
+Software Heritage virtual file system
+=====================================
 
-Python module template, used as skeleton to create new modules.
-
+Virtual file system to browse the
+[Software Heritage](https://www.softwareheritage.org/) [archive](https://archive.softwareheritage.org/),
+built on top of [FUSE](https://github.com/libfuse/libfuse).

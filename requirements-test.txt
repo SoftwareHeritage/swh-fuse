@@ -1,1 +1,5 @@
 pytest
+
+# XXX  not actually needed
+# XXX just a temporary workaround for https://forge.softwareheritage.org/T2634
+requests
