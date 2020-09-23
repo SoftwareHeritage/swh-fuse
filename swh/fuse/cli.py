@@ -37,7 +37,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 #     help="YAML configuration file",
 # )
 @click.pass_context
-def fuse(ctx):
+def cli(ctx):
     """Software Heritage virtual file system"""
 
     # # recursive merge not done by config.read
@@ -49,7 +49,7 @@ def fuse(ctx):
     ctx.obj["config"] = conf
 
 
-@fuse.command()
+@cli.command()
 @click.option(
     "-u",
     "--api-url",
