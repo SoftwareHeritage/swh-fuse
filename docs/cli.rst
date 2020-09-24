@@ -1,3 +1,5 @@
+.. _swh-fuse-cli:
+
 Command-line interface
 ======================
 
