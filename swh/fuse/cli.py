@@ -3,27 +3,55 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import os
+
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
-import os
+from pathlib import Path
 from typing import Any, Dict
 
 import click
 
 # from swh.core import config
 from swh.core.cli import CONTEXT_SETTINGS
+from swh.model.identifiers import SWHID
 
 # All generic config code should reside in swh.core.config
 DEFAULT_CONFIG_PATH = os.environ.get(
     "SWH_CONFIG_FILE", os.path.join(click.get_app_dir("swh"), "global.yml")
 )
 
+CACHE_HOME_DIR = (
+    Path(os.environ["XDG_CACHE_HOME"])
+    if "XDG_CACHE_HOME" in os.environ
+    else Path(Path.home(), ".cache")
+)
+
 DEFAULT_CONFIG: Dict[str, Any] = {
+    "cache-dir": Path(CACHE_HOME_DIR, "swh", "fuse"),
     "web-api": {
         "url": "https://archive.softwareheritage.org/api/1",
         "auth-token": None,
-    }
+    },
 }
+
+
+class SWHIDParamType(click.ParamType):
+    """Click argument that accepts SWHID and return them as
+    :class:`swh.model.identifiers.SWHID` instances
+
+    """
+
+    name = "SWHID"
+
+    def convert(self, value, param, ctx) -> SWHID:
+        from swh.model.exceptions import ValidationError
+        from swh.model.identifiers import parse_swhid
+
+        try:
+            return parse_swhid(value)
+        except ValidationError:
+            self.fail(f'"{value}" is not a valid SWHID', param, ctx)
 
 
 @click.group(name="fuse", context_settings=CONTEXT_SETTINGS)
@@ -50,6 +78,25 @@ def cli(ctx):
 
 
 @cli.command()
+@click.argument("swhid", required=True, metavar="SWHID", type=SWHIDParamType())
+@click.argument(
+    "path",
+    required=True,
+    metavar="PATH",
+    type=click.Path(exists=True, dir_okay=True, file_okay=False),
+)
+@click.option(
+    "-c",
+    "--cache-dir",
+    default=DEFAULT_CONFIG["cache-dir"],
+    metavar="CACHE_DIR",
+    show_default=True,
+    type=click.Path(dir_okay=True, file_okay=False),
+    help="""
+        directory where to store cache from the Software Heritage API. To
+        store all the cache in memory instead of disk, use a value of ':memory:'.
+    """,
+)
 @click.option(
     "-u",
     "--api-url",
@@ -59,8 +106,8 @@ def cli(ctx):
     help="base URL for Software Heritage Web API",
 )
 @click.pass_context
-def mount(ctx, api_url):
+def mount(ctx, swhid, path, cache_dir, api_url):
     """Mount the Software Heritage archive at the given mount point"""
-    from .fuse import fuse  # XXX
+    from swh.fuse import fuse
 
-    fuse()
+    fuse.main(swhid, path, cache_dir, api_url)
