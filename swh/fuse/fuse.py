@@ -6,10 +6,11 @@
 import asyncio
 import errno
 import itertools
+import logging
 import os
 from pathlib import Path
 import time
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import pyfuse3
 import pyfuse3_asyncio
@@ -18,9 +19,9 @@ import requests
 from swh.fuse.cache import Cache
 from swh.fuse.fs.artifact import Content, Directory
 from swh.fuse.fs.entry import (
-    ARCHIVE_ENTRY,
-    META_ENTRY,
-    ROOT_ENTRY,
+    ARCHIVE_DIRENTRY,
+    META_DIRENTRY,
+    ROOT_DIRENTRY,
     ArtifactEntry,
     EntryMode,
     VirtualEntry,
@@ -29,28 +30,27 @@ from swh.fuse.fs.mountpoint import Archive, Meta, Root
 from swh.model.identifiers import CONTENT, DIRECTORY, SWHID, parse_swhid
 from swh.web.client.client import WebAPIClient
 
-# Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
-pyfuse3_asyncio.enable()
-
 
 class Fuse(pyfuse3.Operations):
     """ Software Heritage Filesystem in Userspace (FUSE). Locally mount parts of
     the archive and navigate it as a virtual file system. """
 
     def __init__(
-        self, root_swhid: SWHID, root_path: Path, cache_dir: Path, api_url: str
+        self, swhids: List[SWHID], root_path: Path, cache_dir: Path, api_url: str
     ):
         super(Fuse, self).__init__()
 
-        root_inode = pyfuse3.ROOT_INODE
-        self._inode2entry: Dict[int, VirtualEntry] = {root_inode: ROOT_ENTRY}
-        self._entry2inode: Dict[VirtualEntry, int] = {ROOT_ENTRY: root_inode}
+        self._next_inode: int = pyfuse3.ROOT_INODE
+        self._next_fd: int = 0
+
+        root_inode = self._next_inode
+        self._next_inode += 1
+
+        self._inode2entry: Dict[int, VirtualEntry] = {root_inode: ROOT_DIRENTRY}
+        self._entry2inode: Dict[VirtualEntry, int] = {ROOT_DIRENTRY: root_inode}
         self._entry2fd: Dict[VirtualEntry, int] = {}
         self._fd2entry: Dict[int, VirtualEntry] = {}
         self._inode2path: Dict[int, Path] = {root_inode: root_path}
-
-        self._next_inode: int = root_inode + 1
-        self._next_fd: int = 0
 
         self.time_ns: int = time.time_ns()  # start time, used as timestamp
         self.gid = os.getgid()
@@ -59,9 +59,9 @@ class Fuse(pyfuse3.Operations):
         self.web_api = WebAPIClient(api_url)
         self.cache = Cache(cache_dir)
 
-        # TODO check if root_swhid actually exists in the graph
         # Initially populate the cache
-        self.get_metadata(root_swhid)
+        for swhid in swhids:
+            self.get_metadata(swhid)
 
     def _alloc_inode(self, entry: VirtualEntry) -> int:
         """ Return a unique inode integer for a given entry """
@@ -123,9 +123,12 @@ class Fuse(pyfuse3.Operations):
         if cache:
             return cache
 
-        metadata = self.web_api.get(swhid)
-        self.cache.put_metadata(swhid, metadata)
-        return metadata
+        try:
+            metadata = self.web_api.get(swhid)
+            self.cache.put_metadata(swhid, metadata)
+            return metadata
+        except requests.HTTPError:
+            logging.error(f"Unknown SWHID: '{swhid}'")
 
     def get_blob(self, swhid: SWHID) -> str:
         """ Retrieve the blob bytes for a given content SWHID using Software
@@ -157,11 +160,11 @@ class Fuse(pyfuse3.Operations):
                 return Directory(metadata)
             # TODO: add other objects
         else:
-            if entry == ROOT_ENTRY:
+            if entry == ROOT_DIRENTRY:
                 return Root()
-            elif entry == ARCHIVE_ENTRY:
+            elif entry == ARCHIVE_DIRENTRY:
                 return Archive(self.cache)
-            elif entry == META_ENTRY:
+            elif entry == META_DIRENTRY:
                 return Meta(self.cache)
             # TODO: error handling
 
@@ -188,9 +191,9 @@ class Fuse(pyfuse3.Operations):
                 attrs.st_mode = int(EntryMode.RDONLY_DIR)
         else:
             attrs.st_mode = int(entry.mode)
+            # Meta JSON entries (under the root meta/ directory)
             if entry.name.endswith(".json"):
-                filename = Path(entry.name).stem
-                swhid = parse_swhid(filename)
+                swhid = parse_swhid(entry.name.replace(".json", ""))
                 metadata = self.get_metadata(swhid)
                 attrs.st_size = len(str(metadata))
 
@@ -254,9 +257,9 @@ class Fuse(pyfuse3.Operations):
             blob = self.get_blob(entry.swhid)
             return blob.encode()
         else:
+            # Meta JSON entries (under the root meta/ directory)
             if entry.name.endswith(".json"):
-                filename = Path(entry.name).stem
-                swhid = parse_swhid(filename)
+                swhid = parse_swhid(entry.name.replace(".json", ""))
                 metadata = self.get_metadata(swhid)
                 return str(metadata).encode()
             else:
@@ -285,10 +288,13 @@ class Fuse(pyfuse3.Operations):
         return pyfuse3.EntryAttributes()
 
 
-def main(root_swhid: SWHID, root_path: Path, cache_dir: Path, api_url: str) -> None:
+def main(swhids: List[SWHID], root_path: Path, cache_dir: Path, api_url: str) -> None:
     """ swh-fuse CLI entry-point """
 
-    fs = Fuse(root_swhid, root_path, cache_dir, api_url)
+    # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
+    pyfuse3_asyncio.enable()
+
+    fs = Fuse(swhids, root_path, cache_dir, api_url)
 
     fuse_options = set(pyfuse3.default_options)
     fuse_options.add("fsname=swhfs")

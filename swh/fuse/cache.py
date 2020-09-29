@@ -24,18 +24,20 @@ class Cache:
             cache_path.parents[0].mkdir(parents=True, exist_ok=True)
             self.conn = sqlite3.connect(cache_path)
 
-        self.db = self.conn.cursor()
-        self.db.execute("create table if not exists metadata_cache (swhid, metadata)")
-        self.db.execute("create table if not exists blob_cache (swhid, blob)")
-        self.conn.commit()
+        self.cursor = self.conn.cursor()
+        with self.conn:
+            self.conn.execute(
+                "create table if not exists metadata_cache (swhid, metadata)"
+            )
+            self.conn.execute("create table if not exists blob_cache (swhid, blob)")
 
     def get_metadata(self, swhid: SWHID) -> Any:
         """ Return previously cached JSON metadata associated with a SWHID """
 
-        self.db.execute(
+        self.cursor.execute(
             "select metadata from metadata_cache where swhid=?", (str(swhid),)
         )
-        cache = self.db.fetchone()
+        cache = self.cursor.fetchone()
         if cache:
             metadata = json.loads(cache[0])
             return typify(metadata, swhid.object_type)
@@ -45,26 +47,26 @@ class Cache:
     def put_metadata(self, swhid: SWHID, metadata: Any) -> None:
         """ Cache JSON metadata associated with a SWHID """
 
-        self.db.execute(
-            "insert into metadata_cache values (?, ?)",
-            (
-                str(swhid),
-                json.dumps(
-                    metadata,
-                    # Converts the typified JSON to plain str version
-                    default=lambda x: x.object_id
-                    if isinstance(x, SWHID)
-                    else x.__dict__,
+        with self.conn:
+            self.conn.execute(
+                "insert into metadata_cache values (?, ?)",
+                (
+                    str(swhid),
+                    json.dumps(
+                        metadata,
+                        # Converts the typified JSON to plain str version
+                        default=lambda x: x.object_id
+                        if isinstance(x, SWHID)
+                        else x.__dict__,
+                    ),
                 ),
-            ),
-        )
-        self.conn.commit()
+            )
 
     def get_metadata_swhids(self) -> List[SWHID]:
         """ Return a list of SWHID of all previously cached entry """
 
-        self.db.execute("select swhid from metadata_cache")
-        swhids = self.db.fetchall()
+        self.cursor.execute("select swhid from metadata_cache")
+        swhids = self.cursor.fetchall()
         swhids = [parse_swhid(x[0]) for x in swhids]
         return swhids
 
@@ -74,8 +76,8 @@ class Cache:
         if swhid.object_type != CONTENT:
             raise AttributeError("Cannot retrieve blob from non-content object type")
 
-        self.db.execute("select blob from blob_cache where swhid=?", (str(swhid),))
-        cache = self.db.fetchone()
+        self.cursor.execute("select blob from blob_cache where swhid=?", (str(swhid),))
+        cache = self.cursor.fetchone()
         if cache:
             blob = cache[0]
             return blob
@@ -85,5 +87,7 @@ class Cache:
     def put_blob(self, swhid: SWHID, blob: str) -> None:
         """ Cache blob bytes associated with a content SWHID """
 
-        self.db.execute("insert into blob_cache values (?, ?)", (str(swhid), blob))
-        self.conn.commit()
+        with self.conn:
+            self.conn.execute(
+                "insert into blob_cache values (?, ?)", (str(swhid), blob)
+            )

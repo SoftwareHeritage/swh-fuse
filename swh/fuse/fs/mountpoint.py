@@ -7,8 +7,8 @@ from typing import Iterator
 
 from swh.fuse.cache import Cache
 from swh.fuse.fs.entry import (
-    ARCHIVE_ENTRY,
-    META_ENTRY,
+    ARCHIVE_DIRENTRY,
+    META_DIRENTRY,
     ArtifactEntry,
     EntryMode,
     VirtualEntry,
@@ -19,7 +19,7 @@ class Root:
     """ The FUSE mountpoint, consisting of the archive/ and meta/ directories """
 
     def __iter__(self) -> Iterator[VirtualEntry]:
-        entries = [ARCHIVE_ENTRY, META_ENTRY]
+        entries = [ARCHIVE_DIRENTRY, META_DIRENTRY]
         return iter(entries)
 
 

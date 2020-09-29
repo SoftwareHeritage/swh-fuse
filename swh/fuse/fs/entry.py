@@ -50,6 +50,6 @@ class ArtifactEntry(VirtualEntry):
         self.prefetch = prefetch
 
 
-ROOT_ENTRY = VirtualEntry("root", EntryMode.RDONLY_DIR)
-ARCHIVE_ENTRY = VirtualEntry("archive", EntryMode.RDONLY_DIR)
-META_ENTRY = VirtualEntry("meta", EntryMode.RDONLY_DIR)
+ROOT_DIRENTRY = VirtualEntry("root", EntryMode.RDONLY_DIR)
+ARCHIVE_DIRENTRY = VirtualEntry("archive", EntryMode.RDONLY_DIR)
+META_DIRENTRY = VirtualEntry("meta", EntryMode.RDONLY_DIR)

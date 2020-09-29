@@ -78,13 +78,13 @@ def cli(ctx):
 
 
 @cli.command()
-@click.argument("swhid", required=True, metavar="SWHID", type=SWHIDParamType())
 @click.argument(
     "path",
     required=True,
     metavar="PATH",
     type=click.Path(exists=True, dir_okay=True, file_okay=False),
 )
+@click.argument("swhids", nargs=-1, metavar="[SWHID]...", type=SWHIDParamType())
 @click.option(
     "-c",
     "--cache-dir",
@@ -106,9 +106,9 @@ def cli(ctx):
     help="base URL for Software Heritage Web API",
 )
 @click.pass_context
-def mount(ctx, swhid, path, cache_dir, api_url):
+def mount(ctx, swhids, path, cache_dir, api_url):
     """ Mount the Software Heritage archive at the given mount point """
 
     from swh.fuse import fuse
 
-    fuse.main(swhid, path, cache_dir, api_url)
+    fuse.main(swhids, path, cache_dir, api_url)
