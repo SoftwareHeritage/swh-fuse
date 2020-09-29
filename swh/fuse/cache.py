@@ -6,14 +6,18 @@
 import json
 from pathlib import Path
 import sqlite3
+from typing import Any, List, Optional
 
 from swh.model.identifiers import CONTENT, SWHID, parse_swhid
 from swh.web.client.client import typify
 
 
 class Cache:
-    def __init__(self, cache_dir):
-        if cache_dir == ":memory:":
+    """ Cache all information retrieved from the Software Heritage API to
+    minimize API calls. """
+
+    def __init__(self, cache_dir: Path):
+        if str(cache_dir) == ":memory:":
             self.conn = sqlite3.connect(":memory:")
         else:
             cache_path = Path(cache_dir, "cache.sqlite")
@@ -25,7 +29,9 @@ class Cache:
         self.db.execute("create table if not exists blob_cache (swhid, blob)")
         self.conn.commit()
 
-    def get_metadata(self, swhid: SWHID):
+    def get_metadata(self, swhid: SWHID) -> Any:
+        """ Return previously cached JSON metadata associated with a SWHID """
+
         self.db.execute(
             "select metadata from metadata_cache where swhid=?", (str(swhid),)
         )
@@ -33,8 +39,12 @@ class Cache:
         if cache:
             metadata = json.loads(cache[0])
             return typify(metadata, swhid.object_type)
+        else:
+            return None
 
-    def put_metadata(self, swhid: SWHID, metadata):
+    def put_metadata(self, swhid: SWHID, metadata: Any) -> None:
+        """ Cache JSON metadata associated with a SWHID """
+
         self.db.execute(
             "insert into metadata_cache values (?, ?)",
             (
@@ -50,13 +60,17 @@ class Cache:
         )
         self.conn.commit()
 
-    def get_metadata_swhids(self):
+    def get_metadata_swhids(self) -> List[SWHID]:
+        """ Return a list of SWHID of all previously cached entry """
+
         self.db.execute("select swhid from metadata_cache")
         swhids = self.db.fetchall()
         swhids = [parse_swhid(x[0]) for x in swhids]
         return swhids
 
-    def get_blob(self, swhid: SWHID):
+    def get_blob(self, swhid: SWHID) -> Optional[str]:
+        """ Return previously cached blob bytes associated with a content SWHID """
+
         if swhid.object_type != CONTENT:
             raise AttributeError("Cannot retrieve blob from non-content object type")
 
@@ -65,7 +79,11 @@ class Cache:
         if cache:
             blob = cache[0]
             return blob
+        else:
+            return None
 
-    def put_blob(self, swhid: SWHID, blob):
+    def put_blob(self, swhid: SWHID, blob: str) -> None:
+        """ Cache blob bytes associated with a content SWHID """
+
         self.db.execute("insert into blob_cache values (?, ?)", (str(swhid), blob))
         self.conn.commit()

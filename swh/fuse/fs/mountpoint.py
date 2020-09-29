@@ -3,6 +3,9 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from typing import Iterator
+
+from swh.fuse.cache import Cache
 from swh.fuse.fs.entry import (
     ARCHIVE_ENTRY,
     META_ENTRY,
@@ -13,16 +16,21 @@ from swh.fuse.fs.entry import (
 
 
 class Root:
-    def __iter__(self):
+    """ The FUSE mountpoint, consisting of the archive/ and meta/ directories """
+
+    def __iter__(self) -> Iterator[VirtualEntry]:
         entries = [ARCHIVE_ENTRY, META_ENTRY]
         return iter(entries)
 
 
 class Archive:
-    def __init__(self, cache):
+    """ The archive/ directory is lazily populated with one entry per accessed
+    SWHID, having actual SWHIDs as names """
+
+    def __init__(self, cache: Cache):
         self.cache = cache
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[VirtualEntry]:
         entries = []
         for swhid in self.cache.get_metadata_swhids():
             entries.append(ArtifactEntry(str(swhid), swhid))
@@ -30,10 +38,17 @@ class Archive:
 
 
 class Meta:
-    def __init__(self, cache):
+    """ The meta/ directory contains one SWHID.json file for each SWHID entry
+    under archive/. The JSON file contain all available meta information about
+    the given SWHID, as returned by the Software Heritage Web API for that
+    object. Note that, in case of pagination (e.g., snapshot objects with many
+    branches) the JSON file will contain a complete version with all pages
+    merged together. """
+
+    def __init__(self, cache: Cache):
         self.cache = cache
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[VirtualEntry]:
         entries = []
         for swhid in self.cache.get_metadata_swhids():
             filename = str(swhid) + ".json"

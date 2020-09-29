@@ -21,7 +21,7 @@ DEFAULT_CONFIG_PATH = os.environ.get(
     "SWH_CONFIG_FILE", os.path.join(click.get_app_dir("swh"), "global.yml")
 )
 
-CACHE_HOME_DIR = (
+CACHE_HOME_DIR: Path = (
     Path(os.environ["XDG_CACHE_HOME"])
     if "XDG_CACHE_HOME" in os.environ
     else Path(Path.home(), ".cache")
@@ -107,7 +107,8 @@ def cli(ctx):
 )
 @click.pass_context
 def mount(ctx, swhid, path, cache_dir, api_url):
-    """Mount the Software Heritage archive at the given mount point"""
+    """ Mount the Software Heritage archive at the given mount point """
+
     from swh.fuse import fuse
 
     fuse.main(swhid, path, cache_dir, api_url)
