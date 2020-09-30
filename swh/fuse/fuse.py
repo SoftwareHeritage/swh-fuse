@@ -276,19 +276,32 @@ class Fuse(pyfuse3.Operations):
 
         name = os.fsdecode(name)
         path = Path(self.inode2path(parent_inode), name)
-
         parent_entry = self.inode2entry(parent_inode)
+
+        attr = None
         if isinstance(parent_entry, ArtifactEntry):
             metadata = self.get_metadata(parent_entry.swhid)
             for entry in metadata:
                 if entry["name"] == name:
                     swhid = entry["target"]
                     attr = self.get_attrs(ArtifactEntry(name, swhid))
-                    self._inode2path[attr.st_ino] = path
-                    return attr
+        # TODO: this is fragile, maybe cache attrs?
+        else:
+            if parent_entry == ROOT_DIRENTRY:
+                if name == ARCHIVE_DIRENTRY.name:
+                    attr = self.get_attrs(ARCHIVE_DIRENTRY)
+                elif name == META_DIRENTRY.name:
+                    attr = self.get_attrs(META_DIRENTRY)
+            else:
+                swhid = parse_swhid(name)
+                attr = self.get_attrs(ArtifactEntry(name, swhid))
 
-        # TODO: error handling (name not found)
-        return pyfuse3.EntryAttributes()
+        if attr:
+            self._inode2path[attr.st_ino] = path
+            return attr
+        else:
+            # TODO: error handling (name not found)
+            return pyfuse3.EntryAttributes()
 
 
 def main(swhids: List[SWHID], root_path: Path, cache_dir: Path, api_url: str) -> None:
