@@ -144,8 +144,8 @@ class Fuse(pyfuse3.Operations):
         if cache:
             return cache
 
-        metadata = self.get_metadata(swhid)
-        blob = requests.get(metadata["data_url"]).text
+        resp = list(self.web_api.content_raw(swhid))
+        blob = "".join(map(bytes.decode, resp))
         self.cache.put_blob(swhid, blob)
         return blob
 
