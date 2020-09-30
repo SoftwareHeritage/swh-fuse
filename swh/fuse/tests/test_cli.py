@@ -3,17 +3,15 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import unittest
+from pathlib import Path
 
-from click.testing import CliRunner
-
-from swh.fuse import cli
+from .api_data import ROOT_SWHID
 
 
-class TestMount(unittest.TestCase):
-    def setUp(self):
-        self.runner = CliRunner()
-
-    def test_no_args(self):
-        result = self.runner.invoke(cli.mount)
-        self.assertNotEqual(result.exit_code, 0)
+def test_mountpoint(fuse_mntdir):
+    archive_dir = Path(fuse_mntdir, "archive")
+    meta_dir = Path(fuse_mntdir, "meta")
+    swhid_dir = Path(fuse_mntdir, "archive", ROOT_SWHID)
+    assert archive_dir.is_dir()
+    assert meta_dir.is_dir()
+    assert swhid_dir.is_dir()

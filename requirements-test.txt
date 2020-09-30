@@ -1,2 +1,3 @@
 pytest
 requests  # workaround for https://forge.softwareheritage.org/T2634
+requests-mock
