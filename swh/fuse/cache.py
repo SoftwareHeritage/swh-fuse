@@ -31,6 +31,9 @@ class Cache:
             )
             self.conn.execute("create table if not exists blob_cache (swhid, blob)")
 
+    def close(self) -> None:
+        self.conn.close()
+
     def get_metadata(self, swhid: SWHID) -> Any:
         """ Return previously cached JSON metadata associated with a SWHID """
 

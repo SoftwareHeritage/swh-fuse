@@ -1,1 +1,2 @@
 pyfuse3
+python-daemon

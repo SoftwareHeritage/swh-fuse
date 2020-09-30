@@ -63,6 +63,9 @@ class Fuse(pyfuse3.Operations):
         for swhid in swhids:
             self.get_metadata(swhid)
 
+    def shutdown(self) -> None:
+        self.cache.close()
+
     def _alloc_inode(self, entry: VirtualEntry) -> int:
         """ Return a unique inode integer for a given entry """
 

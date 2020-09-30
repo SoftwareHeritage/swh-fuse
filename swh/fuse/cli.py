@@ -105,10 +105,23 @@ def cli(ctx):
     show_default=True,
     help="base URL for Software Heritage Web API",
 )
+@click.option(
+    "-f",
+    "--foreground",
+    is_flag=True,
+    show_default=True,
+    help="Run FUSE system in foreground instead of daemon",
+)
 @click.pass_context
-def mount(ctx, swhids, path, cache_dir, api_url):
+def mount(ctx, swhids, path, cache_dir, api_url, foreground):
     """ Mount the Software Heritage archive at the given mount point """
 
     from swh.fuse import fuse
 
-    fuse.main(swhids, path, cache_dir, api_url)
+    if foreground:
+        fuse.main(swhids, path, cache_dir, api_url)
+    else:
+        import daemon
+
+        with daemon.DaemonContext():
+            fuse.main(swhids, path, cache_dir, api_url)
