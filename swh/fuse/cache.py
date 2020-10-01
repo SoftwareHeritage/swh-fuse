@@ -3,23 +3,23 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from abc import ABC
 from contextlib import closing
 import json
-from pathlib import Path
 import sqlite3
-from typing import Any, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 from swh.model.identifiers import SWHID, parse_swhid
 from swh.web.client.client import typify
 
 
-class Cache:
+class FuseCache:
     """ SWH FUSE retrieves both metadata and file contents from the Software
     Heritage archive via the network. In order to obtain reasonable performances
     several caches are used to minimize network transfer.
 
     Caches are stored on disk in SQLite databases located at
-    `$XDG_CACHE_HOME/swh/fuse/cache.sqlite`.
+    `$XDG_CACHE_HOME/swh/fuse/`.
 
     All caches are persistent (i.e., they survive the restart of the SWH FUSE
     process) and global (i.e., they are shared by concurrent SWH FUSE
@@ -30,24 +30,14 @@ class Cache:
     and append-only archive changes. To clean the caches one can just remove the
     corresponding files from disk. """
 
-    def __init__(self, cache_dir: Path):
-        self.cache_dir = cache_dir
+    def __init__(self, cache_conf: Dict[str, Any]):
+        self.cache_conf = cache_conf
 
     def __enter__(self):
-        # In-memory (thus temporary) caching is useful for testing purposes
-        in_memory = ":memory:"
-        if str(self.cache_dir) == in_memory:
-            metadata_cache_path = in_memory
-            blob_cache_path = in_memory
-        else:
-            metadata_cache_path = self.cache_dir / "metadata.sqlite"
-            blob_cache_path = self.cache_dir / "blob.sqlite"
-
-        self.metadata = MetadataCache(metadata_cache_path)
+        self.metadata = MetadataCache(self.cache_conf["metadata"])
         self.metadata.__enter__()
-        self.blob = BlobCache(blob_cache_path)
+        self.blob = BlobCache(self.cache_conf["blob"])
         self.blob.__enter__()
-
         return self
 
     def __exit__(self, type=None, val=None, tb=None) -> None:
@@ -69,28 +59,40 @@ class Cache:
             return set(swhids)
 
 
-class MetadataCache:
-    """ The metadata cache map each SWHID to the complete metadata of the
-    referenced object. This is analogous to what is available in
-    `meta/<SWHID>.json` file (and generally used as data source for returning
-    the content of those files). """
+class AbstractCache(ABC):
+    """ Abstract cache implementation to share common behavior between cache
+    types (such as: YAML config parsing, SQLite context manager) """
 
-    def __init__(self, path: str):
-        self.path = path
+    def __init__(self, conf: Dict[str, Any]):
+        self.conf = conf
 
     def __enter__(self):
-        self.conn = sqlite3.connect(self.path)
-        with self.conn:
-            self.conn.execute(
-                "create table if not exists metadata_cache (swhid, metadata)"
-            )
+        # In-memory (thus temporary) caching is useful for testing purposes
+        if self.conf.get("in-memory", False):
+            path = ":memory:"
+        else:
+            path = self.conf["path"]
+        self.conn = sqlite3.connect(path)
         return self
 
     def __exit__(self, type=None, val=None, tb=None) -> None:
         self.conn.close()
 
+
+class MetadataCache(AbstractCache):
+    """ The metadata cache map each SWHID to the complete metadata of the
+    referenced object. This is analogous to what is available in
+    `meta/<SWHID>.json` file (and generally used as data source for returning
+    the content of those files). """
+
+    def __enter__(self):
+        super().__enter__()
+        with self.conn as conn:
+            conn.execute("create table if not exists metadata_cache (swhid, metadata)")
+        return self
+
     def __getitem__(self, swhid: SWHID) -> Any:
-        with closing(self.conn.cursor()) as cursor:
+        with self.conn as conn, closing(conn.cursor()) as cursor:
             cursor.execute(
                 "select metadata from metadata_cache where swhid=?", (str(swhid),)
             )
@@ -102,8 +104,8 @@ class MetadataCache:
                 return None
 
     def __setitem__(self, swhid: SWHID, metadata: Any) -> None:
-        with closing(self.conn.cursor()) as cursor:
-            cursor.execute(
+        with self.conn as conn:
+            conn.execute(
                 "insert into metadata_cache values (?, ?)",
                 (
                     str(swhid),
@@ -118,7 +120,7 @@ class MetadataCache:
             )
 
 
-class BlobCache:
+class BlobCache(AbstractCache):
     """ The blob cache map SWHIDs of type `cnt` to the bytes of their archived
     content.
 
@@ -127,20 +129,14 @@ class BlobCache:
     due to prefetching, e.g., when a directory pointing to the given content is
     listed for the first time. """
 
-    def __init__(self, path: str):
-        self.path = path
-
     def __enter__(self):
-        self.conn = sqlite3.connect(self.path)
-        with self.conn:
-            self.conn.execute("create table if not exists blob_cache (swhid, blob)")
+        super().__enter__()
+        with self.conn as conn:
+            conn.execute("create table if not exists blob_cache (swhid, blob)")
         return self
 
-    def __exit__(self, type=None, val=None, tb=None) -> None:
-        self.conn.close()
-
     def __getitem__(self, swhid: SWHID) -> Optional[str]:
-        with closing(self.conn.cursor()) as cursor:
+        with self.conn as conn, closing(conn.cursor()) as cursor:
             cursor.execute("select blob from blob_cache where swhid=?", (str(swhid),))
             cache = cursor.fetchone()
             if cache:
@@ -150,5 +146,5 @@ class BlobCache:
                 return None
 
     def __setitem__(self, swhid: SWHID, blob: str) -> None:
-        with closing(self.conn.cursor()) as cursor:
-            cursor.execute("insert into blob_cache values (?, ?)", (str(swhid), blob))
+        with self.conn as conn:
+            conn.execute("insert into blob_cache values (?, ?)", (str(swhid), blob))

@@ -5,7 +5,7 @@
 
 from typing import Iterator
 
-from swh.fuse.cache import Cache
+from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import (
     ARCHIVE_DIRENTRY,
     META_DIRENTRY,
@@ -27,7 +27,7 @@ class Archive:
     """ The archive/ directory is lazily populated with one entry per accessed
     SWHID, having actual SWHIDs as names """
 
-    def __init__(self, cache: Cache):
+    def __init__(self, cache: FuseCache):
         self.cache = cache
 
     def __iter__(self) -> Iterator[VirtualEntry]:
@@ -45,7 +45,7 @@ class Meta:
     branches) the JSON file will contain a complete version with all pages
     merged together. """
 
-    def __init__(self, cache: Cache):
+    def __init__(self, cache: FuseCache):
         self.cache = cache
 
     def __iter__(self) -> Iterator[VirtualEntry]:

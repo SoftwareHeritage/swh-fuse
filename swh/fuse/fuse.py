@@ -16,7 +16,7 @@ import pyfuse3
 import pyfuse3_asyncio
 import requests
 
-from swh.fuse.cache import Cache
+from swh.fuse.cache import FuseCache
 from swh.fuse.fs.artifact import Content, Directory
 from swh.fuse.fs.entry import (
     ARCHIVE_DIRENTRY,
@@ -36,7 +36,11 @@ class Fuse(pyfuse3.Operations):
     the archive and navigate it as a virtual file system. """
 
     def __init__(
-        self, swhids: List[SWHID], root_path: Path, api_url: str, cache: Cache
+        self,
+        swhids: List[SWHID],
+        root_path: Path,
+        cache: FuseCache,
+        conf: Dict[str, Any],
     ):
         super(Fuse, self).__init__()
 
@@ -56,7 +60,9 @@ class Fuse(pyfuse3.Operations):
         self.gid = os.getgid()
         self.uid = os.getuid()
 
-        self.web_api = WebAPIClient(api_url)
+        self.web_api = WebAPIClient(
+            conf["web-api"]["url"], conf["web-api"]["auth-token"]
+        )
         self.cache = cache
 
         # Initially populate the cache
@@ -304,14 +310,14 @@ class Fuse(pyfuse3.Operations):
             return pyfuse3.EntryAttributes()
 
 
-def main(swhids: List[SWHID], root_path: Path, cache_dir: Path, api_url: str) -> None:
+def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
     """ swh-fuse CLI entry-point """
 
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
     pyfuse3_asyncio.enable()
 
-    with Cache(cache_dir) as cache:
-        fs = Fuse(swhids, root_path, api_url, cache)
+    with FuseCache(conf["cache"]) as cache:
+        fs = Fuse(swhids, root_path, cache, conf)
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
