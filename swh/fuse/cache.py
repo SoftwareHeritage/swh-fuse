@@ -3,94 +3,152 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
-from typing import Any, List, Optional
+from typing import Any, Optional, Set
 
-from swh.model.identifiers import CONTENT, SWHID, parse_swhid
+from swh.model.identifiers import SWHID, parse_swhid
 from swh.web.client.client import typify
 
 
 class Cache:
-    """ Cache all information retrieved from the Software Heritage API to
-    minimize API calls. """
+    """ SWH FUSE retrieves both metadata and file contents from the Software
+    Heritage archive via the network. In order to obtain reasonable performances
+    several caches are used to minimize network transfer.
+
+    Caches are stored on disk in SQLite databases located at
+    `$XDG_CACHE_HOME/swh/fuse/cache.sqlite`.
+
+    All caches are persistent (i.e., they survive the restart of the SWH FUSE
+    process) and global (i.e., they are shared by concurrent SWH FUSE
+    processes).
+
+    We assume that no cache *invalidation* is necessary, due to intrinsic
+    properties of the Software Heritage archive, such as integrity verification
+    and append-only archive changes. To clean the caches one can just remove the
+    corresponding files from disk. """
 
     def __init__(self, cache_dir: Path):
-        if str(cache_dir) == ":memory:":
-            self.conn = sqlite3.connect(":memory:")
-        else:
-            cache_path = Path(cache_dir, "cache.sqlite")
-            cache_path.parents[0].mkdir(parents=True, exist_ok=True)
-            self.conn = sqlite3.connect(cache_path)
+        self.cache_dir = cache_dir
 
-        self.cursor = self.conn.cursor()
+    def __enter__(self):
+        # In-memory (thus temporary) caching is useful for testing purposes
+        in_memory = ":memory:"
+        if str(self.cache_dir) == in_memory:
+            metadata_cache_path = in_memory
+            blob_cache_path = in_memory
+        else:
+            metadata_cache_path = self.cache_dir / "metadata.sqlite"
+            blob_cache_path = self.cache_dir / "blob.sqlite"
+
+        self.metadata = MetadataCache(metadata_cache_path)
+        self.metadata.__enter__()
+        self.blob = BlobCache(blob_cache_path)
+        self.blob.__enter__()
+
+        return self
+
+    def __exit__(self, type=None, val=None, tb=None) -> None:
+        self.metadata.__exit__()
+        self.blob.__exit__()
+
+    def get_cached_swhids(self) -> Set[SWHID]:
+        """ Return a list of all previously cached SWHID """
+
+        with closing(self.metadata.conn.cursor()) as metadata_cursor, (
+            closing(self.blob.conn.cursor())
+        ) as blob_cursor:
+            # Some entries can be in one cache but not in the other so create a
+            # set from all caches
+            metadata_cursor.execute("select swhid from metadata_cache")
+            blob_cursor.execute("select swhid from blob_cache")
+            swhids = metadata_cursor.fetchall() + blob_cursor.fetchall()
+            swhids = [parse_swhid(x[0]) for x in swhids]
+            return set(swhids)
+
+
+class MetadataCache:
+    """ The metadata cache map each SWHID to the complete metadata of the
+    referenced object. This is analogous to what is available in
+    `meta/<SWHID>.json` file (and generally used as data source for returning
+    the content of those files). """
+
+    def __init__(self, path: str):
+        self.path = path
+
+    def __enter__(self):
+        self.conn = sqlite3.connect(self.path)
         with self.conn:
             self.conn.execute(
                 "create table if not exists metadata_cache (swhid, metadata)"
             )
-            self.conn.execute("create table if not exists blob_cache (swhid, blob)")
+        return self
 
-    def close(self) -> None:
+    def __exit__(self, type=None, val=None, tb=None) -> None:
         self.conn.close()
 
-    def get_metadata(self, swhid: SWHID) -> Any:
-        """ Return previously cached JSON metadata associated with a SWHID """
+    def __getitem__(self, swhid: SWHID) -> Any:
+        with closing(self.conn.cursor()) as cursor:
+            cursor.execute(
+                "select metadata from metadata_cache where swhid=?", (str(swhid),)
+            )
+            cache = cursor.fetchone()
+            if cache:
+                metadata = json.loads(cache[0])
+                return typify(metadata, swhid.object_type)
+            else:
+                return None
 
-        self.cursor.execute(
-            "select metadata from metadata_cache where swhid=?", (str(swhid),)
-        )
-        cache = self.cursor.fetchone()
-        if cache:
-            metadata = json.loads(cache[0])
-            return typify(metadata, swhid.object_type)
-        else:
-            return None
-
-    def put_metadata(self, swhid: SWHID, metadata: Any) -> None:
-        """ Cache JSON metadata associated with a SWHID """
-
-        with self.conn:
-            self.conn.execute(
+    def __setitem__(self, swhid: SWHID, metadata: Any) -> None:
+        with closing(self.conn.cursor()) as cursor:
+            cursor.execute(
                 "insert into metadata_cache values (?, ?)",
                 (
                     str(swhid),
                     json.dumps(
                         metadata,
                         # Converts the typified JSON to plain str version
-                        default=lambda x: x.object_id
-                        if isinstance(x, SWHID)
-                        else x.__dict__,
+                        default=lambda x: (
+                            x.object_id if isinstance(x, SWHID) else x.__dict__
+                        ),
                     ),
                 ),
             )
 
-    def get_metadata_swhids(self) -> List[SWHID]:
-        """ Return a list of SWHID of all previously cached entry """
 
-        self.cursor.execute("select swhid from metadata_cache")
-        swhids = self.cursor.fetchall()
-        swhids = [parse_swhid(x[0]) for x in swhids]
-        return swhids
+class BlobCache:
+    """ The blob cache map SWHIDs of type `cnt` to the bytes of their archived
+    content.
 
-    def get_blob(self, swhid: SWHID) -> Optional[str]:
-        """ Return previously cached blob bytes associated with a content SWHID """
+    The blob cache entry for a given content object is populated, at the latest,
+    the first time the object is `read()`-d. It might be populated earlier on
+    due to prefetching, e.g., when a directory pointing to the given content is
+    listed for the first time. """
 
-        if swhid.object_type != CONTENT:
-            raise AttributeError("Cannot retrieve blob from non-content object type")
+    def __init__(self, path: str):
+        self.path = path
 
-        self.cursor.execute("select blob from blob_cache where swhid=?", (str(swhid),))
-        cache = self.cursor.fetchone()
-        if cache:
-            blob = cache[0]
-            return blob
-        else:
-            return None
-
-    def put_blob(self, swhid: SWHID, blob: str) -> None:
-        """ Cache blob bytes associated with a content SWHID """
-
+    def __enter__(self):
+        self.conn = sqlite3.connect(self.path)
         with self.conn:
-            self.conn.execute(
-                "insert into blob_cache values (?, ?)", (str(swhid), blob)
-            )
+            self.conn.execute("create table if not exists blob_cache (swhid, blob)")
+        return self
+
+    def __exit__(self, type=None, val=None, tb=None) -> None:
+        self.conn.close()
+
+    def __getitem__(self, swhid: SWHID) -> Optional[str]:
+        with closing(self.conn.cursor()) as cursor:
+            cursor.execute("select blob from blob_cache where swhid=?", (str(swhid),))
+            cache = cursor.fetchone()
+            if cache:
+                blob = cache[0]
+                return blob
+            else:
+                return None
+
+    def __setitem__(self, swhid: SWHID, blob: str) -> None:
+        with closing(self.conn.cursor()) as cursor:
+            cursor.execute("insert into blob_cache values (?, ?)", (str(swhid), blob))

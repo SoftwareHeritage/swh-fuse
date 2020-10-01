@@ -36,7 +36,7 @@ class Fuse(pyfuse3.Operations):
     the archive and navigate it as a virtual file system. """
 
     def __init__(
-        self, swhids: List[SWHID], root_path: Path, cache_dir: Path, api_url: str
+        self, swhids: List[SWHID], root_path: Path, api_url: str, cache: Cache
     ):
         super(Fuse, self).__init__()
 
@@ -57,14 +57,14 @@ class Fuse(pyfuse3.Operations):
         self.uid = os.getuid()
 
         self.web_api = WebAPIClient(api_url)
-        self.cache = Cache(cache_dir)
+        self.cache = cache
 
         # Initially populate the cache
         for swhid in swhids:
             self.get_metadata(swhid)
 
     def shutdown(self) -> None:
-        self.cache.close()
+        pass
 
     def _alloc_inode(self, entry: VirtualEntry) -> int:
         """ Return a unique inode integer for a given entry """
@@ -122,13 +122,13 @@ class Fuse(pyfuse3.Operations):
         """ Retrieve metadata for a given SWHID using Software Heritage API """
 
         # TODO: swh-graph API
-        cache = self.cache.get_metadata(swhid)
+        cache = self.cache.metadata[swhid]
         if cache:
             return cache
 
         try:
             metadata = self.web_api.get(swhid)
-            self.cache.put_metadata(swhid, metadata)
+            self.cache.metadata[swhid] = metadata
             return metadata
         except requests.HTTPError:
             logging.error(f"Unknown SWHID: '{swhid}'")
@@ -140,13 +140,13 @@ class Fuse(pyfuse3.Operations):
         if swhid.object_type != CONTENT:
             raise pyfuse3.FUSEError(errno.EINVAL)
 
-        cache = self.cache.get_blob(swhid)
+        cache = self.cache.blob[swhid]
         if cache:
             return cache
 
         resp = list(self.web_api.content_raw(swhid))
         blob = "".join(map(bytes.decode, resp))
-        self.cache.put_blob(swhid, blob)
+        self.cache.blob[swhid] = blob
         return blob
 
     def get_direntries(self, entry: VirtualEntry) -> Any:
@@ -310,17 +310,18 @@ def main(swhids: List[SWHID], root_path: Path, cache_dir: Path, api_url: str) ->
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
     pyfuse3_asyncio.enable()
 
-    fs = Fuse(swhids, root_path, cache_dir, api_url)
+    with Cache(cache_dir) as cache:
+        fs = Fuse(swhids, root_path, api_url, cache)
 
-    fuse_options = set(pyfuse3.default_options)
-    fuse_options.add("fsname=swhfs")
-    fuse_options.add("debug")
-    pyfuse3.init(fs, root_path, fuse_options)
+        fuse_options = set(pyfuse3.default_options)
+        fuse_options.add("fsname=swhfs")
+        fuse_options.add("debug")
+        pyfuse3.init(fs, root_path, fuse_options)
 
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(pyfuse3.main())
-        fs.shutdown()
-    finally:
-        pyfuse3.close(unmount=True)
-        loop.close()
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(pyfuse3.main())
+            fs.shutdown()
+        finally:
+            pyfuse3.close(unmount=True)
+            loop.close()

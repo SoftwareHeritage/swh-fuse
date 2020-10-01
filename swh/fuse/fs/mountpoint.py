@@ -32,7 +32,7 @@ class Archive:
 
     def __iter__(self) -> Iterator[VirtualEntry]:
         entries = []
-        for swhid in self.cache.get_metadata_swhids():
+        for swhid in self.cache.get_cached_swhids():
             entries.append(ArtifactEntry(str(swhid), swhid))
         return iter(entries)
 
@@ -50,7 +50,7 @@ class Meta:
 
     def __iter__(self) -> Iterator[VirtualEntry]:
         entries = []
-        for swhid in self.cache.get_metadata_swhids():
+        for swhid in self.cache.get_cached_swhids():
             filename = str(swhid) + ".json"
             entries.append(VirtualEntry(filename, EntryMode.RDONLY_FILE))
         return iter(entries)
