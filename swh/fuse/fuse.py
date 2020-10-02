@@ -17,17 +17,9 @@ import pyfuse3_asyncio
 import requests
 
 from swh.fuse.cache import FuseCache
-from swh.fuse.fs.artifact import Content, Directory
-from swh.fuse.fs.entry import (
-    ARCHIVE_DIRENTRY,
-    META_DIRENTRY,
-    ROOT_DIRENTRY,
-    ArtifactEntry,
-    EntryMode,
-    VirtualEntry,
-)
-from swh.fuse.fs.mountpoint import Archive, Meta, Root
-from swh.model.identifiers import CONTENT, DIRECTORY, SWHID, parse_swhid
+from swh.fuse.fs.entry import FuseEntry
+from swh.fuse.fs.mountpoint import Root
+from swh.model.identifiers import CONTENT, SWHID
 from swh.web.client.client import WebAPIClient
 
 
@@ -36,13 +28,11 @@ class Fuse(pyfuse3.Operations):
     the archive and navigate it as a virtual file system. """
 
     def __init__(
-        self,
-        swhids: List[SWHID],
-        root_path: Path,
-        cache: FuseCache,
-        conf: Dict[str, Any],
+        self, root_path: Path, cache: FuseCache, conf: Dict[str, Any],
     ):
         super(Fuse, self).__init__()
+
+        root_direntry = Root(fuse=self)
 
         self._next_inode: int = pyfuse3.ROOT_INODE
         self._next_fd: int = 0
@@ -50,10 +40,10 @@ class Fuse(pyfuse3.Operations):
         root_inode = self._next_inode
         self._next_inode += 1
 
-        self._inode2entry: Dict[int, VirtualEntry] = {root_inode: ROOT_DIRENTRY}
-        self._entry2inode: Dict[VirtualEntry, int] = {ROOT_DIRENTRY: root_inode}
-        self._entry2fd: Dict[VirtualEntry, int] = {}
-        self._fd2entry: Dict[int, VirtualEntry] = {}
+        self._inode2entry: Dict[int, FuseEntry] = {root_inode: root_direntry}
+        self._entry2inode: Dict[FuseEntry, int] = {root_direntry: root_inode}
+        self._entry2fd: Dict[FuseEntry, int] = {}
+        self._fd2entry: Dict[int, FuseEntry] = {}
         self._inode2path: Dict[int, Path] = {root_inode: root_path}
 
         self.time_ns: int = time.time_ns()  # start time, used as timestamp
@@ -65,14 +55,10 @@ class Fuse(pyfuse3.Operations):
         )
         self.cache = cache
 
-        # Initially populate the cache
-        for swhid in swhids:
-            self.get_metadata(swhid)
-
     def shutdown(self) -> None:
         pass
 
-    def _alloc_inode(self, entry: VirtualEntry) -> int:
+    def _alloc_inode(self, entry: FuseEntry) -> int:
         """ Return a unique inode integer for a given entry """
 
         try:
@@ -88,7 +74,7 @@ class Fuse(pyfuse3.Operations):
 
             return inode
 
-    def _alloc_fd(self, entry: VirtualEntry) -> int:
+    def _alloc_fd(self, entry: FuseEntry) -> int:
         """ Return a unique file descriptor integer for a given entry """
 
         try:
@@ -100,19 +86,11 @@ class Fuse(pyfuse3.Operations):
             self._fd2entry[fd] = entry
             return fd
 
-    def inode2entry(self, inode: int) -> VirtualEntry:
+    def inode2entry(self, inode: int) -> FuseEntry:
         """ Return the entry matching a given inode """
 
         try:
             return self._inode2entry[inode]
-        except KeyError:
-            raise pyfuse3.FUSEError(errno.ENOENT)
-
-    def entry2inode(self, entry: VirtualEntry) -> int:
-        """ Return the inode matching a given entry """
-
-        try:
-            return self._entry2inode[entry]
         except KeyError:
             raise pyfuse3.FUSEError(errno.ENOENT)
 
@@ -155,29 +133,7 @@ class Fuse(pyfuse3.Operations):
         self.cache.blob[swhid] = blob
         return blob
 
-    def get_direntries(self, entry: VirtualEntry) -> Any:
-        """ Return directory entries of a given entry """
-
-        if isinstance(entry, ArtifactEntry):
-            if entry.swhid.object_type == CONTENT:
-                raise pyfuse3.FUSEError(errno.ENOTDIR)
-
-            metadata = self.get_metadata(entry.swhid)
-            if entry.swhid.object_type == CONTENT:
-                return Content(metadata)
-            if entry.swhid.object_type == DIRECTORY:
-                return Directory(metadata)
-            # TODO: add other objects
-        else:
-            if entry == ROOT_DIRENTRY:
-                return Root()
-            elif entry == ARCHIVE_DIRENTRY:
-                return Archive(self.cache)
-            elif entry == META_DIRENTRY:
-                return Meta(self.cache)
-            # TODO: error handling
-
-    def get_attrs(self, entry: VirtualEntry) -> pyfuse3.EntryAttributes:
+    def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
         """ Return entry attributes """
 
         attrs = pyfuse3.EntryAttributes()
@@ -188,24 +144,8 @@ class Fuse(pyfuse3.Operations):
         attrs.st_gid = self.gid
         attrs.st_uid = self.uid
         attrs.st_ino = self._alloc_inode(entry)
-
-        if isinstance(entry, ArtifactEntry):
-            metadata = entry.prefetch or self.get_metadata(entry.swhid)
-            if entry.swhid.object_type == CONTENT:
-                # Only in the context of a directory entry do we have archived
-                # permissions. Otherwise, fallback to default read-only.
-                attrs.st_mode = metadata.get("perms", int(EntryMode.RDONLY_FILE))
-                attrs.st_size = metadata["length"]
-            else:
-                attrs.st_mode = int(EntryMode.RDONLY_DIR)
-        else:
-            attrs.st_mode = int(entry.mode)
-            # Meta JSON entries (under the root meta/ directory)
-            if entry.name.endswith(".json"):
-                swhid = parse_swhid(entry.name.replace(".json", ""))
-                metadata = self.get_metadata(swhid)
-                attrs.st_size = len(str(metadata))
-
+        attrs.st_mode = entry.mode
+        attrs.st_size = len(entry)
         return attrs
 
     async def getattr(
@@ -231,9 +171,8 @@ class Fuse(pyfuse3.Operations):
         path = self.inode2path(inode)
 
         # TODO: add cache on direntry list?
-        entries = self.get_direntries(direntry)
         next_id = offset + 1
-        for entry in itertools.islice(entries, offset, None):
+        for entry in itertools.islice(direntry, offset, None):
             name = os.fsencode(entry.name)
             attrs = self.get_attrs(entry)
             if not pyfuse3.readdir_reply(token, name, attrs, next_id):
@@ -262,18 +201,8 @@ class Fuse(pyfuse3.Operations):
         except KeyError:
             raise pyfuse3.FUSEError(errno.ENOENT)
 
-        if isinstance(entry, ArtifactEntry):
-            blob = self.get_blob(entry.swhid)
-            return blob.encode()
-        else:
-            # Meta JSON entries (under the root meta/ directory)
-            if entry.name.endswith(".json"):
-                swhid = parse_swhid(entry.name.replace(".json", ""))
-                metadata = self.get_metadata(swhid)
-                return str(metadata).encode()
-            else:
-                # TODO: error handling
-                raise pyfuse3.FUSEError(errno.ENOENT)
+        data = str(entry)
+        return data.encode()
 
     async def lookup(
         self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
@@ -284,30 +213,14 @@ class Fuse(pyfuse3.Operations):
         path = Path(self.inode2path(parent_inode), name)
         parent_entry = self.inode2entry(parent_inode)
 
-        attr = None
-        if isinstance(parent_entry, ArtifactEntry):
-            metadata = self.get_metadata(parent_entry.swhid)
-            for entry in metadata:
-                if entry["name"] == name:
-                    swhid = entry["target"]
-                    attr = self.get_attrs(ArtifactEntry(name, swhid))
-        # TODO: this is fragile, maybe cache attrs?
-        else:
-            if parent_entry == ROOT_DIRENTRY:
-                if name == ARCHIVE_DIRENTRY.name:
-                    attr = self.get_attrs(ARCHIVE_DIRENTRY)
-                elif name == META_DIRENTRY.name:
-                    attr = self.get_attrs(META_DIRENTRY)
-            else:
-                swhid = parse_swhid(name)
-                attr = self.get_attrs(ArtifactEntry(name, swhid))
+        for entry in parent_entry:
+            if name == entry.name:
+                attr = self.get_attrs(entry)
+                self._inode2path[attr.st_ino] = path
+                return attr
 
-        if attr:
-            self._inode2path[attr.st_ino] = path
-            return attr
-        else:
-            # TODO: error handling (name not found)
-            return pyfuse3.EntryAttributes()
+        # TODO: error handling (name not found)
+        return pyfuse3.EntryAttributes()
 
 
 def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
@@ -317,7 +230,11 @@ def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
     pyfuse3_asyncio.enable()
 
     with FuseCache(conf["cache"]) as cache:
-        fs = Fuse(swhids, root_path, cache, conf)
+        fs = Fuse(root_path, cache, conf)
+
+        # Initially populate the cache
+        for swhid in swhids:
+            fs.get_metadata(swhid)
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")

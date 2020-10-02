@@ -3,11 +3,15 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from dataclasses import dataclass
 from enum import IntEnum
 from stat import S_IFDIR, S_IFREG
-from typing import Any, Dict
+from typing import Any
 
 from swh.model.identifiers import SWHID
+
+# Avoid cycling import
+Fuse = "Fuse"
 
 
 class EntryMode(IntEnum):
@@ -22,34 +26,44 @@ class EntryMode(IntEnum):
     RDONLY_DIR = S_IFDIR | 0o555
 
 
-class VirtualEntry:
+@dataclass
+class FuseEntry:
     """ Main wrapper class to manipulate virtual FUSE entries
 
     Attributes:
         name: entry filename
         mode: entry permission mode
+        fuse: internal reference to the main FUSE class
     """
 
-    def __init__(self, name: str, mode: EntryMode):
-        self.name = name
-        self.mode = mode
+    name: str
+    mode: int
+    fuse: Fuse
+
+    def __len__(self) -> int:
+        return 0
+
+    # TODO: type hint?
+    def __iter__(self):
+        return None
+
+    # TODO: remove
+    def __hash__(self):
+        return hash((self.name, self.mode))
 
 
-class ArtifactEntry(VirtualEntry):
+@dataclass
+class ArtifactEntry(FuseEntry):
     """ FUSE virtual entry for a Software Heritage Artifact
 
     Attributes:
-        name: entry filename
         swhid: Software Heritage persistent identifier
         prefetch: optional prefetched metadata used to set entry attributes
     """
 
-    def __init__(self, name: str, swhid: SWHID, prefetch: Dict[str, Any] = None):
-        self.name = name
-        self.swhid = swhid
-        self.prefetch = prefetch
+    swhid: SWHID
+    prefetch: Any = None
 
-
-ROOT_DIRENTRY = VirtualEntry("root", EntryMode.RDONLY_DIR)
-ARCHIVE_DIRENTRY = VirtualEntry("archive", EntryMode.RDONLY_DIR)
-META_DIRENTRY = VirtualEntry("meta", EntryMode.RDONLY_DIR)
+    # TODO: remove
+    def __hash__(self):
+        return hash((self.name, self.mode, self.swhid))
