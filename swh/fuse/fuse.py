@@ -182,10 +182,8 @@ class Fuse(pyfuse3.Operations):
         fd = self._alloc_fd(inode)
         return pyfuse3.FileInfo(fh=fd, keep_cache=True)
 
-    async def read(self, fd: int, _offset: int, _length: int) -> bytes:
-        """ Read blob content pointed by the given `fd` (file descriptor). Both
-        parameters `_offset` and `_length` are ignored. """
-        # TODO: use offset/length
+    async def read(self, fd: int, offset: int, length: int) -> bytes:
+        """ Read `length` bytes from file descriptor `fd` at position `offset` """
 
         try:
             inode = self._fd2inode[fd]
@@ -194,7 +192,7 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
         data = str(entry)
-        return data.encode()
+        return data.encode()[offset : offset + length]
 
     async def lookup(
         self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
