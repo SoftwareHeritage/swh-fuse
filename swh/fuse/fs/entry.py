@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from dataclasses import dataclass
 from enum import IntEnum
 from stat import S_IFDIR, S_IFREG
 from typing import Any
@@ -26,7 +25,6 @@ class EntryMode(IntEnum):
     RDONLY_DIR = S_IFDIR | 0o555
 
 
-@dataclass
 class FuseEntry:
     """ Main wrapper class to manipulate virtual FUSE entries
 
@@ -34,25 +32,22 @@ class FuseEntry:
         name: entry filename
         mode: entry permission mode
         fuse: internal reference to the main FUSE class
+        inode: unique integer identifying the entry
     """
 
-    name: str
-    mode: int
-    fuse: Fuse
+    def __init__(self, name: str, mode: int, fuse: Fuse):
+        self.name = name
+        self.mode = mode
+        self.fuse = fuse
+        self.inode = fuse._alloc_inode(self)
 
     def __len__(self) -> int:
         return 0
 
-    # TODO: type hint?
     def __iter__(self):
         return None
 
-    # TODO: remove
-    def __hash__(self):
-        return hash((self.name, self.mode))
 
-
-@dataclass
 class ArtifactEntry(FuseEntry):
     """ FUSE virtual entry for a Software Heritage Artifact
 
@@ -61,9 +56,9 @@ class ArtifactEntry(FuseEntry):
         prefetch: optional prefetched metadata used to set entry attributes
     """
 
-    swhid: SWHID
-    prefetch: Any = None
-
-    # TODO: remove
-    def __hash__(self):
-        return hash((self.name, self.mode, self.swhid))
+    def __init__(
+        self, name: str, mode: int, fuse: Fuse, swhid: SWHID, prefetch: Any = None
+    ):
+        super().__init__(name, mode, fuse)
+        self.swhid = swhid
+        self.prefetch = prefetch

@@ -32,19 +32,15 @@ class Fuse(pyfuse3.Operations):
     ):
         super(Fuse, self).__init__()
 
-        root_direntry = Root(fuse=self)
-
         self._next_inode: int = pyfuse3.ROOT_INODE
         self._next_fd: int = 0
+        self._inode2entry: Dict[int, FuseEntry] = {}
 
-        root_inode = self._next_inode
-        self._next_inode += 1
+        self.root = Root(fuse=self)
 
-        self._inode2entry: Dict[int, FuseEntry] = {root_inode: root_direntry}
-        self._entry2inode: Dict[FuseEntry, int] = {root_direntry: root_inode}
-        self._entry2fd: Dict[FuseEntry, int] = {}
-        self._fd2entry: Dict[int, FuseEntry] = {}
-        self._inode2path: Dict[int, Path] = {root_inode: root_path}
+        self._inode2fd: Dict[int, int] = {}
+        self._fd2inode: Dict[int, int] = {}
+        self._inode2path: Dict[int, Path] = {self.root.inode: root_path}
 
         self.time_ns: int = time.time_ns()  # start time, used as timestamp
         self.gid = os.getgid()
@@ -61,29 +57,25 @@ class Fuse(pyfuse3.Operations):
     def _alloc_inode(self, entry: FuseEntry) -> int:
         """ Return a unique inode integer for a given entry """
 
-        try:
-            return self._entry2inode[entry]
-        except KeyError:
-            inode = self._next_inode
-            self._next_inode += 1
-            self._entry2inode[entry] = inode
-            self._inode2entry[inode] = entry
+        inode = self._next_inode
+        self._next_inode += 1
+        self._inode2entry[inode] = entry
 
-            # TODO add inode recycling with invocation to invalidate_inode when
-            # the dicts get too big
+        # TODO add inode recycling with invocation to invalidate_inode when
+        # the dicts get too big
 
-            return inode
+        return inode
 
-    def _alloc_fd(self, entry: FuseEntry) -> int:
-        """ Return a unique file descriptor integer for a given entry """
+    def _alloc_fd(self, inode: int) -> int:
+        """ Return a unique file descriptor integer for a given inode """
 
         try:
-            return self._entry2fd[entry]
+            return self._inode2fd[inode]
         except KeyError:
             fd = self._next_fd
             self._next_fd += 1
-            self._entry2fd[entry] = fd
-            self._fd2entry[fd] = entry
+            self._inode2fd[inode] = fd
+            self._fd2inode[fd] = inode
             return fd
 
     def inode2entry(self, inode: int) -> FuseEntry:
@@ -143,7 +135,7 @@ class Fuse(pyfuse3.Operations):
         attrs.st_mtime_ns = self.time_ns
         attrs.st_gid = self.gid
         attrs.st_uid = self.uid
-        attrs.st_ino = self._alloc_inode(entry)
+        attrs.st_ino = entry.inode
         attrs.st_mode = entry.mode
         attrs.st_size = len(entry)
         return attrs
@@ -187,8 +179,7 @@ class Fuse(pyfuse3.Operations):
     ) -> pyfuse3.FileInfo:
         """ Open an inode and return a unique file descriptor """
 
-        entry = self.inode2entry(inode)
-        fd = self._alloc_fd(entry)
+        fd = self._alloc_fd(inode)
         return pyfuse3.FileInfo(fh=fd, keep_cache=True)
 
     async def read(self, fd: int, _offset: int, _length: int) -> bytes:
@@ -197,7 +188,8 @@ class Fuse(pyfuse3.Operations):
         # TODO: use offset/length
 
         try:
-            entry = self._fd2entry[fd]
+            inode = self._fd2inode[fd]
+            entry = self.inode2entry(inode)
         except KeyError:
             raise pyfuse3.FUSEError(errno.ENOENT)
 

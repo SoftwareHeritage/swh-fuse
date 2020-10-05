@@ -17,9 +17,7 @@ class Root(FuseEntry):
     """ The FUSE mountpoint, consisting of the archive/ and meta/ directories """
 
     def __init__(self, fuse: Fuse):
-        self.name = "root"
-        self.mode = int(EntryMode.RDONLY_DIR)
-        self.fuse = fuse
+        super().__init__(name="root", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
 
     def __iter__(self) -> Iterator[FuseEntry]:
         entries = [ArchiveDir(self.fuse), MetaDir(self.fuse)]
@@ -31,9 +29,7 @@ class ArchiveDir(FuseEntry):
     SWHID, having actual SWHIDs as names """
 
     def __init__(self, fuse: Fuse):
-        self.name = "archive"
-        self.mode = int(EntryMode.RDONLY_DIR)
-        self.fuse = fuse
+        super().__init__(name="archive", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
 
     def __iter__(self) -> Iterator[FuseEntry]:
         entries = []
@@ -55,9 +51,7 @@ class MetaDir(FuseEntry):
     merged together. """
 
     def __init__(self, fuse: Fuse):
-        self.name = "meta"
-        self.mode = int(EntryMode.RDONLY_DIR)
-        self.fuse = fuse
+        super().__init__(name="meta", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
 
     def __iter__(self) -> Iterator[FuseEntry]:
         entries = []
@@ -72,9 +66,9 @@ class MetaEntry(FuseEntry):
     Heritage archive. """
 
     def __init__(self, swhid: SWHID, fuse: Fuse):
-        self.name = str(swhid) + ".json"
-        self.mode = int(EntryMode.RDONLY_FILE)
-        self.fuse = fuse
+        super().__init__(
+            name=str(swhid) + ".json", mode=int(EntryMode.RDONLY_FILE), fuse=fuse
+        )
         self.swhid = swhid
 
     def __str__(self) -> str:
