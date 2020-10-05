@@ -16,7 +16,7 @@ from daemon import DaemonContext
 
 # from swh.core import config
 from swh.core.cli import CONTEXT_SETTINGS
-from swh.model.identifiers import SWHID
+from swh.model.cli import SWHIDParamType
 
 # All generic config code should reside in swh.core.config
 DEFAULT_CONFIG_PATH = os.environ.get(
@@ -42,24 +42,6 @@ DEFAULT_CONFIG: Dict[str, Tuple[str, Any]] = {
         {"url": "https://archive.softwareheritage.org/api/1", "auth-token": None,},
     ),
 }
-
-
-class SWHIDParamType(click.ParamType):
-    """Click argument that accepts SWHID and return them as
-    :class:`swh.model.identifiers.SWHID` instances
-
-    """
-
-    name = "SWHID"
-
-    def convert(self, value, param, ctx) -> SWHID:
-        from swh.model.exceptions import ValidationError
-        from swh.model.identifiers import parse_swhid
-
-        try:
-            return parse_swhid(value)
-        except ValidationError:
-            self.fail(f'"{value}" is not a valid SWHID', param, ctx)
 
 
 @click.group(name="fuse", context_settings=CONTEXT_SETTINGS)
