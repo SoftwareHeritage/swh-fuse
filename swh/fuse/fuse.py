@@ -209,8 +209,8 @@ class Fuse(pyfuse3.Operations):
                 self._inode2path[attr.st_ino] = path
                 return attr
 
-        # TODO: error handling (name not found)
-        return pyfuse3.EntryAttributes()
+        logging.error(f"Unknown name during lookup: '{name}'")
+        raise pyfuse3.FUSEError(errno.ENOENT)
 
 
 def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
