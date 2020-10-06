@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Iterator
+from typing import AsyncIterator
 
 from swh.fuse.fs.artifact import typify
 from swh.fuse.fs.entry import EntryMode, FuseEntry
@@ -19,9 +19,9 @@ class Root(FuseEntry):
     def __init__(self, fuse: Fuse):
         super().__init__(name="root", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
 
-    def __iter__(self) -> Iterator[FuseEntry]:
-        entries = [ArchiveDir(self.fuse), MetaDir(self.fuse)]
-        return iter(entries)
+    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+        for entry in [ArchiveDir(self.fuse), MetaDir(self.fuse)]:
+            yield entry
 
 
 class ArchiveDir(FuseEntry):
@@ -31,15 +31,13 @@ class ArchiveDir(FuseEntry):
     def __init__(self, fuse: Fuse):
         super().__init__(name="archive", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
 
-    def __iter__(self) -> Iterator[FuseEntry]:
-        entries = []
-        for swhid in self.fuse.cache.get_cached_swhids():
+    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+        async for swhid in self.fuse.cache.get_cached_swhids():
             if swhid.object_type == CONTENT:
                 mode = EntryMode.RDONLY_FILE
             else:
                 mode = EntryMode.RDONLY_DIR
-            entries.append(typify(str(swhid), int(mode), self.fuse, swhid))
-        return iter(entries)
+            yield typify(str(swhid), int(mode), self.fuse, swhid)
 
 
 class MetaDir(FuseEntry):
@@ -53,11 +51,9 @@ class MetaDir(FuseEntry):
     def __init__(self, fuse: Fuse):
         super().__init__(name="meta", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
 
-    def __iter__(self) -> Iterator[FuseEntry]:
-        entries = []
-        for swhid in self.fuse.cache.get_cached_swhids():
-            entries.append(MetaEntry(swhid, self.fuse))
-        return iter(entries)
+    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+        async for swhid in self.fuse.cache.get_cached_swhids():
+            yield MetaEntry(swhid, self.fuse)
 
 
 class MetaEntry(FuseEntry):
@@ -71,9 +67,9 @@ class MetaEntry(FuseEntry):
         )
         self.swhid = swhid
 
-    def __str__(self) -> str:
-        metadata = self.fuse.get_metadata(self.swhid)
+    async def content(self) -> str:
+        metadata = await self.fuse.get_metadata(self.swhid)
         return str(metadata)
 
-    def __len__(self) -> int:
-        return len(str(self))
+    async def length(self) -> int:
+        return len(await self.content())

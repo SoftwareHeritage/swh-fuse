@@ -41,10 +41,13 @@ class FuseEntry:
         self.fuse = fuse
         self.inode = fuse._alloc_inode(self)
 
-    def __len__(self) -> int:
+    async def length(self) -> int:
         return 0
 
-    def __iter__(self):
+    async def content(self):
+        return None
+
+    async def __aiter__(self):
         return None
 
 

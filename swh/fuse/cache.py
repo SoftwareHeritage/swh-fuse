@@ -4,10 +4,10 @@
 # See top-level LICENSE file for more information
 
 from abc import ABC
-from contextlib import closing
 import json
-import sqlite3
-from typing import Any, Dict, Optional, Set
+from typing import Any, AsyncGenerator, Dict, Optional
+
+import aiosqlite
 
 from swh.model.identifiers import SWHID, parse_swhid
 from swh.web.client.client import typify
@@ -33,30 +33,30 @@ class FuseCache:
     def __init__(self, cache_conf: Dict[str, Any]):
         self.cache_conf = cache_conf
 
-    def __enter__(self):
+    async def __aenter__(self):
         self.metadata = MetadataCache(self.cache_conf["metadata"])
-        self.metadata.__enter__()
         self.blob = BlobCache(self.cache_conf["blob"])
-        self.blob.__enter__()
+        await self.metadata.__aenter__()
+        await self.blob.__aenter__()
         return self
 
-    def __exit__(self, type=None, val=None, tb=None) -> None:
-        self.metadata.__exit__()
-        self.blob.__exit__()
+    async def __aexit__(self, type=None, val=None, tb=None) -> None:
+        await self.metadata.__aexit__()
+        await self.blob.__aexit__()
 
-    def get_cached_swhids(self) -> Set[SWHID]:
+    async def get_cached_swhids(self) -> AsyncGenerator[SWHID, None]:
         """ Return a list of all previously cached SWHID """
 
-        with closing(self.metadata.conn.cursor()) as metadata_cursor, (
-            closing(self.blob.conn.cursor())
-        ) as blob_cursor:
-            # Some entries can be in one cache but not in the other so create a
-            # set from all caches
-            metadata_cursor.execute("select swhid from metadata_cache")
-            blob_cursor.execute("select swhid from blob_cache")
-            swhids = metadata_cursor.fetchall() + blob_cursor.fetchall()
-            swhids = [parse_swhid(x[0]) for x in swhids]
-            return set(swhids)
+        meta_cursor = await self.metadata.conn.execute(
+            "select swhid from metadata_cache"
+        )
+        blob_cursor = await self.blob.conn.execute("select swhid from blob_cache")
+        # Some entries can be in one cache but not in the other so create a set
+        # from all caches
+        swhids = await meta_cursor.fetchall() + await blob_cursor.fetchall()
+        swhids = [parse_swhid(x[0]) for x in swhids]
+        for swhid in set(swhids):
+            yield swhid
 
 
 class AbstractCache(ABC):
@@ -66,17 +66,17 @@ class AbstractCache(ABC):
     def __init__(self, conf: Dict[str, Any]):
         self.conf = conf
 
-    def __enter__(self):
+    async def __aenter__(self):
         # In-memory (thus temporary) caching is useful for testing purposes
         if self.conf.get("in-memory", False):
             path = ":memory:"
         else:
             path = self.conf["path"]
-        self.conn = sqlite3.connect(path)
+        self.conn = await aiosqlite.connect(path)
         return self
 
-    def __exit__(self, type=None, val=None, tb=None) -> None:
-        self.conn.close()
+    async def __aexit__(self, type=None, val=None, tb=None) -> None:
+        await self.conn.close()
 
 
 class MetadataCache(AbstractCache):
@@ -85,39 +85,38 @@ class MetadataCache(AbstractCache):
     `meta/<SWHID>.json` file (and generally used as data source for returning
     the content of those files). """
 
-    def __enter__(self):
-        super().__enter__()
-        with self.conn as conn:
-            conn.execute("create table if not exists metadata_cache (swhid, metadata)")
+    async def __aenter__(self):
+        await super().__aenter__()
+        await self.conn.execute(
+            "create table if not exists metadata_cache (swhid, metadata)"
+        )
         return self
 
-    def __getitem__(self, swhid: SWHID) -> Any:
-        with self.conn as conn, closing(conn.cursor()) as cursor:
-            cursor.execute(
-                "select metadata from metadata_cache where swhid=?", (str(swhid),)
-            )
-            cache = cursor.fetchone()
-            if cache:
-                metadata = json.loads(cache[0])
-                return typify(metadata, swhid.object_type)
-            else:
-                return None
+    async def get(self, swhid: SWHID) -> Any:
+        cursor = await self.conn.execute(
+            "select metadata from metadata_cache where swhid=?", (str(swhid),)
+        )
+        cache = await cursor.fetchone()
+        if cache:
+            metadata = json.loads(cache[0])
+            return typify(metadata, swhid.object_type)
+        else:
+            return None
 
-    def __setitem__(self, swhid: SWHID, metadata: Any) -> None:
-        with self.conn as conn:
-            conn.execute(
-                "insert into metadata_cache values (?, ?)",
-                (
-                    str(swhid),
-                    json.dumps(
-                        metadata,
-                        # Converts the typified JSON to plain str version
-                        default=lambda x: (
-                            x.object_id if isinstance(x, SWHID) else x.__dict__
-                        ),
+    async def set(self, swhid: SWHID, metadata: Any) -> None:
+        await self.conn.execute(
+            "insert into metadata_cache values (?, ?)",
+            (
+                str(swhid),
+                json.dumps(
+                    metadata,
+                    # Converts the typified JSON to plain str version
+                    default=lambda x: (
+                        x.object_id if isinstance(x, SWHID) else x.__dict__
                     ),
                 ),
-            )
+            ),
+        )
 
 
 class BlobCache(AbstractCache):
@@ -129,22 +128,23 @@ class BlobCache(AbstractCache):
     due to prefetching, e.g., when a directory pointing to the given content is
     listed for the first time. """
 
-    def __enter__(self):
-        super().__enter__()
-        with self.conn as conn:
-            conn.execute("create table if not exists blob_cache (swhid, blob)")
+    async def __aenter__(self):
+        await super().__aenter__()
+        await self.conn.execute("create table if not exists blob_cache (swhid, blob)")
         return self
 
-    def __getitem__(self, swhid: SWHID) -> Optional[str]:
-        with self.conn as conn, closing(conn.cursor()) as cursor:
-            cursor.execute("select blob from blob_cache where swhid=?", (str(swhid),))
-            cache = cursor.fetchone()
-            if cache:
-                blob = cache[0]
-                return blob
-            else:
-                return None
+    async def get(self, swhid: SWHID) -> Optional[str]:
+        cursor = await self.conn.execute(
+            "select blob from blob_cache where swhid=?", (str(swhid),)
+        )
+        cache = await cursor.fetchone()
+        if cache:
+            blob = cache[0]
+            return blob
+        else:
+            return None
 
-    def __setitem__(self, swhid: SWHID, blob: str) -> None:
-        with self.conn as conn:
-            conn.execute("insert into blob_cache values (?, ?)", (str(swhid), blob))
+    async def set(self, swhid: SWHID, blob: str) -> None:
+        await self.conn.execute(
+            "insert into blob_cache values (?, ?)", (str(swhid), blob)
+        )

@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from typing import Any, Iterator
+from typing import Any, AsyncIterator
 
 from swh.fuse.fs.entry import ArtifactEntry, EntryMode
 from swh.model.identifiers import CONTENT, DIRECTORY, SWHID
@@ -30,16 +30,16 @@ class Content(ArtifactEntry):
     directory, the permissions of the `archive/SWHID` file will be arbitrary and
     not meaningful (e.g., `0x644`). """
 
-    def __str__(self) -> str:
-        return self.fuse.get_blob(self.swhid)
+    async def content(self) -> str:
+        return await self.fuse.get_blob(self.swhid)
 
-    def __len__(self) -> int:
+    async def length(self) -> int:
         # When listing entries from a directory, the API already gave us information
         if self.prefetch:
             return self.prefetch["length"]
-        return len(str(self))
+        return len(await self.content())
 
-    def __iter__(self):
+    async def __aiter__(self):
         raise ValueError("Cannot iterate over a content type artifact")
 
 
@@ -55,24 +55,21 @@ class Directory(ArtifactEntry):
     So it is possible that, in the context of a directory, a file is presented
     as writable, whereas actually writing to it will fail with `EPERM`. """
 
-    def __iter__(self) -> Iterator[ArtifactEntry]:
-        entries = []
-        for entry in self.fuse.get_metadata(self.swhid):
-            entries.append(
-                typify(
-                    name=entry["name"],
-                    # Use default read-only permissions for directories, and
-                    # archived permissions for contents
-                    mode=(
-                        entry["perms"]
-                        if entry["target"].object_type == CONTENT
-                        else int(EntryMode.RDONLY_DIR)
-                    ),
-                    fuse=self.fuse,
-                    swhid=entry["target"],
-                    # The directory API has extra info we can use to set attributes
-                    # without additional Software Heritage API call
-                    prefetch=entry,
-                )
+    async def __aiter__(self) -> AsyncIterator[ArtifactEntry]:
+        metadata = await self.fuse.get_metadata(self.swhid)
+        for entry in metadata:
+            yield typify(
+                name=entry["name"],
+                # Use default read-only permissions for directories, and
+                # archived permissions for contents
+                mode=(
+                    entry["perms"]
+                    if entry["target"].object_type == CONTENT
+                    else int(EntryMode.RDONLY_DIR)
+                ),
+                fuse=self.fuse,
+                swhid=entry["target"],
+                # The directory API has extra info we can use to set attributes
+                # without additional Software Heritage API call
+                prefetch=entry,
             )
-        return iter(entries)

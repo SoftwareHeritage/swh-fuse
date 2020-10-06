@@ -5,7 +5,6 @@
 
 import asyncio
 import errno
-import itertools
 import logging
 import os
 from pathlib import Path
@@ -94,38 +93,42 @@ class Fuse(pyfuse3.Operations):
         except KeyError:
             raise pyfuse3.FUSEError(errno.ENOENT)
 
-    def get_metadata(self, swhid: SWHID) -> Any:
+    async def get_metadata(self, swhid: SWHID) -> Any:
         """ Retrieve metadata for a given SWHID using Software Heritage API """
 
-        # TODO: swh-graph API
-        cache = self.cache.metadata[swhid]
+        cache = await self.cache.metadata.get(swhid)
         if cache:
             return cache
 
         try:
-            metadata = self.web_api.get(swhid)
-            self.cache.metadata[swhid] = metadata
+            # TODO: swh-graph API
+            # TODO: async web API
+            loop = asyncio.get_event_loop()
+            metadata = await loop.run_in_executor(None, self.web_api.get, swhid)
+            await self.cache.metadata.set(swhid, metadata)
             return metadata
         except requests.HTTPError:
             logging.error(f"Unknown SWHID: '{swhid}'")
 
-    def get_blob(self, swhid: SWHID) -> str:
+    # TODO: should return bytes
+    async def get_blob(self, swhid: SWHID) -> str:
         """ Retrieve the blob bytes for a given content SWHID using Software
         Heritage API """
 
         if swhid.object_type != CONTENT:
             raise pyfuse3.FUSEError(errno.EINVAL)
 
-        cache = self.cache.blob[swhid]
+        cache = await self.cache.blob.get(swhid)
         if cache:
             return cache
 
-        resp = list(self.web_api.content_raw(swhid))
-        blob = "".join(map(bytes.decode, resp))
-        self.cache.blob[swhid] = blob
+        loop = asyncio.get_event_loop()
+        resp = await loop.run_in_executor(None, self.web_api.content_raw, swhid)
+        blob = "".join(map(bytes.decode, list(resp)))
+        await self.cache.blob.set(swhid, blob)
         return blob
 
-    def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
+    async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
         """ Return entry attributes """
 
         attrs = pyfuse3.EntryAttributes()
@@ -137,7 +140,7 @@ class Fuse(pyfuse3.Operations):
         attrs.st_uid = self.uid
         attrs.st_ino = entry.inode
         attrs.st_mode = entry.mode
-        attrs.st_size = len(entry)
+        attrs.st_size = await entry.length()
         return attrs
 
     async def getattr(
@@ -146,7 +149,7 @@ class Fuse(pyfuse3.Operations):
         """ Get attributes for a given inode """
 
         entry = self.inode2entry(inode)
-        return self.get_attrs(entry)
+        return await self.get_attrs(entry)
 
     async def opendir(self, inode: int, _ctx: pyfuse3.RequestContext) -> int:
         """ Open a directory referred by a given inode """
@@ -164,9 +167,14 @@ class Fuse(pyfuse3.Operations):
 
         # TODO: add cache on direntry list?
         next_id = offset + 1
-        for entry in itertools.islice(direntry, offset, None):
+        i = 0
+        async for entry in direntry:
+            if i < offset:
+                i += 1
+                continue
+
             name = os.fsencode(entry.name)
-            attrs = self.get_attrs(entry)
+            attrs = await self.get_attrs(entry)
             if not pyfuse3.readdir_reply(token, name, attrs, next_id):
                 break
 
@@ -191,7 +199,7 @@ class Fuse(pyfuse3.Operations):
         except KeyError:
             raise pyfuse3.FUSEError(errno.ENOENT)
 
-        data = str(entry)
+        data = await entry.content()
         return data.encode()[offset : offset + length]
 
     async def lookup(
@@ -203,9 +211,9 @@ class Fuse(pyfuse3.Operations):
         path = Path(self.inode2path(parent_inode), name)
         parent_entry = self.inode2entry(parent_inode)
 
-        for entry in parent_entry:
+        async for entry in parent_entry:
             if name == entry.name:
-                attr = self.get_attrs(entry)
+                attr = await self.get_attrs(entry)
                 self._inode2path[attr.st_ino] = path
                 return attr
 
@@ -213,28 +221,26 @@ class Fuse(pyfuse3.Operations):
         raise pyfuse3.FUSEError(errno.ENOENT)
 
 
-def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
+async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
     """ swh-fuse CLI entry-point """
 
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
     pyfuse3_asyncio.enable()
 
-    with FuseCache(conf["cache"]) as cache:
+    async with FuseCache(conf["cache"]) as cache:
         fs = Fuse(root_path, cache, conf)
 
         # Initially populate the cache
         for swhid in swhids:
-            fs.get_metadata(swhid)
+            await fs.get_metadata(swhid)
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
         fuse_options.add("debug")
         pyfuse3.init(fs, root_path, fuse_options)
 
-        loop = asyncio.get_event_loop()
         try:
-            loop.run_until_complete(pyfuse3.main())
-            fs.shutdown()
+            await pyfuse3.main()
         finally:
+            fs.shutdown()
             pyfuse3.close(unmount=True)
-            loop.close()

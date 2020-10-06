@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import asyncio
 from contextlib import ExitStack
 import os
 
@@ -100,4 +101,4 @@ def mount(ctx, swhids, path, config_file, foreground):
     with ExitStack() as stack:
         if not foreground:
             stack.enter_context(DaemonContext())
-        fuse.main(swhids, path, conf)
+        asyncio.run(fuse.main(swhids, path, conf))
