@@ -32,13 +32,10 @@ class Fuse(pyfuse3.Operations):
         super(Fuse, self).__init__()
 
         self._next_inode: int = pyfuse3.ROOT_INODE
-        self._next_fd: int = 0
         self._inode2entry: Dict[int, FuseEntry] = {}
 
         self.root = Root(fuse=self)
 
-        self._inode2fd: Dict[int, int] = {}
-        self._fd2inode: Dict[int, int] = {}
         self._inode2path: Dict[int, Path] = {self.root.inode: root_path}
 
         self.time_ns: int = time.time_ns()  # start time, used as timestamp
@@ -64,18 +61,6 @@ class Fuse(pyfuse3.Operations):
         # the dicts get too big
 
         return inode
-
-    def _alloc_fd(self, inode: int) -> int:
-        """ Return a unique file descriptor integer for a given inode """
-
-        try:
-            return self._inode2fd[inode]
-        except KeyError:
-            fd = self._next_fd
-            self._next_fd += 1
-            self._inode2fd[inode] = fd
-            self._fd2inode[fd] = inode
-            return fd
 
     def inode2entry(self, inode: int) -> FuseEntry:
         """ Return the entry matching a given inode """
@@ -157,9 +142,12 @@ class Fuse(pyfuse3.Operations):
         return inode
 
     async def readdir(
-        self, inode: int, offset: int, token: pyfuse3.ReaddirToken
+        self, fh: int, offset: int, token: pyfuse3.ReaddirToken
     ) -> None:
         """ Read entries in an open directory """
+
+        # opendir() uses inode as directory handle
+        inode = fh
 
         direntry = self.inode2entry(inode)
         path = self.inode2path(inode)
@@ -184,20 +172,18 @@ class Fuse(pyfuse3.Operations):
     async def open(
         self, inode: int, _flags: int, _ctx: pyfuse3.RequestContext
     ) -> pyfuse3.FileInfo:
-        """ Open an inode and return a unique file descriptor """
+        """ Open an inode and return a unique file handle """
 
-        fd = self._alloc_fd(inode)
-        return pyfuse3.FileInfo(fh=fd, keep_cache=True)
+        # Re-use inode as file handle
+        return pyfuse3.FileInfo(fh=inode, keep_cache=True)
 
-    async def read(self, fd: int, offset: int, length: int) -> bytes:
-        """ Read `length` bytes from file descriptor `fd` at position `offset` """
+    async def read(self, fh: int, offset: int, length: int) -> bytes:
+        """ Read `length` bytes from file handle `fh` at position `offset` """
 
-        try:
-            inode = self._fd2inode[fd]
-            entry = self.inode2entry(inode)
-        except KeyError:
-            raise pyfuse3.FUSEError(errno.ENOENT)
+        # open() uses inode as file handle
+        inode = fh
 
+        entry = self.inode2entry(inode)
         data = await entry.content()
         return data[offset : offset + length]
 
