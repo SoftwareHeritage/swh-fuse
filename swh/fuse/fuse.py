@@ -110,8 +110,7 @@ class Fuse(pyfuse3.Operations):
         except requests.HTTPError:
             logging.error(f"Unknown SWHID: '{swhid}'")
 
-    # TODO: should return bytes
-    async def get_blob(self, swhid: SWHID) -> str:
+    async def get_blob(self, swhid: SWHID) -> bytes:
         """ Retrieve the blob bytes for a given content SWHID using Software
         Heritage API """
 
@@ -124,7 +123,7 @@ class Fuse(pyfuse3.Operations):
 
         loop = asyncio.get_event_loop()
         resp = await loop.run_in_executor(None, self.web_api.content_raw, swhid)
-        blob = "".join(map(bytes.decode, list(resp)))
+        blob = b"".join(list(resp))
         await self.cache.blob.set(swhid, blob)
         return blob
 
@@ -200,7 +199,7 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
         data = await entry.content()
-        return data.encode()[offset : offset + length]
+        return data[offset : offset + length]
 
     async def lookup(
         self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext

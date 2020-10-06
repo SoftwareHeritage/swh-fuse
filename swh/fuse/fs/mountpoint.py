@@ -67,9 +67,9 @@ class MetaEntry(FuseEntry):
         )
         self.swhid = swhid
 
-    async def content(self) -> str:
+    async def content(self) -> bytes:
         metadata = await self.fuse.get_metadata(self.swhid)
-        return str(metadata)
+        return str(metadata).encode()
 
     async def length(self) -> int:
         return len(await self.content())

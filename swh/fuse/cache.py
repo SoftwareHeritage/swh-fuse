@@ -133,7 +133,7 @@ class BlobCache(AbstractCache):
         await self.conn.execute("create table if not exists blob_cache (swhid, blob)")
         return self
 
-    async def get(self, swhid: SWHID) -> Optional[str]:
+    async def get(self, swhid: SWHID) -> Optional[bytes]:
         cursor = await self.conn.execute(
             "select blob from blob_cache where swhid=?", (str(swhid),)
         )
@@ -144,7 +144,7 @@ class BlobCache(AbstractCache):
         else:
             return None
 
-    async def set(self, swhid: SWHID, blob: str) -> None:
+    async def set(self, swhid: SWHID, blob: bytes) -> None:
         await self.conn.execute(
             "insert into blob_cache values (?, ?)", (str(swhid), blob)
         )

@@ -30,7 +30,7 @@ class Content(ArtifactEntry):
     directory, the permissions of the `archive/SWHID` file will be arbitrary and
     not meaningful (e.g., `0x644`). """
 
-    async def content(self) -> str:
+    async def content(self) -> bytes:
         return await self.fuse.get_blob(self.swhid)
 
     async def length(self) -> int:
