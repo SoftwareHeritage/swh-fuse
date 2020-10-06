@@ -36,8 +36,6 @@ class Fuse(pyfuse3.Operations):
 
         self.root = Root(fuse=self)
 
-        self._inode2path: Dict[int, Path] = {self.root.inode: root_path}
-
         self.time_ns: int = time.time_ns()  # start time, used as timestamp
         self.gid = os.getgid()
         self.uid = os.getuid()
@@ -67,14 +65,6 @@ class Fuse(pyfuse3.Operations):
 
         try:
             return self._inode2entry[inode]
-        except KeyError:
-            raise pyfuse3.FUSEError(errno.ENOENT)
-
-    def inode2path(self, inode: int) -> Path:
-        """ Return the path matching a given inode """
-
-        try:
-            return self._inode2path[inode]
         except KeyError:
             raise pyfuse3.FUSEError(errno.ENOENT)
 
@@ -149,10 +139,8 @@ class Fuse(pyfuse3.Operations):
         # opendir() uses inode as directory handle
         inode = fh
 
-        direntry = self.inode2entry(inode)
-        path = self.inode2path(inode)
-
         # TODO: add cache on direntry list?
+        direntry = self.inode2entry(inode)
         next_id = offset + 1
         i = 0
         async for entry in direntry:
@@ -167,7 +155,6 @@ class Fuse(pyfuse3.Operations):
 
             next_id += 1
             self._inode2entry[attrs.st_ino] = entry
-            self._inode2path[attrs.st_ino] = Path(path, entry.name)
 
     async def open(
         self, inode: int, _flags: int, _ctx: pyfuse3.RequestContext
@@ -193,13 +180,11 @@ class Fuse(pyfuse3.Operations):
         """ Look up a directory entry by name and get its attributes """
 
         name = os.fsdecode(name)
-        path = Path(self.inode2path(parent_inode), name)
         parent_entry = self.inode2entry(parent_inode)
 
         async for entry in parent_entry:
             if name == entry.name:
                 attr = await self.get_attrs(entry)
-                self._inode2path[attr.st_ino] = path
                 return attr
 
         logging.error(f"Unknown name during lookup: '{name}'")
