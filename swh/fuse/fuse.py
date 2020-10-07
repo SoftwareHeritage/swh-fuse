@@ -77,11 +77,13 @@ class Fuse(pyfuse3.Operations):
 
         try:
             # TODO: swh-graph API
+            typify = False  # Get the raw JSON from the API
             # TODO: async web API
             loop = asyncio.get_event_loop()
-            metadata = await loop.run_in_executor(None, self.web_api.get, swhid)
+            metadata = await loop.run_in_executor(None, self.web_api.get, swhid, typify)
             await self.cache.metadata.set(swhid, metadata)
-            return metadata
+            # Retrieve it from cache so it is correctly typed
+            return await self.cache.metadata.get(swhid)
         except requests.HTTPError:
             logging.error(f"Unknown SWHID: '{swhid}'")
 
@@ -91,6 +93,9 @@ class Fuse(pyfuse3.Operations):
 
         if swhid.object_type != CONTENT:
             raise pyfuse3.FUSEError(errno.EINVAL)
+
+        # Make sure the metadata cache is also populated with the given SWHID
+        await self.get_metadata(swhid)
 
         cache = await self.cache.blob.get(swhid)
         if cache:
@@ -131,9 +136,7 @@ class Fuse(pyfuse3.Operations):
         # Re-use inode as directory handle
         return inode
 
-    async def readdir(
-        self, fh: int, offset: int, token: pyfuse3.ReaddirToken
-    ) -> None:
+    async def readdir(self, fh: int, offset: int, token: pyfuse3.ReaddirToken) -> None:
         """ Read entries in an open directory """
 
         # opendir() uses inode as directory handle

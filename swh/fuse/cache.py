@@ -10,7 +10,7 @@ from typing import Any, AsyncGenerator, Dict, Optional
 import aiosqlite
 
 from swh.model.identifiers import SWHID, parse_swhid
-from swh.web.client.client import typify
+from swh.web.client.client import typify_json
 
 
 class FuseCache:
@@ -47,16 +47,13 @@ class FuseCache:
     async def get_cached_swhids(self) -> AsyncGenerator[SWHID, None]:
         """ Return a list of all previously cached SWHID """
 
-        meta_cursor = await self.metadata.conn.execute(
+        # Use the metadata db since it should always contain all accessed SWHIDs
+        metadata_cursor = await self.metadata.conn.execute(
             "select swhid from metadata_cache"
         )
-        blob_cursor = await self.blob.conn.execute("select swhid from blob_cache")
-        # Some entries can be in one cache but not in the other so create a set
-        # from all caches
-        swhids = await meta_cursor.fetchall() + await blob_cursor.fetchall()
-        swhids = [parse_swhid(x[0]) for x in swhids]
-        for swhid in set(swhids):
-            yield swhid
+        swhids = await metadata_cursor.fetchall()
+        for raw_swhid in swhids:
+            yield parse_swhid(raw_swhid[0])
 
 
 class AbstractCache(ABC):
@@ -92,30 +89,21 @@ class MetadataCache(AbstractCache):
         )
         return self
 
-    async def get(self, swhid: SWHID) -> Any:
+    async def get(self, swhid: SWHID, typify: bool = True) -> Any:
         cursor = await self.conn.execute(
             "select metadata from metadata_cache where swhid=?", (str(swhid),)
         )
         cache = await cursor.fetchone()
         if cache:
             metadata = json.loads(cache[0])
-            return typify(metadata, swhid.object_type)
+            return typify_json(metadata, swhid.object_type) if typify else metadata
         else:
             return None
 
     async def set(self, swhid: SWHID, metadata: Any) -> None:
         await self.conn.execute(
             "insert into metadata_cache values (?, ?)",
-            (
-                str(swhid),
-                json.dumps(
-                    metadata,
-                    # Converts the typified JSON to plain str version
-                    default=lambda x: (
-                        x.object_id if isinstance(x, SWHID) else x.__dict__
-                    ),
-                ),
-            ),
+            (str(swhid), json.dumps(metadata)),
         )
 
 

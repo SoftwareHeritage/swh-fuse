@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import json
 from typing import AsyncIterator
 
 from swh.fuse.fs.artifact import typify
@@ -68,8 +69,9 @@ class MetaEntry(FuseEntry):
         self.swhid = swhid
 
     async def content(self) -> bytes:
-        metadata = await self.fuse.get_metadata(self.swhid)
-        return str(metadata).encode()
+        # Get raw JSON metadata from API (un-typified)
+        metadata = await self.fuse.cache.metadata.get(self.swhid, typify=False)
+        return json.dumps(metadata).encode()
 
     async def length(self) -> int:
         return len(await self.content())
