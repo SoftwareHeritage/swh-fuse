@@ -5,9 +5,6 @@
 
 from enum import IntEnum
 from stat import S_IFDIR, S_IFREG
-from typing import Any
-
-from swh.model.identifiers import SWHID
 
 # Avoid cycling import
 Fuse = "Fuse"
@@ -49,19 +46,3 @@ class FuseEntry:
 
     async def __aiter__(self):
         return None
-
-
-class ArtifactEntry(FuseEntry):
-    """ FUSE virtual entry for a Software Heritage Artifact
-
-    Attributes:
-        swhid: Software Heritage persistent identifier
-        prefetch: optional prefetched metadata used to set entry attributes
-    """
-
-    def __init__(
-        self, name: str, mode: int, fuse: Fuse, swhid: SWHID, prefetch: Any = None
-    ):
-        super().__init__(name, mode, fuse)
-        self.swhid = swhid
-        self.prefetch = prefetch

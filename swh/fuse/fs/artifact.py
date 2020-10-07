@@ -5,18 +5,36 @@
 
 from typing import Any, AsyncIterator
 
-from swh.fuse.fs.entry import ArtifactEntry, EntryMode
+from swh.fuse.fs.entry import EntryMode, FuseEntry
 from swh.model.identifiers import CONTENT, DIRECTORY, SWHID
 
 # Avoid cycling import
 Fuse = "Fuse"
 
 
-def typify(name: str, mode: int, fuse: Fuse, swhid: SWHID, prefetch: Any = None) -> Any:
+class ArtifactEntry(FuseEntry):
+    """ FUSE virtual entry for a Software Heritage Artifact
+
+    Attributes:
+        swhid: Software Heritage persistent identifier
+        prefetch: optional prefetched metadata used to set entry attributes
+    """
+
+    def __init__(
+        self, name: str, mode: int, fuse: Fuse, swhid: SWHID, prefetch: Any = None
+    ):
+        super().__init__(name, mode, fuse)
+        self.swhid = swhid
+        self.prefetch = prefetch
+
+
+def typify(
+    name: str, mode: int, fuse: Fuse, swhid: SWHID, prefetch: Any = None
+) -> ArtifactEntry:
     """ Create an artifact entry corresponding to the given artifact type """
 
-    constructor = {CONTENT: Content, DIRECTORY: Directory}
-    return constructor[swhid.object_type](name, mode, fuse, swhid, prefetch)
+    getters = {CONTENT: Content, DIRECTORY: Directory}
+    return getters[swhid.object_type](name, mode, fuse, swhid, prefetch)
 
 
 class Content(ArtifactEntry):
