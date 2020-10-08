@@ -16,7 +16,7 @@ import yaml
 
 from swh.fuse import cli
 
-from .api_data import API_URL, MOCK_ARCHIVE, ROOT_SWHID
+from .api_data import API_URL, MOCK_ARCHIVE, ROOTDIR_SWHID, ROOTREV_SWHID
 
 
 @pytest.fixture
@@ -44,7 +44,14 @@ def fuse_mntdir(web_api_mock):
             config_path.write_text(yaml.dump(config))
             CliRunner().invoke(
                 cli.mount,
-                args=[mntdir, ROOT_SWHID, "--foreground", "--config-file", config_path],
+                args=[
+                    mntdir,
+                    ROOTDIR_SWHID,
+                    ROOTREV_SWHID,
+                    "--foreground",
+                    "--config-file",
+                    config_path,
+                ],
             )
 
     fuse = Process(target=fuse_process, args=[tmpdir, tmpfile])

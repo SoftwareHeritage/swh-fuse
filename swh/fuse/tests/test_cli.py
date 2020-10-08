@@ -5,13 +5,13 @@
 
 from pathlib import Path
 
-from .api_data import ROOT_SWHID
+from .api_data import ROOTDIR_SWHID
 
 
 def test_mountpoint(fuse_mntdir):
     archive_dir = Path(fuse_mntdir, "archive")
     meta_dir = Path(fuse_mntdir, "meta")
-    swhid_dir = Path(fuse_mntdir, "archive", ROOT_SWHID)
+    swhid_dir = Path(fuse_mntdir, "archive", ROOTDIR_SWHID)
     assert archive_dir.is_dir()
     assert meta_dir.is_dir()
     assert swhid_dir.is_dir()

@@ -3,12 +3,90 @@
 # fmt: off
 
 API_URL = 'https://invalid-test-only.archive.softwareheritage.org/api/1'
-ROOT_SWHID = 'swh:1:dir:9eb62ef7dd283f7385e7d31af6344d9feedd25de'
-ROOT_URL = 'directory/9eb62ef7dd283f7385e7d31af6344d9feedd25de/'
+ROOTREV_SWHID = 'swh:1:rev:d012a7190fc1fd72ed48911e77ca97ba4521bccd'
+ROOTDIR_SWHID = 'swh:1:dir:9eb62ef7dd283f7385e7d31af6344d9feedd25de'
+ROOTREV_URL = 'revision/d012a7190fc1fd72ed48911e77ca97ba4521bccd/'
+ROOTREV_PARENT_URL = 'revision/cb95712138ec5e480db5160b41172bbc6f6494cc/'
+ROOTDIR_URL = 'directory/9eb62ef7dd283f7385e7d31af6344d9feedd25de/'
 README_URL = 'content/sha1_git:669ac7c32292798644b21dbb5a0dc657125f444d/'
 README_RAW_URL = 'content/sha1_git:669ac7c32292798644b21dbb5a0dc657125f444d/raw/'
 
 MOCK_ARCHIVE = {
+    'revision/d012a7190fc1fd72ed48911e77ca97ba4521bccd/':  # NoQA: E501
+    r"""{
+  "author": {
+    "email": "torvalds@linux-foundation.org",
+    "fullname": "Linus Torvalds <torvalds@linux-foundation.org>",
+    "name": "Linus Torvalds"
+  },
+  "committer": {
+    "email": "torvalds@linux-foundation.org",
+    "fullname": "Linus Torvalds <torvalds@linux-foundation.org>",
+    "name": "Linus Torvalds"
+  },
+  "committer_date": "2020-08-23T14:08:43-07:00",
+  "date": "2020-08-23T14:08:43-07:00",
+  "directory": "9eb62ef7dd283f7385e7d31af6344d9feedd25de",
+  "directory_url": "https://archive.softwareheritage.org/api/1/directory/9eb62ef7dd283f7385e7d31af6344d9feedd25de/",
+  "extra_headers": [],
+  "history_url": "https://archive.softwareheritage.org/api/1/revision/d012a7190fc1fd72ed48911e77ca97ba4521bccd/log/",
+  "id": "d012a7190fc1fd72ed48911e77ca97ba4521bccd",
+  "merge": false,
+  "message": "Linux 5.9-rc2\n",
+  "metadata": {},
+  "parents": [
+    {
+      "id": "cb95712138ec5e480db5160b41172bbc6f6494cc",
+      "url": "https://archive.softwareheritage.org/api/1/revision/cb95712138ec5e480db5160b41172bbc6f6494cc/"
+    }
+  ],
+  "synthetic": false,
+  "type": "git",
+  "url": "https://archive.softwareheritage.org/api/1/revision/d012a7190fc1fd72ed48911e77ca97ba4521bccd/"
+}
+""",  # NoQA: E501
+    'revision/cb95712138ec5e480db5160b41172bbc6f6494cc/':  # NoQA: E501
+    r"""{
+  "author": {
+    "email": "torvalds@linux-foundation.org",
+    "fullname": "Linus Torvalds <torvalds@linux-foundation.org>",
+    "name": "Linus Torvalds"
+  },
+  "committer": {
+    "email": "torvalds@linux-foundation.org",
+    "fullname": "Linus Torvalds <torvalds@linux-foundation.org>",
+    "name": "Linus Torvalds"
+  },
+  "committer_date": "2020-08-23T11:37:23-07:00",
+  "date": "2020-08-23T11:37:23-07:00",
+  "directory": "4fa3b43d90ce69b46916cc3fd3ea1d15de70443d",
+  "directory_url": "https://archive.softwareheritage.org/api/1/directory/4fa3b43d90ce69b46916cc3fd3ea1d15de70443d/",
+  "extra_headers": [
+    [
+      "mergetag",
+      "object 64ef8f2c4791940d7f3945507b6a45c20d959260\ntype commit\ntag powerpc-5.9-3\ntagger Michael Ellerman <mpe@ellerman.id.au> 1598185676 +1000\n\npowerpc fixes for 5.9 #3\n\nAdd perf support for emitting extended registers for power10.\n\nA fix for CPU hotplug on pseries, where on large/loaded systems we may not wait\nlong enough for the CPU to be offlined, leading to crashes.\n\nAddition of a raw cputable entry for Power10, which is not required to boot, but\nis required to make our PMU setup work correctly in guests.\n\nThree fixes for the recent changes on 32-bit Book3S to move modules into their\nown segment for strict RWX.\n\nA fix for a recent change in our powernv PCI code that could lead to crashes.\n\nA change to our perf interrupt accounting to avoid soft lockups when using some\nevents, found by syzkaller.\n\nA change in the way we handle power loss events from the hypervisor on pseries.\nWe no longer immediately shut down if we're told we're running on a UPS.\n\nA few other minor fixes.\n\nThanks to:\n  Alexey Kardashevskiy, Andreas Schwab, Aneesh Kumar K.V, Anju T Sudhakar,\n  Athira Rajeev, Christophe Leroy, Frederic Barrat, Greg Kurz, Kajol Jain,\n  Madhavan Srinivasan, Michael Neuling, Michael Roth, Nageswara R Sastry, Oliver\n  O'Halloran, Thiago Jung Bauermann, Vaidyanathan Srinivasan, Vasant Hegde.\n-----BEGIN PGP SIGNATURE-----\n\niQJHBAABCAAxFiEEJFGtCPCthwEv2Y/bUevqPMjhpYAFAl9CYMwTHG1wZUBlbGxl\ncm1hbi5pZC5hdQAKCRBR6+o8yOGlgC/wEACljEVnfHzUObmIgqn9Ru3JlfEI6Hlk\nts7kajCgS/I/bV6DoDMZ8rlZX87QFOwiBkNM1I+vGHSLAuzsmFAnbFPyxw/idxpQ\nXUoNy8OCvbbzCPzChYdiU0PxW2h2i+QxkmktlWSN1SAPudJUWvoPS2Y4+sC4zksk\nB4B6tbW2DT8TFO1kKeZsU9r2t+EH5KwlIOi+uxbH8d76lJINKkBNSnjzMytl7drM\nTZx/HWr8+s/WJo1787x6bv8gxs5tV9b4vIKt2YZNTY2kvYsEDE+fBR1XfCAneXMw\nASYnZV+/xCLIUpRF6DI4RAShLBT/Sfiy1yMTndZgfqAgquokFosszNx2zrk0IzCd\nAgqX93YGbGz/H72W3Y/B0W9+74XyO/u2D9zhNpkCRMpdcsM5MbvOQrQA5Ustu47E\nav5MOaF/nNCd8J+OC4Qjgt5VFb/s0h4FdtrwT80srOa2U6Of9cD/T6xAfOszSJ96\ncWdSb5qhn5wuD9pP32KjwdmWBiUw38/gnRGKpRlOVzyHL/GKZijyaBbWBlkoEmty\n0nbjWW/IVfsOb5Weuiybg541h/QOVuOkb2pOvPClITiH83MY/AciDJ+auo4M//hW\nhaKz9IgV/KctmzDE+v9d0BD8sGmW03YUcQAPdRufI0eGXijDLcnHeuk2B3Nu84Pq\n8mtev+VQ+T6cZA==\n=sdJ1\n-----END PGP SIGNATURE-----"
+    ]
+  ],
+  "history_url": "https://archive.softwareheritage.org/api/1/revision/cb95712138ec5e480db5160b41172bbc6f6494cc/log/",
+  "id": "cb95712138ec5e480db5160b41172bbc6f6494cc",
+  "merge": true,
+  "message": "Merge tag 'powerpc-5.9-3' of git://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux\n\nPull powerpc fixes from Michael Ellerman:\n\n - Add perf support for emitting extended registers for power10.\n\n - A fix for CPU hotplug on pseries, where on large/loaded systems we\n   may not wait long enough for the CPU to be offlined, leading to\n   crashes.\n\n - Addition of a raw cputable entry for Power10, which is not required\n   to boot, but is required to make our PMU setup work correctly in\n   guests.\n\n - Three fixes for the recent changes on 32-bit Book3S to move modules\n   into their own segment for strict RWX.\n\n - A fix for a recent change in our powernv PCI code that could lead to\n   crashes.\n\n - A change to our perf interrupt accounting to avoid soft lockups when\n   using some events, found by syzkaller.\n\n - A change in the way we handle power loss events from the hypervisor\n   on pseries. We no longer immediately shut down if we're told we're\n   running on a UPS.\n\n - A few other minor fixes.\n\nThanks to Alexey Kardashevskiy, Andreas Schwab, Aneesh Kumar K.V, Anju T\nSudhakar, Athira Rajeev, Christophe Leroy, Frederic Barrat, Greg Kurz,\nKajol Jain, Madhavan Srinivasan, Michael Neuling, Michael Roth,\nNageswara R Sastry, Oliver O'Halloran, Thiago Jung Bauermann,\nVaidyanathan Srinivasan, Vasant Hegde.\n\n* tag 'powerpc-5.9-3' of git://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux:\n  powerpc/perf/hv-24x7: Move cpumask file to top folder of hv-24x7 driver\n  powerpc/32s: Fix module loading failure when VMALLOC_END is over 0xf0000000\n  powerpc/pseries: Do not initiate shutdown when system is running on UPS\n  powerpc/perf: Fix soft lockups due to missed interrupt accounting\n  powerpc/powernv/pci: Fix possible crash when releasing DMA resources\n  powerpc/pseries/hotplug-cpu: wait indefinitely for vCPU death\n  powerpc/32s: Fix is_module_segment() when MODULES_VADDR is defined\n  powerpc/kasan: Fix KASAN_SHADOW_START on BOOK3S_32\n  powerpc/fixmap: Fix the size of the early debug area\n  powerpc/pkeys: Fix build error with PPC_MEM_KEYS disabled\n  powerpc/kernel: Cleanup machine check function declarations\n  powerpc: Add POWER10 raw mode cputable entry\n  powerpc/perf: Add extended regs support for power10 platform\n  powerpc/perf: Add support for outputting extended regs in perf intr_regs\n  powerpc: Fix P10 PVR revision in /proc/cpuinfo for SMT4 cores\n",
+  "metadata": {},
+  "parents": [
+    {
+      "id": "550c2129d93d5eb198835ac83c05ef672e8c491c",
+      "url": "https://archive.softwareheritage.org/api/1/revision/550c2129d93d5eb198835ac83c05ef672e8c491c/"
+    },
+    {
+      "id": "64ef8f2c4791940d7f3945507b6a45c20d959260",
+      "url": "https://archive.softwareheritage.org/api/1/revision/64ef8f2c4791940d7f3945507b6a45c20d959260/"
+    }
+  ],
+  "synthetic": false,
+  "type": "git",
+  "url": "https://archive.softwareheritage.org/api/1/revision/cb95712138ec5e480db5160b41172bbc6f6494cc/"
+}
+""",  # NoQA: E501
     'directory/9eb62ef7dd283f7385e7d31af6344d9feedd25de/':  # NoQA: E501
     r"""[
   {

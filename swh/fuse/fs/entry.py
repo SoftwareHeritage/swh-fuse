@@ -3,8 +3,13 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from enum import IntEnum
-from stat import S_IFDIR, S_IFREG
+from pathlib import Path
+from stat import S_IFDIR, S_IFLNK, S_IFREG
+from typing import Any, AsyncIterator, Union
 
 # Avoid cycling import
 Fuse = "Fuse"
@@ -20,8 +25,10 @@ class EntryMode(IntEnum):
 
     RDONLY_FILE = S_IFREG | 0o444
     RDONLY_DIR = S_IFDIR | 0o555
+    SYMLINK = S_IFLNK | 0o444
 
 
+@dataclass
 class FuseEntry:
     """ Main wrapper class to manipulate virtual FUSE entries
 
@@ -32,17 +39,37 @@ class FuseEntry:
         inode: unique integer identifying the entry
     """
 
-    def __init__(self, name: str, mode: int, fuse: Fuse):
-        self.name = name
-        self.mode = mode
-        self.fuse = fuse
-        self.inode = fuse._alloc_inode(self)
+    name: str
+    mode: int
+    depth: int
+    fuse: Fuse
+    inode: int = field(init=False)
 
-    async def length(self) -> int:
+    def __post_init__(self):
+        self.inode = self.fuse._alloc_inode(self)
+
+    async def get_content(self) -> bytes:
+        """ Return the content of a file entry """
+
+        return None
+
+    async def size(self) -> int:
+        """ Return the size of a file entry """
+
         return 0
 
-    async def content(self):
+    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+        """ Return the child entries of a directory entry """
+
+        yield None
+
+    def get_target(self) -> Union[str, bytes, Path]:
+        """ Return the path target of a symlink entry """
+
         return None
 
-    async def __aiter__(self):
-        return None
+    def get_relative_root_path(self) -> str:
+        return "../" * (self.depth - 1)
+
+    def create_child(self, constructor: Any, **kwargs) -> FuseEntry:
+        return constructor(depth=self.depth + 1, fuse=self.fuse, **kwargs)

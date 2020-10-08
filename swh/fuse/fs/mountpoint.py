@@ -3,34 +3,35 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from dataclasses import dataclass, field
 import json
 from typing import AsyncIterator
 
-from swh.fuse.fs.artifact import typify
+from swh.fuse.fs.artifact import OBJTYPE_GETTERS
 from swh.fuse.fs.entry import EntryMode, FuseEntry
 from swh.model.identifiers import CONTENT, SWHID
 
-# Avoid cycling import
-Fuse = "Fuse"
 
-
+@dataclass
 class Root(FuseEntry):
     """ The FUSE mountpoint, consisting of the archive/ and meta/ directories """
 
-    def __init__(self, fuse: Fuse):
-        super().__init__(name="root", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
+    name: str = field(init=False, default=None)
+    mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
+    depth: int = field(init=False, default=1)
 
     async def __aiter__(self) -> AsyncIterator[FuseEntry]:
-        for entry in [ArchiveDir(self.fuse), MetaDir(self.fuse)]:
-            yield entry
+        yield self.create_child(ArchiveDir)
+        yield self.create_child(MetaDir)
 
 
+@dataclass
 class ArchiveDir(FuseEntry):
     """ The archive/ directory is lazily populated with one entry per accessed
     SWHID, having actual SWHIDs as names """
 
-    def __init__(self, fuse: Fuse):
-        super().__init__(name="archive", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
+    name: str = field(init=False, default="archive")
+    mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
 
     async def __aiter__(self) -> AsyncIterator[FuseEntry]:
         async for swhid in self.fuse.cache.get_cached_swhids():
@@ -38,9 +39,15 @@ class ArchiveDir(FuseEntry):
                 mode = EntryMode.RDONLY_FILE
             else:
                 mode = EntryMode.RDONLY_DIR
-            yield typify(str(swhid), int(mode), self.fuse, swhid)
+            yield self.create_child(
+                OBJTYPE_GETTERS[swhid.object_type],
+                name=str(swhid),
+                mode=int(mode),
+                swhid=swhid,
+            )
 
 
+@dataclass
 class MetaDir(FuseEntry):
     """ The meta/ directory contains one SWHID.json file for each SWHID entry
     under archive/. The JSON file contain all available meta information about
@@ -49,29 +56,31 @@ class MetaDir(FuseEntry):
     branches) the JSON file will contain a complete version with all pages
     merged together. """
 
-    def __init__(self, fuse: Fuse):
-        super().__init__(name="meta", mode=int(EntryMode.RDONLY_DIR), fuse=fuse)
+    name: str = field(init=False, default="meta")
+    mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
 
     async def __aiter__(self) -> AsyncIterator[FuseEntry]:
         async for swhid in self.fuse.cache.get_cached_swhids():
-            yield MetaEntry(swhid, self.fuse)
+            yield self.create_child(
+                MetaEntry,
+                name=f"{swhid}.json",
+                mode=int(EntryMode.RDONLY_FILE),
+                swhid=swhid,
+            )
 
 
+@dataclass
 class MetaEntry(FuseEntry):
     """ An entry from the meta/ directory, containing for each accessed SWHID a
     corresponding SWHID.json file with all the metadata from the Software
     Heritage archive. """
 
-    def __init__(self, swhid: SWHID, fuse: Fuse):
-        super().__init__(
-            name=str(swhid) + ".json", mode=int(EntryMode.RDONLY_FILE), fuse=fuse
-        )
-        self.swhid = swhid
+    swhid: SWHID
 
-    async def content(self) -> bytes:
+    async def get_content(self) -> bytes:
         # Get raw JSON metadata from API (un-typified)
         metadata = await self.fuse.cache.metadata.get(self.swhid, typify=False)
         return json.dumps(metadata).encode()
 
-    async def length(self) -> int:
-        return len(await self.content())
+    async def size(self) -> int:
+        return len(await self.get_content())

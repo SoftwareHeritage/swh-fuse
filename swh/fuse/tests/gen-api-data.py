@@ -13,13 +13,18 @@ API_URL_real = "https://archive.softwareheritage.org/api/1"
 API_URL_test = "https://invalid-test-only.archive.softwareheritage.org/api/1"
 
 # Use the Linux kernel as a testing repository
-ROOT_HASH = "9eb62ef7dd283f7385e7d31af6344d9feedd25de"
+ROOTREV_HASH = "d012a7190fc1fd72ed48911e77ca97ba4521bccd"
+ROOTREV_PARENT_HASH = "cb95712138ec5e480db5160b41172bbc6f6494cc"
+ROOTDIR_HASH = "9eb62ef7dd283f7385e7d31af6344d9feedd25de"
 README_HASH = "669ac7c32292798644b21dbb5a0dc657125f444d"
 
-ROOT_SWHID = f"swh:1:dir:{ROOT_HASH}"
+ROOTREV_SWHID = f"swh:1:rev:{ROOTREV_HASH}"
+ROOTDIR_SWHID = f"swh:1:dir:{ROOTDIR_HASH}"
 
 urls = {
-    "ROOT": f"directory/{ROOT_HASH}/",
+    "ROOTREV": f"revision/{ROOTREV_HASH}/",
+    "ROOTREV_PARENT": f"revision/{ROOTREV_PARENT_HASH}/",
+    "ROOTDIR": f"directory/{ROOTDIR_HASH}/",
     "README": f"content/sha1_git:{README_HASH}/",
     "README_RAW": f"content/sha1_git:{README_HASH}/raw/",
 }
@@ -30,7 +35,8 @@ print("# fmt: off")
 
 print("")
 print(f"API_URL = '{API_URL_test}'")
-print(f"ROOT_SWHID = '{ROOT_SWHID}'")
+print(f"ROOTREV_SWHID = '{ROOTREV_SWHID}'")
+print(f"ROOTDIR_SWHID = '{ROOTDIR_SWHID}'")
 for name, url in urls.items():
     print(f"{name}_URL = '{url}'")
 print("")

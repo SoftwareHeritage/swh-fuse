@@ -119,7 +119,7 @@ class Fuse(pyfuse3.Operations):
         attrs.st_uid = self.uid
         attrs.st_ino = entry.inode
         attrs.st_mode = entry.mode
-        attrs.st_size = await entry.length()
+        attrs.st_size = await entry.size()
         return attrs
 
     async def getattr(
@@ -174,7 +174,7 @@ class Fuse(pyfuse3.Operations):
         inode = fh
 
         entry = self.inode2entry(inode)
-        data = await entry.content()
+        data = await entry.get_content()
         return data[offset : offset + length]
 
     async def lookup(
@@ -192,6 +192,10 @@ class Fuse(pyfuse3.Operations):
 
         logging.error(f"Unknown name during lookup: '{name}'")
         raise pyfuse3.FUSEError(errno.ENOENT)
+
+    async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
+        entry = self.inode2entry(inode)
+        return os.fsencode(entry.get_target())
 
 
 async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
