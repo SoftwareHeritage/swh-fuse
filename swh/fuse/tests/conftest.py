@@ -64,3 +64,4 @@ def fuse_mntdir(web_api_mock):
     yield tmpdir.name
 
     subprocess.run(["fusermount", "-u", tmpdir.name], check=True)
+    fuse.join()
