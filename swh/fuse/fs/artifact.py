@@ -39,7 +39,8 @@ class Content(ArtifactEntry):
 
     async def get_content(self) -> bytes:
         data = await self.fuse.get_blob(self.swhid)
-        self.prefetch["length"] = len(data)
+        if not self.prefetch:
+            self.prefetch = {"length": len(data)}
         return data
 
     async def size(self) -> int:
