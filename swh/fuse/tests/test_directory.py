@@ -1,30 +1,29 @@
-from os import listdir, readlink
-from pathlib import Path
+import os
 
 from swh.fuse.tests.common import get_data_from_archive
 from swh.fuse.tests.data.config import DIR_WITH_SUBMODULES, ROOT_DIR
 
 
 def test_list_dir(fuse_mntdir):
-    dir_path = Path(fuse_mntdir, "archive", ROOT_DIR)
+    dir_path = fuse_mntdir / "archive" / ROOT_DIR
     dir_meta = get_data_from_archive(ROOT_DIR)
     expected = [x["name"] for x in dir_meta]
-    actual = listdir(dir_path)
+    actual = os.listdir(dir_path)
     assert set(actual) == set(expected)
 
 
 def test_access_file(fuse_mntdir):
-    file_path = Path(fuse_mntdir, "archive", ROOT_DIR, "README.md")
+    file_path = fuse_mntdir / "archive" / ROOT_DIR / "README.md"
     assert file_path.is_file()
 
 
 def test_access_subdir(fuse_mntdir):
-    dir_path = Path(fuse_mntdir, "archive", ROOT_DIR, "src")
+    dir_path = fuse_mntdir / "archive" / ROOT_DIR / "src"
     assert dir_path.is_dir()
 
 
 def test_access_submodule_entries(fuse_mntdir):
-    dir_path = Path(fuse_mntdir, "archive", DIR_WITH_SUBMODULES)
+    dir_path = fuse_mntdir / "archive" / DIR_WITH_SUBMODULES
     submodules = {
         "book": "swh:1:rev:87dd6843678575f8dda962f239d14ef4be14b352",
         "edition-guide": "swh:1:rev:1a2390247ad6d08160e0dd74f40a01a9578659c2",
@@ -36,4 +35,4 @@ def test_access_submodule_entries(fuse_mntdir):
     }
     for filename, swhid in submodules.items():
         target = f"../../archive/{swhid}"
-        assert readlink(Path(dir_path, filename)) == target
+        assert os.readlink(dir_path / filename) == target

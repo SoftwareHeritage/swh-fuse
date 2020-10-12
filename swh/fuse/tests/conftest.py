@@ -5,7 +5,7 @@
 
 import json
 from multiprocessing import Process
-from os import listdir
+import os
 from pathlib import Path
 import subprocess
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -46,13 +46,7 @@ def fuse_mntdir(web_api_mock):
             config_path = Path(config_path.name)
             config_path.write_text(yaml.dump(config))
             CliRunner().invoke(
-                cli.mount,
-                args=[
-                    mntdir,
-                    "--foreground",
-                    "--config-file",
-                    config_path,
-                ],
+                cli.mount, args=[mntdir, "--foreground", "--config-file", config_path,],
             )
 
     fuse = Process(target=fuse_process, args=[tmpdir, tmpfile])
@@ -60,7 +54,7 @@ def fuse_mntdir(web_api_mock):
     # Wait max 3 seconds for the FUSE to correctly mount
     for i in range(30):
         try:
-            root = listdir(tmpdir.name)
+            root = os.listdir(tmpdir.name)
             if root:
                 break
         except FileNotFoundError:
@@ -69,7 +63,7 @@ def fuse_mntdir(web_api_mock):
     else:
         raise FileNotFoundError(f"Could not mount FUSE in {tmpdir.name}")
 
-    yield tmpdir.name
+    yield Path(tmpdir.name)
 
     subprocess.run(["fusermount", "-u", tmpdir.name], check=True)
     fuse.join()

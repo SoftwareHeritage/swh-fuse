@@ -4,14 +4,13 @@
 # See top-level LICENSE file for more information
 
 import os
-from pathlib import Path
 
 from swh.fuse.tests.data.config import REGULAR_FILE
 
 
 def test_mountpoint(fuse_mntdir):
-    archive_dir = Path(fuse_mntdir, "archive")
-    meta_dir = Path(fuse_mntdir, "meta")
+    archive_dir = fuse_mntdir / "archive"
+    meta_dir = fuse_mntdir / "meta"
     assert os.listdir(archive_dir) == []
     assert os.listdir(meta_dir) == []
     # On the fly mounting
