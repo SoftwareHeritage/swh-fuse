@@ -63,6 +63,14 @@ class FuseEntry:
 
         yield None
 
+    async def lookup(self, name: str) -> FuseEntry:
+        """ Look up a FUSE entry by name """
+
+        async for entry in self:
+            if entry.name == name:
+                return entry
+        return None
+
     def get_target(self) -> Union[str, bytes, Path]:
         """ Return the path target of a symlink entry """
 

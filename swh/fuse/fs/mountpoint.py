@@ -9,7 +9,8 @@ from typing import AsyncIterator
 
 from swh.fuse.fs.artifact import OBJTYPE_GETTERS
 from swh.fuse.fs.entry import EntryMode, FuseEntry
-from swh.model.identifiers import CONTENT, SWHID
+from swh.model.exceptions import ValidationError
+from swh.model.identifiers import CONTENT, SWHID, parse_swhid
 
 
 @dataclass
@@ -33,18 +34,34 @@ class ArchiveDir(FuseEntry):
     name: str = field(init=False, default="archive")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
 
+    def create_child(self, swhid: SWHID) -> FuseEntry:
+        if swhid.object_type == CONTENT:
+            mode = EntryMode.RDONLY_FILE
+        else:
+            mode = EntryMode.RDONLY_DIR
+        return super().create_child(
+            OBJTYPE_GETTERS[swhid.object_type],
+            name=str(swhid),
+            mode=int(mode),
+            swhid=swhid,
+        )
+
     async def __aiter__(self) -> AsyncIterator[FuseEntry]:
         async for swhid in self.fuse.cache.get_cached_swhids():
-            if swhid.object_type == CONTENT:
-                mode = EntryMode.RDONLY_FILE
-            else:
-                mode = EntryMode.RDONLY_DIR
-            yield self.create_child(
-                OBJTYPE_GETTERS[swhid.object_type],
-                name=str(swhid),
-                mode=int(mode),
-                swhid=swhid,
-            )
+            yield self.create_child(swhid)
+
+    async def lookup(self, name: str) -> FuseEntry:
+        entry = await super().lookup(name)
+        if entry:
+            return entry
+
+        # On the fly mounting of a new artifact
+        try:
+            swhid = parse_swhid(name)
+            await self.fuse.get_metadata(swhid)
+            return self.create_child(swhid)
+        except ValidationError:
+            return None
 
 
 @dataclass

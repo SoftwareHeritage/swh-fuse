@@ -184,14 +184,12 @@ class Fuse(pyfuse3.Operations):
 
         name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
-
-        async for entry in parent_entry:
-            if name == entry.name:
-                attr = await self.get_attrs(entry)
-                return attr
-
-        logging.error(f"Unknown name during lookup: '{name}'")
-        raise pyfuse3.FUSEError(errno.ENOENT)
+        lookup_entry = await parent_entry.lookup(name)
+        if lookup_entry:
+            return await self.get_attrs(lookup_entry)
+        else:
+            logging.error(f"Unknown name during lookup: '{name}'")
+            raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
         entry = self.inode2entry(inode)
