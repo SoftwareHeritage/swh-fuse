@@ -3,15 +3,17 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import os
 from pathlib import Path
 
-from .api_data import ROOTDIR_SWHID
+from swh.fuse.tests.data.config import REGULAR_FILE
 
 
 def test_mountpoint(fuse_mntdir):
     archive_dir = Path(fuse_mntdir, "archive")
     meta_dir = Path(fuse_mntdir, "meta")
-    swhid_dir = Path(fuse_mntdir, "archive", ROOTDIR_SWHID)
-    assert archive_dir.is_dir()
-    assert meta_dir.is_dir()
-    assert swhid_dir.is_dir()
+    assert os.listdir(archive_dir) == []
+    assert os.listdir(meta_dir) == []
+    # On the fly mounting
+    file_path = archive_dir / REGULAR_FILE
+    assert file_path.is_file()

@@ -1,18 +1,23 @@
-import json
 from os import listdir
 from pathlib import Path
 
-from .api_data import MOCK_ARCHIVE, ROOTDIR_SWHID, ROOTDIR_URL
+from swh.fuse.tests.common import get_data_from_archive
+from swh.fuse.tests.data.config import ROOT_DIR
 
 
-def get_rootdir_entries():
-    rootdir_resp = json.loads(MOCK_ARCHIVE[ROOTDIR_URL])
-    return [entry["name"] for entry in rootdir_resp]
+def test_list_dir(fuse_mntdir):
+    dir_path = Path(fuse_mntdir, "archive", ROOT_DIR)
+    dir_meta = get_data_from_archive(ROOT_DIR)
+    expected = [x["name"] for x in dir_meta]
+    actual = listdir(dir_path)
+    assert set(actual) == set(expected)
 
 
-def test_ls_rootdir(fuse_mntdir):
-    expected = get_rootdir_entries()
+def test_access_file(fuse_mntdir):
+    file_path = Path(fuse_mntdir, "archive", ROOT_DIR, "README.md")
+    assert file_path.is_file()
 
-    rootdir_path = Path(fuse_mntdir, "archive", ROOTDIR_SWHID)
-    actual = listdir(rootdir_path)
-    assert actual == expected
+
+def test_access_subdir(fuse_mntdir):
+    dir_path = Path(fuse_mntdir, "archive", ROOT_DIR, "src")
+    assert dir_path.is_dir()

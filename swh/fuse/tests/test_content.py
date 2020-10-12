@@ -1,16 +1,15 @@
 from pathlib import Path
 
-from .api_data import MOCK_ARCHIVE, README_RAW_URL, ROOTDIR_SWHID
+from swh.fuse.tests.common import assert_file_content, get_data_from_archive
+from swh.fuse.tests.data.config import REGULAR_FILE
 
 
-def test_file_exists(fuse_mntdir):
-    readme_path = Path(fuse_mntdir, "archive", ROOTDIR_SWHID, "README")
-    assert readme_path.is_file()
+def test_access_file(fuse_mntdir):
+    file_path = Path(fuse_mntdir, "archive", REGULAR_FILE)
+    assert file_path.is_file()
 
 
 def test_cat_file(fuse_mntdir):
-    readme_path = Path(fuse_mntdir, "archive", ROOTDIR_SWHID, "README")
-    expected = MOCK_ARCHIVE[README_RAW_URL]
-    with open(readme_path, "r") as f:
-        actual = f.read()
-        assert actual == expected
+    file_path = Path(fuse_mntdir, "archive", REGULAR_FILE)
+    expected = get_data_from_archive(REGULAR_FILE, raw=True)
+    assert_file_content(file_path, expected)

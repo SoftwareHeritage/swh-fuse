@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import json
 from multiprocessing import Process
 from os import listdir
 from pathlib import Path
@@ -15,13 +16,15 @@ import pytest
 import yaml
 
 from swh.fuse import cli
-
-from .api_data import API_URL, MOCK_ARCHIVE, ROOTDIR_SWHID, ROOTREV_SWHID
+from swh.fuse.tests.data.api_data import API_URL, MOCK_ARCHIVE
 
 
 @pytest.fixture
 def web_api_mock(requests_mock):
     for api_call, data in MOCK_ARCHIVE.items():
+        # Convert Python dict JSON into a string (only for non-raw API call)
+        if not api_call.endswith("raw/"):
+            data = json.dumps(data)
         requests_mock.get(f"{API_URL}/{api_call}", text=data)
     return requests_mock
 
@@ -46,8 +49,6 @@ def fuse_mntdir(web_api_mock):
                 cli.mount,
                 args=[
                     mntdir,
-                    ROOTDIR_SWHID,
-                    ROOTREV_SWHID,
                     "--foreground",
                     "--config-file",
                     config_path,
