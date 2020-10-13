@@ -92,7 +92,23 @@ def cli(ctx):
 )
 @click.pass_context
 def mount(ctx, swhids, path, config_file, foreground):
-    """ Mount the Software Heritage archive at the given mount point """
+    """Mount the Software Heritage archive at PATH
+
+    If specified, objects referenced by the given SWHIDs will be prefetched and used to
+    populate the virtual file system (VFS). Otherwise the VFS will be populated
+    on-demand, when accessing its content.
+
+    \b
+    Example:
+
+    \b
+      $ mkdir swhfs
+      $ swh fuse mount swhfs/
+      $ grep printf swhfs/archive/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2
+          printf("Hello, World!");
+      $
+
+    """
 
     from swh.core import config
     from swh.fuse import fuse
