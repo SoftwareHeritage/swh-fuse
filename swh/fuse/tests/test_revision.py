@@ -1,7 +1,7 @@
 import json
 import os
 
-from swh.fuse.tests.common import get_data_from_archive
+from swh.fuse.tests.common import check_dir_name_entries, get_data_from_archive
 from swh.fuse.tests.data.config import ROOT_DIR, ROOT_REV
 
 
@@ -13,10 +13,7 @@ def test_access_meta(fuse_mntdir):
 
 def test_list_root(fuse_mntdir):
     dir_path = fuse_mntdir / "archive" / ROOT_REV / "root"
-    dir_meta = get_data_from_archive(ROOT_DIR)
-    expected = [x["name"] for x in dir_meta]
-    actual = os.listdir(dir_path)
-    assert set(actual) == set(expected)
+    check_dir_name_entries(dir_path, ROOT_DIR)
 
 
 def test_list_parents(fuse_mntdir):

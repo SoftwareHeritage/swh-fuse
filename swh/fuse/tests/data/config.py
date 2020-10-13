@@ -22,8 +22,24 @@ SUBMODULES = [
     "swh:1:rev:92baf7293dd2d418d2ac4b141b0faa822075d9f7",
 ]
 # Release
+ROOT_REL = "swh:1:rel:874f7cbe352033cac5a8bc889847da2fe1d13e9f"
 # TODO
 # Snapshot
 # TODO
 
-ALL_ENTRIES = [REGULAR_FILE, ROOT_DIR, DIR_WITH_SUBMODULES, ROOT_REV, *SUBMODULES]
+# Special corner cases (not from Rust compiler)
+REL_TARGET_CNT = "swh:1:rel:da5f9898d6248ab26277116f54aca855338401d2"
+TARGET_CNT = "swh:1:cnt:be5effea679c057aec2bb020f0241b1d1d660840"
+REL_TARGET_DIR = "swh:1:rel:3a7b2dfffed2945d2933ba4ebc063adba35ddb2e"
+TARGET_DIR = "swh:1:dir:b24d39c928b9c3f440f8e2ec06c78f43d28d87d6"
+
+ALL_ENTRIES = [
+    REGULAR_FILE,
+    ROOT_DIR,
+    DIR_WITH_SUBMODULES,
+    ROOT_REV,
+    *SUBMODULES,
+    ROOT_REL,
+    REL_TARGET_CNT,
+    REL_TARGET_DIR,
+]

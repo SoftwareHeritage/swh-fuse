@@ -12,7 +12,14 @@ from typing import Any, Dict
 import requests
 
 from swh.fuse.tests.data.config import ALL_ENTRIES
-from swh.model.identifiers import CONTENT, DIRECTORY, REVISION, SWHID, parse_swhid
+from swh.model.identifiers import (
+    CONTENT,
+    DIRECTORY,
+    RELEASE,
+    REVISION,
+    SWHID,
+    parse_swhid,
+)
 
 API_URL_real = "https://archive.softwareheritage.org/api/1"
 API_URL_test = "https://invalid-test-only.archive.softwareheritage.org/api/1"
@@ -28,12 +35,29 @@ def swhid2url(swhid: SWHID) -> str:
         CONTENT: "content/sha1_git:",
         DIRECTORY: "directory/",
         REVISION: "revision/",
+        RELEASE: "release/",
     }
 
     return f"{prefix[swhid.object_type]}{swhid.object_id}/"
 
 
-def generate_archive_data(swhid: SWHID, raw: bool = False) -> None:
+def get_short_type(object_type: str) -> str:
+    short_type = {
+        CONTENT: "cnt",
+        DIRECTORY: "dir",
+        REVISION: "rev",
+        RELEASE: "rel",
+    }
+    return short_type[object_type]
+
+
+def generate_archive_data(
+    swhid: SWHID, raw: bool = False, recursive: bool = False
+) -> None:
+    # Already in mock archive
+    if swhid in METADATA and not raw:
+        return
+
     url = swhid2url(swhid)
     SWHID2URL[str(swhid)] = url
 
@@ -47,19 +71,26 @@ def generate_archive_data(swhid: SWHID, raw: bool = False) -> None:
     MOCK_ARCHIVE[url] = data
     METADATA[swhid] = data
 
+    # Retrieve additional needed data for different artifacts (eg: content's
+    # blob data, revision parents, etc.)
+    if recursive:
+        if swhid.object_type == CONTENT:
+            generate_archive_data(swhid, raw=True)
+        elif swhid.object_type == REVISION:
+            for parent in METADATA[swhid]["parents"]:
+                parent_swhid = parse_swhid(f"swh:1:rev:{parent['id']}")
+                # Only retrieve one-level of parent (disable recursivity)
+                generate_archive_data(parent_swhid)
+        elif swhid.object_type == RELEASE:
+            target_type = METADATA[swhid]["target_type"]
+            target_id = METADATA[swhid]["target"]
+            target = parse_swhid(f"swh:1:{get_short_type(target_type)}:{target_id}")
+            generate_archive_data(target, recursive=True)
+
 
 for entry in ALL_ENTRIES:
     swhid = parse_swhid(entry)
-    generate_archive_data(swhid)
-
-    # Retrieve raw blob data for content artifact
-    if swhid.object_type == CONTENT:
-        generate_archive_data(swhid, raw=True)
-    # Retrieve parent commits for revision artifact
-    elif swhid.object_type == REVISION:
-        for parent in METADATA[swhid]["parents"]:
-            parent_swhid = parse_swhid(f"swh:1:rev:{parent['id']}")
-            generate_archive_data(parent_swhid)
+    generate_archive_data(swhid, recursive=True)
 
 print("# GENERATED FILE, DO NOT EDIT.")
 print("# Run './gen-api-data.py > api_data.py' instead.")

@@ -10,7 +10,7 @@ from typing import Any, AsyncIterator, List
 from swh.fuse.fs.entry import EntryMode, FuseEntry
 from swh.fuse.fs.symlink import SymlinkEntry
 from swh.model.from_disk import DentryPerms
-from swh.model.identifiers import CONTENT, DIRECTORY, REVISION, SWHID
+from swh.model.identifiers import CONTENT, DIRECTORY, RELEASE, REVISION, SWHID
 
 
 @dataclass
@@ -176,4 +176,78 @@ class RevisionParents(FuseEntry):
             )
 
 
-OBJTYPE_GETTERS = {CONTENT: Content, DIRECTORY: Directory, REVISION: Revision}
+class Release(ArtifactEntry):
+    """ Software Heritage release artifact.
+
+    Release nodes are represented on the file-system as directories with the
+    following entries:
+
+    - `target`: target node, as a symlink to `archive/<SWHID>`
+    - `target_type`: regular file containing the type of the target SWHID
+    - `root`: present if and only if the release points to something that
+      (transitively) resolves to a directory. When present it is a symlink
+      pointing into `archive/` to the SWHID of the given directory
+    - `meta.json`: metadata for the current node, as a symlink pointing to the
+      relevant `meta/<SWHID>.json` file """
+
+    async def find_root_directory(self, swhid: SWHID) -> SWHID:
+        if swhid.object_type == RELEASE:
+            metadata = await self.fuse.get_metadata(swhid)
+            return await self.find_root_directory(metadata["target"])
+        elif swhid.object_type == REVISION:
+            metadata = await self.fuse.get_metadata(swhid)
+            return metadata["directory"]
+        elif swhid.object_type == DIRECTORY:
+            return swhid
+        else:
+            return None
+
+    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+        metadata = await self.fuse.get_metadata(self.swhid)
+        root_path = self.get_relative_root_path()
+
+        yield self.create_child(
+            SymlinkEntry,
+            name="meta.json",
+            target=Path(root_path, f"meta/{self.swhid}.json"),
+        )
+
+        target = metadata["target"]
+        yield self.create_child(
+            SymlinkEntry, name="target", target=Path(root_path, f"archive/{target}")
+        )
+        yield self.create_child(
+            ReleaseType,
+            name="target_type",
+            mode=int(EntryMode.RDONLY_FILE),
+            target_type=target.object_type,
+        )
+
+        target_dir = await self.find_root_directory(target)
+        if target_dir is not None:
+            yield self.create_child(
+                SymlinkEntry,
+                name="root",
+                target=Path(root_path, f"archive/{target_dir}"),
+            )
+
+
+@dataclass
+class ReleaseType(FuseEntry):
+    """ Release type virtual file """
+
+    target_type: str
+
+    async def get_content(self) -> bytes:
+        return str.encode(self.target_type + "\n")
+
+    async def size(self) -> int:
+        return len(await self.get_content())
+
+
+OBJTYPE_GETTERS = {
+    CONTENT: Content,
+    DIRECTORY: Directory,
+    REVISION: Revision,
+    RELEASE: Release,
+}
