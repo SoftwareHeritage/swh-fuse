@@ -5,6 +5,7 @@
 
 from abc import ABC
 import json
+from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Optional
 
 import aiosqlite
@@ -68,7 +69,8 @@ class AbstractCache(ABC):
         if self.conf.get("in-memory", False):
             path = ":memory:"
         else:
-            path = self.conf["path"]
+            path = Path(self.conf["path"])
+            path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = await aiosqlite.connect(path)
         return self
 
