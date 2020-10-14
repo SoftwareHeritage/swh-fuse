@@ -9,28 +9,13 @@ SWHID2URL = {
     "swh:1:dir:c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578": "directory/c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578/",
     "swh:1:dir:80ae84abc6122c47aae597fde99645f8663d1aba": "directory/80ae84abc6122c47aae597fde99645f8663d1aba/",
     "swh:1:rev:b8cedc00407a4c56a3bda1ed605c6fc166655447": "revision/b8cedc00407a4c56a3bda1ed605c6fc166655447/",
-    "swh:1:rev:b08d07143d2b61777d341f8658281adc0f2ac809": "revision/b08d07143d2b61777d341f8658281adc0f2ac809/",
-    "swh:1:rev:133f659766c60ff7a33288ae6f33b0c272792f57": "revision/133f659766c60ff7a33288ae6f33b0c272792f57/",
     "swh:1:rev:87dd6843678575f8dda962f239d14ef4be14b352": "revision/87dd6843678575f8dda962f239d14ef4be14b352/",
-    "swh:1:rev:6f38be000b6307428c3cee7cd71fb898ccb43d78": "revision/6f38be000b6307428c3cee7cd71fb898ccb43d78/",
-    "swh:1:rev:6fe276d7126cd95d82603e1b50805ca30e587972": "revision/6fe276d7126cd95d82603e1b50805ca30e587972/",
     "swh:1:rev:1a2390247ad6d08160e0dd74f40a01a9578659c2": "revision/1a2390247ad6d08160e0dd74f40a01a9578659c2/",
-    "swh:1:rev:6601cab4666596494a569f94aa63b7b3230e9769": "revision/6601cab4666596494a569f94aa63b7b3230e9769/",
-    "swh:1:rev:7570e6effbb37e2bf855febeb2182b33d14298e1": "revision/7570e6effbb37e2bf855febeb2182b33d14298e1/",
     "swh:1:rev:4d78994915af1bde9a95c04a8c27d8dca066232a": "revision/4d78994915af1bde9a95c04a8c27d8dca066232a/",
-    "swh:1:rev:9493b7d4dc97eda439bd8780f05ad7b234cd1cd7": "revision/9493b7d4dc97eda439bd8780f05ad7b234cd1cd7/",
-    "swh:1:rev:dde3bbc0315e8640668b72c6d8ecb367c53c00e3": "revision/dde3bbc0315e8640668b72c6d8ecb367c53c00e3/",
     "swh:1:rev:3e6e1001dc6e095dbd5c88005e80969f60e384e1": "revision/3e6e1001dc6e095dbd5c88005e80969f60e384e1/",
-    "swh:1:rev:8be35b201f9cf0a4c3fcc96c83ac21671dcf3112": "revision/8be35b201f9cf0a4c3fcc96c83ac21671dcf3112/",
-    "swh:1:rev:ce08025be28869805e0a0b7c643a9655f548c1b5": "revision/ce08025be28869805e0a0b7c643a9655f548c1b5/",
     "swh:1:rev:11e893fc1357bc688418ddf1087c2b7aa25d154d": "revision/11e893fc1357bc688418ddf1087c2b7aa25d154d/",
-    "swh:1:rev:a94b0efafc6198cbe62f9116b6c75c48d32dd80e": "revision/a94b0efafc6198cbe62f9116b6c75c48d32dd80e/",
-    "swh:1:rev:4f647729f75a753d708876ab250a981c3c2a5185": "revision/4f647729f75a753d708876ab250a981c3c2a5185/",
     "swh:1:rev:1c2bd024d13f8011307e13386cf1fea2180352b5": "revision/1c2bd024d13f8011307e13386cf1fea2180352b5/",
-    "swh:1:rev:1d59403cb5269c190cc52a95584ecc280345495a": "revision/1d59403cb5269c190cc52a95584ecc280345495a/",
-    "swh:1:rev:2d39e2894830331fb02b77980a6190e972ad3d68": "revision/2d39e2894830331fb02b77980a6190e972ad3d68/",
     "swh:1:rev:92baf7293dd2d418d2ac4b141b0faa822075d9f7": "revision/92baf7293dd2d418d2ac4b141b0faa822075d9f7/",
-    "swh:1:rev:cf6447aff01e4bcb1fdbc89d6f754451a157589e": "revision/cf6447aff01e4bcb1fdbc89d6f754451a157589e/",
     "swh:1:rel:874f7cbe352033cac5a8bc889847da2fe1d13e9f": "release/874f7cbe352033cac5a8bc889847da2fe1d13e9f/",
     "swh:1:rel:da5f9898d6248ab26277116f54aca855338401d2": "release/da5f9898d6248ab26277116f54aca855338401d2/",
     "swh:1:cnt:be5effea679c057aec2bb020f0241b1d1d660840": "content/sha1_git:be5effea679c057aec2bb020f0241b1d1d660840/",
@@ -936,77 +921,6 @@ MOCK_ARCHIVE = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/b8cedc00407a4c56a3bda1ed605c6fc166655447/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578/",
     },
-    "revision/b08d07143d2b61777d341f8658281adc0f2ac809/": {
-        "message": "Auto merge of #69748 - Mark-Simulacrum:beta-next, r=Mark-Simulacrum\n\n[beta] another round of backports for 1.42\n\nThis backports the following pull requests:\n\n* Fix a leak in `DiagnosticBuilder::into_diagnostic`. #69628\n* stash API: remove panic to fix ICE. #69623\n* Do not ICE on invalid type node after parse recovery #69583\n* Backport only: avoid ICE on bad placeholder type #69324\n* add regression test for issue #68794 #69168\n* Update compiler-builtins to 0.1.25 #69086\n* Update RELEASES.md for 1.42.0 #68989\n",
-        "author": {
-            "fullname": "bors <bors@rust-lang.org>",
-            "name": "bors",
-            "email": "bors@rust-lang.org",
-        },
-        "committer": {
-            "fullname": "bors <bors@rust-lang.org>",
-            "name": "bors",
-            "email": "bors@rust-lang.org",
-        },
-        "date": "2020-03-06T12:32:33+00:00",
-        "committer_date": "2020-03-06T12:32:33+00:00",
-        "type": "git",
-        "directory": "5bb97568442703a61f57d3733bc63b947de50ee4",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "4e1c5f0e9769a588b91c977e3d81e140209ef3a2",
-                "url": "https://archive.softwareheritage.org/api/1/revision/4e1c5f0e9769a588b91c977e3d81e140209ef3a2/",
-            },
-            {
-                "id": "cead378b97b72e1ee8648e92ec2540da89c0cc4f",
-                "url": "https://archive.softwareheritage.org/api/1/revision/cead378b97b72e1ee8648e92ec2540da89c0cc4f/",
-            },
-        ],
-        "id": "b08d07143d2b61777d341f8658281adc0f2ac809",
-        "extra_headers": [],
-        "merge": True,
-        "url": "https://archive.softwareheritage.org/api/1/revision/b08d07143d2b61777d341f8658281adc0f2ac809/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/b08d07143d2b61777d341f8658281adc0f2ac809/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/5bb97568442703a61f57d3733bc63b947de50ee4/",
-    },
-    "revision/133f659766c60ff7a33288ae6f33b0c272792f57/": {
-        "message": "1.42.0 stable release\n",
-        "author": {
-            "fullname": "Pietro Albini <pietro@pietroalbini.org>",
-            "name": "Pietro Albini",
-            "email": "pietro@pietroalbini.org",
-        },
-        "committer": {
-            "fullname": "Pietro Albini <pietro@pietroalbini.org>",
-            "name": "Pietro Albini",
-            "email": "pietro@pietroalbini.org",
-        },
-        "date": "2020-03-09T15:28:32+01:00",
-        "committer_date": "2020-03-09T15:28:32+01:00",
-        "type": "git",
-        "directory": "c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "182b777b587ff706a5277223fed9b2d26c00e34d",
-                "url": "https://archive.softwareheritage.org/api/1/revision/182b777b587ff706a5277223fed9b2d26c00e34d/",
-            }
-        ],
-        "id": "133f659766c60ff7a33288ae6f33b0c272792f57",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\niQIzBAABCAAdFiEE1JbYPtLJAsc22U9xPgar6Auq8ZwFAl5mUpQACgkQPgar6Auq\n8ZxoEA/5AdPBlTAy8evkwaKGS3VlB7Ug+qiQgat192pSydw3aEvElH9v8VvqpO2g\n6GRFV34C4MDh5z8sw+baOo00086Dvgk3tirXXhtal6VrPB9+ySEFhuPc+IisbBDS\n7H9+whkg1encZ88iTzndp/1AKl916gbe0hS6Un+O6ECelN7/NLVndqTHXyZIO6yf\nTYhkEZTJQa1XOox2OwhppphGRhBFcli/sZ5OEN0286718zLVrV9q80Ht4b6iTk5A\nNRdUGbOQzIWI95ym7XKElp+rY53x5DDhn7qVrvJcISt2+PHVbGRLgCVSQeZ/kUM0\nPDAdeyJmFWemB7JBsf3/GmQzFMM5ZWI61ET5oIMIHQla8J2ofBhRH8b/VuPb4IzY\nWBP6A2G79q67iC+EV5T2z9ov1rOwErjh/dgVT9MkuGEpTSJihA2y/+LNNbgn+I/A\nQMeAv3r13+mKR6SWqZcNVP8m+uyFkLDLkkozlAXPtk74ik0wKuChsuPzN8iWWEQQ\nV4Pz3Mp1ZOb/H2HB5WcqF8SNbspOewKfKmegTnz+Ttio+aIRQ20pnj0ioQJ36Q97\n5PmIzTASRnRDaG+pHsf9KPBr/QkxjLhwcw5g2LCmaOA1wKuZoDNo59rElBq4gR9m\nLWP6FFb/gU2/1TmHvePLQpWXsOq3PqJd9+8g14h+l7EvLWnHJxk=\n=P1mG\n-----END PGP SIGNATURE-----",
-            ]
-        ],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/133f659766c60ff7a33288ae6f33b0c272792f57/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/133f659766c60ff7a33288ae6f33b0c272792f57/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578/",
-    },
     "revision/87dd6843678575f8dda962f239d14ef4be14b352/": {
         "message": "Fix listing numbers (#2227)\n\nFix listing numbers",
         "author": {
@@ -1045,82 +959,6 @@ MOCK_ARCHIVE = {
         "merge": True,
         "url": "https://archive.softwareheritage.org/api/1/revision/87dd6843678575f8dda962f239d14ef4be14b352/",
         "history_url": "https://archive.softwareheritage.org/api/1/revision/87dd6843678575f8dda962f239d14ef4be14b352/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/4c1b991bc9997e885308de8a87b05bbd9956a4fb/",
-    },
-    "revision/6f38be000b6307428c3cee7cd71fb898ccb43d78/": {
-        "message": "Merge pull request #2140 from avandesa/master\n\nMove `async` and `await` keywords to 'Currently in Use'",
-        "author": {
-            "fullname": "Steve Klabnik <steve@steveklabnik.com>",
-            "name": "Steve Klabnik",
-            "email": "steve@steveklabnik.com",
-        },
-        "committer": {
-            "fullname": "GitHub <noreply@github.com>",
-            "name": "GitHub",
-            "email": "noreply@github.com",
-        },
-        "date": "2020-01-14T14:21:29-06:00",
-        "committer_date": "2020-01-14T14:21:29-06:00",
-        "type": "git",
-        "directory": "176d8ab9b98c5b7c995406b0ccd3cdbc5e594ca5",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "0beb46523775e0f545ee870abe8a33cbfe69011b",
-                "url": "https://archive.softwareheritage.org/api/1/revision/0beb46523775e0f545ee870abe8a33cbfe69011b/",
-            },
-            {
-                "id": "649523f93fe3147fd409a9a273e294010e19513e",
-                "url": "https://archive.softwareheritage.org/api/1/revision/649523f93fe3147fd409a9a273e294010e19513e/",
-            },
-        ],
-        "id": "6f38be000b6307428c3cee7cd71fb898ccb43d78",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJeHiLJCRBK7hj4Ov3rIwAAdHIIAFIyson4p25SS7+xddEi4A7O\nYxX56mv2GgJJwLO4cjigNgy3lwIlve4PqpYZVIOMLoSs4e4SW/YNq+8z5qkpq3HZ\nitNdmfVpK+aznl7B89s3k7a3niBNysnl+BevaaKm8aHP6vEaCPwSTvnQtKJoY4eW\n7Doa/sIILldEDXQShvZ4XKHQ/EGub+gHmONe7KpcnBNqZ/bSqv65OxxxmjrULeBy\nAnriVxO0YK8xyoIfsTaD20xfQ2Rcsz1bAU0rfIKL6xoFa/zPRyv7lNe6L52N4a88\nkzPQdrTU6TFxVj4HiWH+TufZ5bKt+n3Mw2F0vCM5i3AewURbBDNHd8plOmJ9YNA=\n=XgC2\n-----END PGP SIGNATURE-----\n",
-            ]
-        ],
-        "merge": True,
-        "url": "https://archive.softwareheritage.org/api/1/revision/6f38be000b6307428c3cee7cd71fb898ccb43d78/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/6f38be000b6307428c3cee7cd71fb898ccb43d78/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/176d8ab9b98c5b7c995406b0ccd3cdbc5e594ca5/",
-    },
-    "revision/6fe276d7126cd95d82603e1b50805ca30e587972/": {
-        "message": "Renumber listings following removed listing\n\nListing 20-21 was removed in 37a17ef40ccee85b28963cfe8d83ff8d66bd7717,\nand listing 20-22 was renumbered because it's in the same file as 20-21\nwas, but the rest of the listings in chapter 20 weren't renumbered.\n",
-        "author": {
-            "fullname": "Carol (Nichols || Goulding) <carol.nichols@gmail.com>",
-            "name": "Carol (Nichols || Goulding)",
-            "email": "carol.nichols@gmail.com",
-        },
-        "committer": {
-            "fullname": "Carol (Nichols || Goulding) <carol.nichols@gmail.com>",
-            "name": "Carol (Nichols || Goulding)",
-            "email": "carol.nichols@gmail.com",
-        },
-        "date": "2020-01-20T14:38:04-05:00",
-        "committer_date": "2020-01-20T14:38:04-05:00",
-        "type": "git",
-        "directory": "4c1b991bc9997e885308de8a87b05bbd9956a4fb",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "fefe3ef522b2a88fe3db946f11962d27c00f2b5a",
-                "url": "https://archive.softwareheritage.org/api/1/revision/fefe3ef522b2a88fe3db946f11962d27c00f2b5a/",
-            }
-        ],
-        "id": "6fe276d7126cd95d82603e1b50805ca30e587972",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\niQJMBAABCAA2FiEET6WvJ6ML0pFC5CKw0Es5psokOQIFAl4mAdoYHGNhcm9sLm5p\nY2hvbHNAZ21haWwuY29tAAoJENBLOabKJDkCnOMP/27J4jy4w3u6JDDNeFu0Obs0\njDBsGJkKNfftzunV90zCzakPlyqqsViPh18CY5Q7ZutA1RpOKyQoEjmCFFB+4kCw\niGt3ENV6Nab5MDqCb7OmmhN+x4QLJD+r12XCCpnbFumdHuZ2Xrb1KtNsooU6f9/E\nBpRWd4J6TB+Esf2zGPvkQtlLHYniO13a/pGY88fyc+ejRraZc81rO5iuxi/gM78/\nKRAzE6mveje16UTxE7N5iW7Q0WrpSUE1BAC9mCE6qdztwp3iVYcXQKvJeIsAtaD6\n6ShLwzJVxTGkbNhV6Z0oTLG1U02mJusevucHALtl7b2kpCj72IHB0+vUYJhTBq8Z\nG8xj/Xg/pUPIb/sP26ObFWKh59WnEA+oqaFT/JyfognUE3a7y9sD/vklzTDimWEF\nPTq1e3o1blopeX7KUySJ4bLzOkr7qvvovfknIdvJgfir/jKSspEr10BImENQqqLJ\nA4iejoYiGxIME6zHSxDi6VUnSukdEMThrHx7lDdqdhQdfWZEywtszWCVf0qPqLJd\nImNY6vOwcseGFegh80uWgyxx/FVCarMtE0nhA9Ki/c7BzhD7OuSwIXusCQP5H8Uc\nIs0ZIvxgGjrA6KEiYz9bzZA8INeCT57WoWraqZwbadt8ApDQmzTV47ohrt9QbtLt\nyKakRzGzWNp8HCK8OwEa\n=0/Qr\n-----END PGP SIGNATURE-----",
-            ]
-        ],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/6fe276d7126cd95d82603e1b50805ca30e587972/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/6fe276d7126cd95d82603e1b50805ca30e587972/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/4c1b991bc9997e885308de8a87b05bbd9956a4fb/",
     },
     "revision/1a2390247ad6d08160e0dd74f40a01a9578659c2/": {
@@ -1163,68 +1001,6 @@ MOCK_ARCHIVE = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/1a2390247ad6d08160e0dd74f40a01a9578659c2/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/5f461af28f89e3de5fa7aadbe8e601e61e0318de/",
     },
-    "revision/6601cab4666596494a569f94aa63b7b3230e9769/": {
-        "message": "Remove final nursery reference\n",
-        "author": {
-            "fullname": "Mark Rousskov <mark.simulacrum@gmail.com>",
-            "name": "Mark Rousskov",
-            "email": "mark.simulacrum@gmail.com",
-        },
-        "committer": {
-            "fullname": "Mark Rousskov <mark.simulacrum@gmail.com>",
-            "name": "Mark Rousskov",
-            "email": "mark.simulacrum@gmail.com",
-        },
-        "date": "2019-11-22T12:08:58-05:00",
-        "committer_date": "2019-11-22T12:08:58-05:00",
-        "type": "git",
-        "directory": "1819204fe0f5e6edb8e40c0fa45eda6fecacf9ca",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "f553fb26c60c4623ea88a1cfe731eafe0643ce34",
-                "url": "https://archive.softwareheritage.org/api/1/revision/f553fb26c60c4623ea88a1cfe731eafe0643ce34/",
-            }
-        ],
-        "id": "6601cab4666596494a569f94aa63b7b3230e9769",
-        "extra_headers": [],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/6601cab4666596494a569f94aa63b7b3230e9769/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/6601cab4666596494a569f94aa63b7b3230e9769/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/1819204fe0f5e6edb8e40c0fa45eda6fecacf9ca/",
-    },
-    "revision/7570e6effbb37e2bf855febeb2182b33d14298e1/": {
-        "message": "Updated install and uninstall instructions\n\nrust-lang/rustup#2148\n\nSigned-off-by: zakaluka <zakthrow@gmail.com>\n",
-        "author": {
-            "fullname": "zakaluka <zakthrow@gmail.com>",
-            "name": "zakaluka",
-            "email": "zakthrow@gmail.com",
-        },
-        "committer": {
-            "fullname": "zakaluka <zakthrow@gmail.com>",
-            "name": "zakaluka",
-            "email": "zakthrow@gmail.com",
-        },
-        "date": "2019-12-15T17:54:17-06:00",
-        "committer_date": "2019-12-15T17:54:17-06:00",
-        "type": "git",
-        "directory": "5f461af28f89e3de5fa7aadbe8e601e61e0318de",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "6601cab4666596494a569f94aa63b7b3230e9769",
-                "url": "https://archive.softwareheritage.org/api/1/revision/6601cab4666596494a569f94aa63b7b3230e9769/",
-            }
-        ],
-        "id": "7570e6effbb37e2bf855febeb2182b33d14298e1",
-        "extra_headers": [],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/7570e6effbb37e2bf855febeb2182b33d14298e1/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/7570e6effbb37e2bf855febeb2182b33d14298e1/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/5f461af28f89e3de5fa7aadbe8e601e61e0318de/",
-    },
     "revision/4d78994915af1bde9a95c04a8c27d8dca066232a/": {
         "message": "Merge #221\n\n221: Update .gitattributes r=therealprof a=jethrogb\n\nSee https://github.com/rust-lang/rust/pull/57858\n\nCo-authored-by: jethrogb <github@jbeekman.nl>\n",
         "author": {
@@ -1263,82 +1039,6 @@ MOCK_ARCHIVE = {
         "merge": True,
         "url": "https://archive.softwareheritage.org/api/1/revision/4d78994915af1bde9a95c04a8c27d8dca066232a/",
         "history_url": "https://archive.softwareheritage.org/api/1/revision/4d78994915af1bde9a95c04a8c27d8dca066232a/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/aedfd5f87a2bb6f48d748a3d6e11ce755a5fc531/",
-    },
-    "revision/9493b7d4dc97eda439bd8780f05ad7b234cd1cd7/": {
-        "message": "Merge #218\n\n218: fixed typo in Interrupts.md r=therealprof a=tessi\n\nJust fixing a double-`to` I encountered while reading the book.\r\nThanks for the great content ❤️ \n\nCo-authored-by: Philipp Tessenow <philipp@tessenow.org>\n",
-        "author": {
-            "fullname": "bors[bot] <26634292+bors[bot]@users.noreply.github.com>",
-            "name": "bors[bot]",
-            "email": "26634292+bors[bot]@users.noreply.github.com",
-        },
-        "committer": {
-            "fullname": "GitHub <noreply@github.com>",
-            "name": "GitHub",
-            "email": "noreply@github.com",
-        },
-        "date": "2019-12-27T20:05:00+00:00",
-        "committer_date": "2019-12-27T20:05:00+00:00",
-        "type": "git",
-        "directory": "4d55db54462bbd1a597bb356b3e32f0c6e3e558b",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "c26234930282210849256e4ecab925f0f2daf3be",
-                "url": "https://archive.softwareheritage.org/api/1/revision/c26234930282210849256e4ecab925f0f2daf3be/",
-            },
-            {
-                "id": "b0caac378c3460dc1a1ae3a2949bb4596de0c206",
-                "url": "https://archive.softwareheritage.org/api/1/revision/b0caac378c3460dc1a1ae3a2949bb4596de0c206/",
-            },
-        ],
-        "id": "9493b7d4dc97eda439bd8780f05ad7b234cd1cd7",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJeBmPsCRBK7hj4Ov3rIwAAdHIIAJTqAdHK2awlLKZWaGajbXUT\nrmk7T9gzyA+fe5VQcM33JcXyuRIG8qttrOzA9g87j3+dwDd2hB64MBZxYQ0M3t1+\nxBdGGhCCxi0gPKqG42VlGzugcZiCfCekDwal10FUIA+OScErW1oGVDPX/nKz9Hpf\nNnl2lOG4aFkqleh5R5N559vRx4R1HUMhy1ppuKe+oah5c46U7wB2kPzUzjjiU0lB\nFI4eG/0rkrsIDM1OuOgBZXqGbWRiUH/6+wRGTyCBaX+qhvd1XDwgBmBbZDq8XxQT\n0bLMfiJkCfPXq1pmY9/GJqpSj5BLbT5A7+rqlhmpCS87KNxwcxsrI4ZWs462kys=\n=LOTR\n-----END PGP SIGNATURE-----\n",
-            ]
-        ],
-        "merge": True,
-        "url": "https://archive.softwareheritage.org/api/1/revision/9493b7d4dc97eda439bd8780f05ad7b234cd1cd7/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/9493b7d4dc97eda439bd8780f05ad7b234cd1cd7/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/4d55db54462bbd1a597bb356b3e32f0c6e3e558b/",
-    },
-    "revision/dde3bbc0315e8640668b72c6d8ecb367c53c00e3/": {
-        "message": "Update .gitattributes\n\nSee https://github.com/rust-lang/rust/pull/57858",
-        "author": {
-            "fullname": "jethrogb <github@jbeekman.nl>",
-            "name": "jethrogb",
-            "email": "github@jbeekman.nl",
-        },
-        "committer": {
-            "fullname": "GitHub <noreply@github.com>",
-            "name": "GitHub",
-            "email": "noreply@github.com",
-        },
-        "date": "2020-01-13T20:07:02-08:00",
-        "committer_date": "2020-01-13T20:07:02-08:00",
-        "type": "git",
-        "directory": "aedfd5f87a2bb6f48d748a3d6e11ce755a5fc531",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "9493b7d4dc97eda439bd8780f05ad7b234cd1cd7",
-                "url": "https://archive.softwareheritage.org/api/1/revision/9493b7d4dc97eda439bd8780f05ad7b234cd1cd7/",
-            }
-        ],
-        "id": "dde3bbc0315e8640668b72c6d8ecb367c53c00e3",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJeHT5mCRBK7hj4Ov3rIwAAdHIIAEkv8GVDxPxLvGNYc9Mtdepc\n0Ng7ohLm6+IJAUwu3zT871bSL8g48IHUrWUF8p0WsxQ8wmm11COvp7WvxThqmi3D\nICw4+SnZQc9/IjcPyB+ndOlwwk4xVZ/BXOBSCEARjkrbfIWaIpaMo14qvxHPRpSv\nWzATUaTY4fIPSEjTdBTnte7uJqKyiivL5EKW7JisdA+tgTX5srv/3lJdxnPtWT3Q\n0XYqQdWDfPPPqIFeyG/gaTEhLXpDbOrVlWEzG+iVr0eogv29aWoBwgbeXmSnZULG\nYkoNjZUtNHxVaIJAGONTZby1j6YHlTmVHOu3gOtLm1fgk1F4VxWYF6X/Aw5D6jM=\n=KmtI\n-----END PGP SIGNATURE-----\n",
-            ]
-        ],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/dde3bbc0315e8640668b72c6d8ecb367c53c00e3/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/dde3bbc0315e8640668b72c6d8ecb367c53c00e3/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/aedfd5f87a2bb6f48d748a3d6e11ce755a5fc531/",
     },
     "revision/3e6e1001dc6e095dbd5c88005e80969f60e384e1/": {
@@ -1381,73 +1081,6 @@ MOCK_ARCHIVE = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/3e6e1001dc6e095dbd5c88005e80969f60e384e1/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/2c4e09410c52ffd98d771d370948037d192f6178/",
     },
-    "revision/8be35b201f9cf0a4c3fcc96c83ac21671dcf3112/": {
-        "message": "Update unwinding.md\n\n`catch_unwind` is not unstable anymore",
-        "author": {
-            "fullname": "CreepySkeleton <creepy-skeleton@yandex.ru>",
-            "name": "CreepySkeleton",
-            "email": "creepy-skeleton@yandex.ru",
-        },
-        "committer": {
-            "fullname": "Alexis Beingessner <a.beingessner@gmail.com>",
-            "name": "Alexis Beingessner",
-            "email": "a.beingessner@gmail.com",
-        },
-        "date": "2019-11-04T08:48:21+03:00",
-        "committer_date": "2019-12-01T13:02:12-05:00",
-        "type": "git",
-        "directory": "94bc2d95c2829227a09a3d50abbfec92d7cd6168",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "f2f2e4b60b8e1a9d94466b20bb50a54773ca7955",
-                "url": "https://archive.softwareheritage.org/api/1/revision/f2f2e4b60b8e1a9d94466b20bb50a54773ca7955/",
-            }
-        ],
-        "id": "8be35b201f9cf0a4c3fcc96c83ac21671dcf3112",
-        "extra_headers": [],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/8be35b201f9cf0a4c3fcc96c83ac21671dcf3112/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/8be35b201f9cf0a4c3fcc96c83ac21671dcf3112/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/94bc2d95c2829227a09a3d50abbfec92d7cd6168/",
-    },
-    "revision/ce08025be28869805e0a0b7c643a9655f548c1b5/": {
-        "message": "Remove mention of contravariance possibly getting scrapped\n\nContravariance is part of stable Rust, and it's a natural outcome of how\n`fn(T)` interacts with lifetimes, so it's hard to imagine this ever\ngoing away.\n\ntl;dr: LONG LIVE CONTRAVARIANCE!\n",
-        "author": {
-            "fullname": "Peter Todd <pete@petertodd.org>",
-            "name": "Peter Todd",
-            "email": "pete@petertodd.org",
-        },
-        "committer": {
-            "fullname": "Peter Todd <pete@petertodd.org>",
-            "name": "Peter Todd",
-            "email": "pete@petertodd.org",
-        },
-        "date": "2019-12-12T15:26:04-05:00",
-        "committer_date": "2019-12-12T15:27:44-05:00",
-        "type": "git",
-        "directory": "2c4e09410c52ffd98d771d370948037d192f6178",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "8be35b201f9cf0a4c3fcc96c83ac21671dcf3112",
-                "url": "https://archive.softwareheritage.org/api/1/revision/8be35b201f9cf0a4c3fcc96c83ac21671dcf3112/",
-            }
-        ],
-        "id": "ce08025be28869805e0a0b7c643a9655f548c1b5",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\niQEzBAABCAAdFiEEFcyURjhyM68BBPYTJIFAPaXwkfsFAl3yosQACgkQJIFAPaXw\nkfsU7ggAgaJYJGyVNHlYsIEwpbyuBGPFIleUDAJCjukzmi45mxSL6O378jirBPY2\nCLl2CGn93WI9Z766YuXG/9QHDiWDUH94S3r1hA/+PgzVEXs5bXHmuJ+AIn+HPB9N\n0y8dNUyVvwatSQQ/Uowk8PH7C+K31gB+QRM5GNKJdkEDAlc/aFTkjxQhvtQ3Fhj1\nebG1LT6fGcxMmlZ9K58bIdi0FYPighitpRb1IDleSuqBtaO5xrW4LUR20EDVpB4C\nKPEG5zpEkX0GX3YOYx65P7ockTp3gln3DcEeofA2WVpnH/cKhxMi2Fx2c5pYxlnf\n1mDZgcpLGoORrPHbMJC5A3wBEAzVjQ==\n=gaMl\n-----END PGP SIGNATURE-----\n-----BEGIN OPENTIMESTAMPS GIT TIMESTAMP-----\n\nAQHwIBXigO7IWXhrNZ6OCt07Jt5E1C/tFufHcVYnZciKdT3cCP/wECD80JS9yKA8\nVfUWiRSri1AI8QRd8qLJ8Ahh2v488jvrJACD3+MNLvkMjiMiaHR0cHM6Ly9idGMu\nY2FsZW5kYXIuY2F0YWxsYXh5LmNvbf/wECJc/CxWmRgctBxB4+EIEjYI8SBM8e7/\n0y3cYWUKtJJlGeRjpSDk8aYzSseSUmytmZi5SwjxBF3yosrwCGXGmPKIF5waAIPf\n4w0u+QyOKShodHRwczovL2Zpbm5leS5jYWxlbmRhci5ldGVybml0eXdhbGwuY29t\n//AQM5KNFGVEzJF/CQ/oKN+yDwjxIAl3cejE9EdYaYVSHgSjFerlOdI/AJO8Tvxp\nuTt2reMyCPEEXfKiyfAIDJw8NfPghs8Ag9/jDS75DI4uLWh0dHBzOi8vYWxpY2Uu\nYnRjLmNhbGVuZGFyLm9wZW50aW1lc3RhbXBzLm9yZ/AQaPwUL8er1tJ1YEMw8tGD\ndgjxIAbsw4yZSSnNGLlpWokhwEQ33zQws28COru1T/6JK9RpCPEEXfKizPAI9RKo\ndPRAMNEAg9/jDS75DI4sK2h0dHBzOi8vYm9iLmJ0Yy5jYWxlbmRhci5vcGVudGlt\nZXN0YW1wcy5vcmc=\n-----END OPENTIMESTAMPS GIT TIMESTAMP-----",
-            ]
-        ],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/ce08025be28869805e0a0b7c643a9655f548c1b5/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/ce08025be28869805e0a0b7c643a9655f548c1b5/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/2c4e09410c52ffd98d771d370948037d192f6178/",
-    },
     "revision/11e893fc1357bc688418ddf1087c2b7aa25d154d/": {
         "message": "Merge pull request #726 from phansch/small_pointer_improvement\n\nSmall improvements to types/pointer.md",
         "author": {
@@ -1487,82 +1120,6 @@ MOCK_ARCHIVE = {
         "url": "https://archive.softwareheritage.org/api/1/revision/11e893fc1357bc688418ddf1087c2b7aa25d154d/",
         "history_url": "https://archive.softwareheritage.org/api/1/revision/11e893fc1357bc688418ddf1087c2b7aa25d154d/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/2892c88f2d5fc8c16adef8dd7e7c649bc194b672/",
-    },
-    "revision/a94b0efafc6198cbe62f9116b6c75c48d32dd80e/": {
-        "message": "Merge pull request #737 from rkruppe/patch-2\n\nrepr(transparent): mention align=1 requirement",
-        "author": {
-            "fullname": "Mazdak Farrokhzad <twingoow@gmail.com>",
-            "name": "Mazdak Farrokhzad",
-            "email": "twingoow@gmail.com",
-        },
-        "committer": {
-            "fullname": "GitHub <noreply@github.com>",
-            "name": "GitHub",
-            "email": "noreply@github.com",
-        },
-        "date": "2020-01-11T17:51:22+01:00",
-        "committer_date": "2020-01-11T17:51:22+01:00",
-        "type": "git",
-        "directory": "e384cfde1f3f41934f396d55e68199395a049233",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "55a3f99e5b3ceabec6f286247edfadb62c2d541d",
-                "url": "https://archive.softwareheritage.org/api/1/revision/55a3f99e5b3ceabec6f286247edfadb62c2d541d/",
-            },
-            {
-                "id": "8055a35c909a34752eb4d5a367f3798d6089b0a3",
-                "url": "https://archive.softwareheritage.org/api/1/revision/8055a35c909a34752eb4d5a367f3798d6089b0a3/",
-            },
-        ],
-        "id": "a94b0efafc6198cbe62f9116b6c75c48d32dd80e",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJeGf0KCRBK7hj4Ov3rIwAAdHIIAGtU53ovARaHf2s45pkDyrkj\nfyVCKapPzONFmdZjEswVCACCm8Ntlkpp7hSr7ym3dBsBcZQPNSe1y6FSWWXQJyNu\n64sePIjtiQqaPo0+8TBSOJlYVuWNtVZNeM5jIN34kg4EJ/sw7riv5HaKDr3ZofuL\nAdL7hxw3hyC8ltnGPWt8c+F9qhNzlv7cRABE4optUZjIWuO7XVQY1gzjhoVAlXfe\n9ZAI5oabpdJzT8Y1Pe3qAjCer4I6raE0VmLobEthLjotpm5GaXBeQkNfEk12N7dH\ncs5BTwvlwahp5tSja8dI0M0zaCxlYIHX8VcbttLmRMWhW/HaMnxo9aN3hh+HIo4=\n=wSIK\n-----END PGP SIGNATURE-----\n",
-            ]
-        ],
-        "merge": True,
-        "url": "https://archive.softwareheritage.org/api/1/revision/a94b0efafc6198cbe62f9116b6c75c48d32dd80e/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/a94b0efafc6198cbe62f9116b6c75c48d32dd80e/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/e384cfde1f3f41934f396d55e68199395a049233/",
-    },
-    "revision/4f647729f75a753d708876ab250a981c3c2a5185/": {
-        "message": "addition -> additional\n",
-        "author": {
-            "fullname": "Philipp Hansch <dev@phansch.net>",
-            "name": "Philipp Hansch",
-            "email": "dev@phansch.net",
-        },
-        "committer": {
-            "fullname": "Philipp Hansch <dev@phansch.net>",
-            "name": "Philipp Hansch",
-            "email": "dev@phansch.net",
-        },
-        "date": "2019-12-04T07:55:27+01:00",
-        "committer_date": "2019-12-04T07:55:27+01:00",
-        "type": "git",
-        "directory": "861ab7ad199494b3ca9fe059a726e796453a5d68",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "f131a13363ac153a9db5072844738c2086edf93e",
-                "url": "https://archive.softwareheritage.org/api/1/revision/f131a13363ac153a9db5072844738c2086edf93e/",
-            }
-        ],
-        "id": "4f647729f75a753d708876ab250a981c3c2a5185",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\niQJEBAABCgAuFiEEj4U0bmbiMSg/mWqvgqphyqETl+YFAl3nWGkQHGRldkBwaGFu\nc2NoLm5ldAAKCRCCqmHKoROX5kecD/9ByqrrDCQefvG1QhW6SEF5ryWItNjfci2I\nSMX9nJcHHXaPjMGiaGj6zPebFPDiUsHUz29TtsK5h9VpWpT8qFwsPNO9MF0Mjmq0\nsg6papGH/gW7OohSlgGbu5XWzXYOC0d5QDz+HvOZJcdGiuXAH8hToqMouPz6tO7x\nv+ddEKxdB0Sx6rfpEUYZQwXoB2zZuEERvfYdYHAndiqqR+ZGH8TxYlAVVmSt35fJ\nIepUybm396i8nxmNOkatpNSCi8MWJYv6Ui9oUSbT+SOEplWh94bVGHdDrzddV7a0\nOPobuZIu5KyNaP2PAttLuRZnSkqbdH/8AO9n+zoWiPCLQuXWXERLHv4GrOec4YP+\nHuNNboihkawiCX1EjmOFq5lmOQdGsTgnSLY5m0HYekj5tRl7ghLxL1fBHT6lPG8o\n7ekNYlW7FGXoTtqNUwV3QFOBHxD9wJz17ZkDocwSItgG5/696IQCckFaFRHFJicT\nHoePtPicLEIMlor+Es7SvF2sjZ0plmMz5JLT3IOS5GniXF929OcMb19qZeb8ZU/P\nSoIiPtdFayeYZNbUIVC3wVdQzFg+dM5g/TJ/OyItIhHM9yTgTRZBQ62jlf4qNitE\nOFQvgmlmZkbjbHzRb5pQyhQSlWaXYg5wf4CLpHRhOyt9NTXj8//aMJv5p+FvRNYr\nCcC7Enm6CQ==\n=GruG\n-----END PGP SIGNATURE-----",
-            ]
-        ],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/4f647729f75a753d708876ab250a981c3c2a5185/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/4f647729f75a753d708876ab250a981c3c2a5185/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/861ab7ad199494b3ca9fe059a726e796453a5d68/",
     },
     "revision/1c2bd024d13f8011307e13386cf1fea2180352b5/": {
         "message": "Merge pull request #1302 from Cawibo/patch-1\n\nCamelCase -> UpperCamelCase",
@@ -1604,82 +1161,6 @@ MOCK_ARCHIVE = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/1c2bd024d13f8011307e13386cf1fea2180352b5/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/07720bc1cae5641b300fadc2aa076b9a5de71d2b/",
     },
-    "revision/1d59403cb5269c190cc52a95584ecc280345495a/": {
-        "message": "Merge pull request #1290 from weihanglo/patch-1\n\nEnable section-folding of table of content",
-        "author": {
-            "fullname": "Mario Idival <marioidival@gmail.com>",
-            "name": "Mario Idival",
-            "email": "marioidival@gmail.com",
-        },
-        "committer": {
-            "fullname": "GitHub <noreply@github.com>",
-            "name": "GitHub",
-            "email": "noreply@github.com",
-        },
-        "date": "2019-12-27T08:27:05-03:00",
-        "committer_date": "2019-12-27T08:27:05-03:00",
-        "type": "git",
-        "directory": "ca9c63310fb379fbaa4c0487e9b600071f47c2db",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "b8772b39f325f2dee8c424fca57b96f2d4f9b7a7",
-                "url": "https://archive.softwareheritage.org/api/1/revision/b8772b39f325f2dee8c424fca57b96f2d4f9b7a7/",
-            },
-            {
-                "id": "eaf891dfdabc824deda825ff068ea3cbf2c4afd8",
-                "url": "https://archive.softwareheritage.org/api/1/revision/eaf891dfdabc824deda825ff068ea3cbf2c4afd8/",
-            },
-        ],
-        "id": "1d59403cb5269c190cc52a95584ecc280345495a",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJeBeqJCRBK7hj4Ov3rIwAAdHIIAH7+V3gApEMEMYQdmnYG6Gg0\n3siDRNe8jFBQK4ImHQgZ7jBqDo7Qw/NV+AzLE+wcVAR01brloGSsPT6/bu0d38bk\nxXoKEMfRjoszM4zC7VyiKT6jd43e6fJffvCW7w4RkEM7kkco4UKhp9noUuPJZyDE\n0jWGyZeHJMirvfKx+m58HbY++6F8ndUS4gyyEluoXs6b4B4Jvxjr/cpejaD4zHIJ\n2u5dZNPZ2t2dLcYYrnazkFMqTWROKNJR9XlUmfoovB4sv/0kPMma6UBjTt1IgHhf\n3fgMoq4VLaP4iboftdPBHS1+KjX6NUM/1K+jNCLaI6LV8R00s87fyt+WGXz/Ffw=\n=53Qs\n-----END PGP SIGNATURE-----\n",
-            ]
-        ],
-        "merge": True,
-        "url": "https://archive.softwareheritage.org/api/1/revision/1d59403cb5269c190cc52a95584ecc280345495a/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/1d59403cb5269c190cc52a95584ecc280345495a/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/ca9c63310fb379fbaa4c0487e9b600071f47c2db/",
-    },
-    "revision/2d39e2894830331fb02b77980a6190e972ad3d68/": {
-        "message": 'CamelCase -> UpperCamelCase\n\nThe compiler will raise a warning unless it is UpperCamelCase. Since the warning is explicit about mentioning "upper", maybe the guide should too?',
-        "author": {
-            "fullname": "Cawibo <cwborg@kth.se>",
-            "name": "Cawibo",
-            "email": "cwborg@kth.se",
-        },
-        "committer": {
-            "fullname": "GitHub <noreply@github.com>",
-            "name": "GitHub",
-            "email": "noreply@github.com",
-        },
-        "date": "2020-01-09T23:40:26+01:00",
-        "committer_date": "2020-01-09T23:40:26+01:00",
-        "type": "git",
-        "directory": "07720bc1cae5641b300fadc2aa076b9a5de71d2b",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "1d59403cb5269c190cc52a95584ecc280345495a",
-                "url": "https://archive.softwareheritage.org/api/1/revision/1d59403cb5269c190cc52a95584ecc280345495a/",
-            }
-        ],
-        "id": "2d39e2894830331fb02b77980a6190e972ad3d68",
-        "extra_headers": [
-            [
-                "gpgsig",
-                "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJeF6vaCRBK7hj4Ov3rIwAAdHIIAEJLOt7bGDb9vKn8+A7Qhdtg\natOoWQUo34wU7l6MYIcOmYDdkWdzotSuEuKZw1qlo3xBP7jFN6D9T5MGjUl583+l\no7sRlUIluQd/ulGkLXcyK/X+McalogJU6THyrtzdPty1RMhlFeNNghWQmw/TwWpO\nwW9ikpSu67xJdkLUPxuP5N4q6tXLLXjq+KeiBU/IneDlt8V06g06vd028iPttXPT\nFVc49bKVMW1eqjm70XwqnP6HwQitJcLxqe4tlJ8KHiAgSAzW7sDbYJmZTajAr+zj\nOfyTMVK+6GrFqghNymEFIykH4/gQFIw/PaqYwf1f7eGupYoH5pH3T8UMBLKkukw=\n=RCTJ\n-----END PGP SIGNATURE-----\n",
-            ]
-        ],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/2d39e2894830331fb02b77980a6190e972ad3d68/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/2d39e2894830331fb02b77980a6190e972ad3d68/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/07720bc1cae5641b300fadc2aa076b9a5de71d2b/",
-    },
     "revision/92baf7293dd2d418d2ac4b141b0faa822075d9f7/": {
         "message": "Fix link\n",
         "author": {
@@ -1710,37 +1191,6 @@ MOCK_ARCHIVE = {
         "url": "https://archive.softwareheritage.org/api/1/revision/92baf7293dd2d418d2ac4b141b0faa822075d9f7/",
         "history_url": "https://archive.softwareheritage.org/api/1/revision/92baf7293dd2d418d2ac4b141b0faa822075d9f7/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/d5b7e02dd66666e7f16066162d3cc9bbc3a2c3d3/",
-    },
-    "revision/cf6447aff01e4bcb1fdbc89d6f754451a157589e/": {
-        "message": "Update .gitattributes\n\nSee https://github.com/rust-lang/rust/pull/57858",
-        "author": {
-            "fullname": "jethrogb <github@jbeekman.nl>",
-            "name": "jethrogb",
-            "email": "github@jbeekman.nl",
-        },
-        "committer": {
-            "fullname": "Who? Me?! <mark-i-m@users.noreply.github.com>",
-            "name": "Who? Me?!",
-            "email": "mark-i-m@users.noreply.github.com",
-        },
-        "date": "2020-01-13T20:06:54-08:00",
-        "committer_date": "2020-01-13T22:15:32-06:00",
-        "type": "git",
-        "directory": "59263209d6c932eefc716826aa0d0df60e540cbe",
-        "synthetic": False,
-        "metadata": {},
-        "parents": [
-            {
-                "id": "41efacea44c3460d1c5400c68231387ebd607a03",
-                "url": "https://archive.softwareheritage.org/api/1/revision/41efacea44c3460d1c5400c68231387ebd607a03/",
-            }
-        ],
-        "id": "cf6447aff01e4bcb1fdbc89d6f754451a157589e",
-        "extra_headers": [],
-        "merge": False,
-        "url": "https://archive.softwareheritage.org/api/1/revision/cf6447aff01e4bcb1fdbc89d6f754451a157589e/",
-        "history_url": "https://archive.softwareheritage.org/api/1/revision/cf6447aff01e4bcb1fdbc89d6f754451a157589e/log/",
-        "directory_url": "https://archive.softwareheritage.org/api/1/directory/59263209d6c932eefc716826aa0d0df60e540cbe/",
     },
     "release/874f7cbe352033cac5a8bc889847da2fe1d13e9f/": {
         "name": "1.42.0",

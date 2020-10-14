@@ -72,15 +72,10 @@ def generate_archive_data(
     METADATA[swhid] = data
 
     # Retrieve additional needed data for different artifacts (eg: content's
-    # blob data, revision parents, etc.)
+    # blob data, release target, etc.)
     if recursive:
         if swhid.object_type == CONTENT:
             generate_archive_data(swhid, raw=True)
-        elif swhid.object_type == REVISION:
-            for parent in METADATA[swhid]["parents"]:
-                parent_swhid = parse_swhid(f"swh:1:rev:{parent['id']}")
-                # Only retrieve one-level of parent (disable recursivity)
-                generate_archive_data(parent_swhid)
         elif swhid.object_type == RELEASE:
             target_type = METADATA[swhid]["target_type"]
             target_id = METADATA[swhid]["target"]

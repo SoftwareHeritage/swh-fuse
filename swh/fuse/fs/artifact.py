@@ -148,11 +148,6 @@ class Revision(FuseDirEntry):
         directory = metadata["directory"]
         parents = metadata["parents"]
 
-        # Make sure all necessary metadatas are fetched
-        await self.fuse.get_metadata(directory)
-        for parent in parents:
-            await self.fuse.get_metadata(parent["id"])
-
         root_path = self.get_relative_root_path()
 
         yield self.create_child(
