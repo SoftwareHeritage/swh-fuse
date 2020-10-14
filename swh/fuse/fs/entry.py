@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
 from stat import S_IFDIR, S_IFLNK, S_IFREG
-from typing import Any, AsyncIterator, Union
+from typing import Any, Union
 
 # Avoid cycling import
 Fuse = "Fuse"
@@ -48,20 +48,37 @@ class FuseEntry:
     def __post_init__(self):
         self.inode = self.fuse._alloc_inode(self)
 
+    async def size(self) -> int:
+        """ Return the size (in bytes) of an entry """
+
+        raise NotImplementedError
+
+    def get_relative_root_path(self) -> str:
+        return "../" * (self.depth - 1)
+
+    def create_child(self, constructor: Any, **kwargs) -> FuseEntry:
+        return constructor(depth=self.depth + 1, fuse=self.fuse, **kwargs)
+
+
+class FuseFileEntry(FuseEntry):
+    """ FUSE virtual file entry """
+
     async def get_content(self) -> bytes:
         """ Return the content of a file entry """
 
-        return None
+        raise NotImplementedError
+
+
+class FuseDirEntry(FuseEntry):
+    """ FUSE virtual directory entry """
 
     async def size(self) -> int:
-        """ Return the size of a file entry """
-
         return 0
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def __aiter__(self):
         """ Return the child entries of a directory entry """
 
-        yield None
+        raise NotImplementedError
 
     async def lookup(self, name: str) -> FuseEntry:
         """ Look up a FUSE entry by name """
@@ -71,13 +88,22 @@ class FuseEntry:
                 return entry
         return None
 
+
+@dataclass
+class FuseSymlinkEntry(FuseEntry):
+    """ FUSE virtual symlink entry
+
+    Attributes:
+        target: path to symlink target
+    """
+
+    mode: int = field(init=False, default=int(EntryMode.SYMLINK))
+    target: Union[str, bytes, Path]
+
+    async def size(self) -> int:
+        return len(str(self.target))
+
     def get_target(self) -> Union[str, bytes, Path]:
         """ Return the path target of a symlink entry """
 
-        return None
-
-    def get_relative_root_path(self) -> str:
-        return "../" * (self.depth - 1)
-
-    def create_child(self, constructor: Any, **kwargs) -> FuseEntry:
-        return constructor(depth=self.depth + 1, fuse=self.fuse, **kwargs)
+        return self.target

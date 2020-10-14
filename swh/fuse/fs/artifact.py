@@ -7,27 +7,24 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, AsyncIterator, List
 
-from swh.fuse.fs.entry import EntryMode, FuseEntry
-from swh.fuse.fs.symlink import SymlinkEntry
+from swh.fuse.fs.entry import (
+    EntryMode,
+    FuseDirEntry,
+    FuseEntry,
+    FuseFileEntry,
+    FuseSymlinkEntry,
+)
 from swh.model.from_disk import DentryPerms
 from swh.model.identifiers import CONTENT, DIRECTORY, RELEASE, REVISION, SWHID
 
 
 @dataclass
-class ArtifactEntry(FuseEntry):
-    """ FUSE virtual entry for a Software Heritage Artifact
+class Content(FuseFileEntry):
+    """ Software Heritage content artifact.
 
     Attributes:
         swhid: Software Heritage persistent identifier
         prefetch: optional prefetched metadata used to set entry attributes
-    """
-
-    swhid: SWHID
-    prefetch: Any = None
-
-
-class Content(ArtifactEntry):
-    """ Software Heritage content artifact.
 
     Content leaves (AKA blobs) are represented on disks as regular files,
     containing the corresponding bytes, as archived.
@@ -36,6 +33,9 @@ class Content(ArtifactEntry):
     directories. Hence, when accessing blobs from the top-level `archive/`
     directory, the permissions of the `archive/SWHID` file will be arbitrary and
     not meaningful (e.g., `0x644`). """
+
+    swhid: SWHID
+    prefetch: Any = None
 
     async def get_content(self) -> bytes:
         data = await self.fuse.get_blob(self.swhid)
@@ -49,12 +49,13 @@ class Content(ArtifactEntry):
         else:
             return len(await self.get_content())
 
-    async def __aiter__(self):
-        raise ValueError("Cannot iterate over a content type artifact")
 
-
-class Directory(ArtifactEntry):
+@dataclass
+class Directory(FuseDirEntry):
     """ Software Heritage directory artifact.
+
+    Attributes:
+        swhid: Software Heritage persistent identifier
 
     Directory nodes are represented as directories on the file-system,
     containing one entry for each entry of the archived directory. Entry names
@@ -64,6 +65,8 @@ class Directory(ArtifactEntry):
     Note that the FUSE mount is read-only, no matter what the permissions say.
     So it is possible that, in the context of a directory, a file is presented
     as writable, whereas actually writing to it will fail with `EPERM`. """
+
+    swhid: SWHID
 
     async def __aiter__(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
@@ -78,28 +81,10 @@ class Directory(ArtifactEntry):
                 else entry["perms"]
             )
 
-            # 1. Symlinks
-            if mode == DentryPerms.symlink:
+            # 1. Regular file
+            if swhid.object_type == CONTENT:
                 yield self.create_child(
-                    SymlinkEntry,
-                    name=name,
-                    # Symlink target is stored in the blob content
-                    target=await self.fuse.get_blob(swhid),
-                )
-            # 2. Submodules
-            elif swhid.object_type == REVISION:
-                # Make sure the revision metadata is fetched and create a
-                # symlink to distinguish it with regular directories
-                await self.fuse.get_metadata(swhid)
-                yield self.create_child(
-                    SymlinkEntry,
-                    name=name,
-                    target=Path(self.get_relative_root_path(), f"archive/{swhid}"),
-                )
-            # 3. Regular entries (directories, contents)
-            else:
-                yield self.create_child(
-                    OBJTYPE_GETTERS[swhid.object_type],
+                    Content,
                     name=name,
                     mode=mode,
                     swhid=swhid,
@@ -107,10 +92,39 @@ class Directory(ArtifactEntry):
                     # attributes without additional Software Heritage API call
                     prefetch=entry,
                 )
+            # 2. Regular directory
+            elif swhid.object_type == DIRECTORY:
+                yield self.create_child(
+                    Directory, name=name, mode=mode, swhid=swhid,
+                )
+            # 3. Symlink
+            elif mode == DentryPerms.symlink:
+                yield self.create_child(
+                    FuseSymlinkEntry,
+                    name=name,
+                    # Symlink target is stored in the blob content
+                    target=await self.fuse.get_blob(swhid),
+                )
+            # 4. Submodule
+            elif swhid.object_type == REVISION:
+                # Make sure the revision metadata is fetched and create a
+                # symlink to distinguish it with regular directories
+                await self.fuse.get_metadata(swhid)
+                yield self.create_child(
+                    FuseSymlinkEntry,
+                    name=name,
+                    target=Path(self.get_relative_root_path(), f"archive/{swhid}"),
+                )
+            else:
+                raise ValueError("Unknown directory entry type: {swhid.object_type}")
 
 
-class Revision(ArtifactEntry):
+@dataclass
+class Revision(FuseDirEntry):
     """ Software Heritage revision artifact.
+
+    Attributes:
+        swhid: Software Heritage persistent identifier
 
     Revision (AKA commit) nodes are represented on the file-system as
     directories with the following entries:
@@ -127,6 +141,8 @@ class Revision(ArtifactEntry):
     - `meta.json`: metadata for the current node, as a symlink pointing to the
       relevant `meta/<SWHID>.json` file """
 
+    swhid: SWHID
+
     async def __aiter__(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
         directory = metadata["directory"]
@@ -140,10 +156,12 @@ class Revision(ArtifactEntry):
         root_path = self.get_relative_root_path()
 
         yield self.create_child(
-            SymlinkEntry, name="root", target=Path(root_path, f"archive/{directory}"),
+            FuseSymlinkEntry,
+            name="root",
+            target=Path(root_path, f"archive/{directory}"),
         )
         yield self.create_child(
-            SymlinkEntry,
+            FuseSymlinkEntry,
             name="meta.json",
             target=Path(root_path, f"meta/{self.swhid}.json"),
         )
@@ -156,12 +174,12 @@ class Revision(ArtifactEntry):
 
         if len(parents) >= 1:
             yield self.create_child(
-                SymlinkEntry, name="parent", target="parents/1/",
+                FuseSymlinkEntry, name="parent", target="parents/1/",
             )
 
 
 @dataclass
-class RevisionParents(FuseEntry):
+class RevisionParents(FuseDirEntry):
     """ Revision virtual `parents/` directory """
 
     parents: List[SWHID]
@@ -170,14 +188,18 @@ class RevisionParents(FuseEntry):
         root_path = self.get_relative_root_path()
         for i, parent in enumerate(self.parents):
             yield self.create_child(
-                SymlinkEntry,
+                FuseSymlinkEntry,
                 name=str(i + 1),
                 target=Path(root_path, f"archive/{parent}"),
             )
 
 
-class Release(ArtifactEntry):
+@dataclass
+class Release(FuseDirEntry):
     """ Software Heritage release artifact.
+
+    Attributes:
+        swhid: Software Heritage persistent identifier
 
     Release nodes are represented on the file-system as directories with the
     following entries:
@@ -189,6 +211,8 @@ class Release(ArtifactEntry):
       pointing into `archive/` to the SWHID of the given directory
     - `meta.json`: metadata for the current node, as a symlink pointing to the
       relevant `meta/<SWHID>.json` file """
+
+    swhid: SWHID
 
     async def find_root_directory(self, swhid: SWHID) -> SWHID:
         if swhid.object_type == RELEASE:
@@ -207,14 +231,14 @@ class Release(ArtifactEntry):
         root_path = self.get_relative_root_path()
 
         yield self.create_child(
-            SymlinkEntry,
+            FuseSymlinkEntry,
             name="meta.json",
             target=Path(root_path, f"meta/{self.swhid}.json"),
         )
 
         target = metadata["target"]
         yield self.create_child(
-            SymlinkEntry, name="target", target=Path(root_path, f"archive/{target}")
+            FuseSymlinkEntry, name="target", target=Path(root_path, f"archive/{target}")
         )
         yield self.create_child(
             ReleaseType,
@@ -226,14 +250,14 @@ class Release(ArtifactEntry):
         target_dir = await self.find_root_directory(target)
         if target_dir is not None:
             yield self.create_child(
-                SymlinkEntry,
+                FuseSymlinkEntry,
                 name="root",
                 target=Path(root_path, f"archive/{target_dir}"),
             )
 
 
 @dataclass
-class ReleaseType(FuseEntry):
+class ReleaseType(FuseFileEntry):
     """ Release type virtual file """
 
     target_type: str

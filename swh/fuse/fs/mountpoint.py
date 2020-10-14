@@ -8,13 +8,13 @@ import json
 from typing import AsyncIterator
 
 from swh.fuse.fs.artifact import OBJTYPE_GETTERS
-from swh.fuse.fs.entry import EntryMode, FuseEntry
+from swh.fuse.fs.entry import EntryMode, FuseDirEntry, FuseEntry, FuseFileEntry
 from swh.model.exceptions import ValidationError
 from swh.model.identifiers import CONTENT, SWHID, parse_swhid
 
 
 @dataclass
-class Root(FuseEntry):
+class Root(FuseDirEntry):
     """ The FUSE mountpoint, consisting of the archive/ and meta/ directories """
 
     name: str = field(init=False, default=None)
@@ -27,7 +27,7 @@ class Root(FuseEntry):
 
 
 @dataclass
-class ArchiveDir(FuseEntry):
+class ArchiveDir(FuseDirEntry):
     """ The archive/ directory is lazily populated with one entry per accessed
     SWHID, having actual SWHIDs as names """
 
@@ -65,7 +65,7 @@ class ArchiveDir(FuseEntry):
 
 
 @dataclass
-class MetaDir(FuseEntry):
+class MetaDir(FuseDirEntry):
     """ The meta/ directory contains one SWHID.json file for each SWHID entry
     under archive/. The JSON file contain all available meta information about
     the given SWHID, as returned by the Software Heritage Web API for that
@@ -87,7 +87,7 @@ class MetaDir(FuseEntry):
 
 
 @dataclass
-class MetaEntry(FuseEntry):
+class MetaEntry(FuseFileEntry):
     """ An entry from the meta/ directory, containing for each accessed SWHID a
     corresponding SWHID.json file with all the metadata from the Software
     Heritage archive. """

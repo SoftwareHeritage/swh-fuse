@@ -16,7 +16,7 @@ import pyfuse3_asyncio
 import requests
 
 from swh.fuse.cache import FuseCache
-from swh.fuse.fs.entry import FuseEntry
+from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
 from swh.model.identifiers import CONTENT, SWHID
 from swh.web.client.client import WebAPIClient
@@ -144,6 +144,7 @@ class Fuse(pyfuse3.Operations):
 
         # TODO: add cache on direntry list?
         direntry = self.inode2entry(inode)
+        assert isinstance(direntry, FuseDirEntry)
         next_id = offset + 1
         i = 0
         async for entry in direntry:
@@ -174,6 +175,7 @@ class Fuse(pyfuse3.Operations):
         inode = fh
 
         entry = self.inode2entry(inode)
+        assert isinstance(entry, FuseFileEntry)
         data = await entry.get_content()
         return data[offset : offset + length]
 
@@ -184,6 +186,7 @@ class Fuse(pyfuse3.Operations):
 
         name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
+        assert isinstance(parent_entry, FuseDirEntry)
         lookup_entry = await parent_entry.lookup(name)
         if lookup_entry:
             return await self.get_attrs(lookup_entry)
@@ -193,6 +196,7 @@ class Fuse(pyfuse3.Operations):
 
     async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
         entry = self.inode2entry(inode)
+        assert isinstance(entry, FuseSymlinkEntry)
         return os.fsencode(entry.get_target())
 
 
