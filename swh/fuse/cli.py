@@ -5,6 +5,7 @@
 
 import asyncio
 from contextlib import ExitStack
+import logging
 import os
 
 # WARNING: do not import unnecessary things here to keep cli startup time under
@@ -106,9 +107,28 @@ def mount(ctx, swhids, path, foreground):
 
     from swh.fuse import fuse
 
+    # TODO: set default logging settings when --log-config is not passed
+    # DEFAULT_LOG_PATH = Path(".local/swh/fuse/mount.log")
     with ExitStack() as stack:
         if not foreground:
+            # TODO: temporary fix until swh.core has the proper logging utilities
+            # Disable logging config before daemonizing, and reset it once
+            # daemonized to be sure to not close file handlers
+            logging.shutdown()
             # Stay in the current working directory when spawning daemon
             cwd = os.getcwd()
             stack.enter_context(DaemonContext(working_directory=cwd))
+            logging.config.dictConfig(
+                {
+                    "version": 1,
+                    "handlers": {
+                        "syslog": {
+                            "class": "logging.handlers.SysLogHandler",
+                            "address": "/dev/log",
+                        },
+                    },
+                    "root": {"level": ctx.obj["log_level"], "handlers": ["syslog"],},
+                }
+            )
+
         asyncio.run(fuse.main(swhids, path, ctx.obj["config"]))
