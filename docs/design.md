@@ -52,11 +52,9 @@ merged together.
 
 ```{todo}
 
-consider sharding `<SWHID>`/`<SWHID>.json` files under `ab/cd/` dirs to avoid
+Consider sharding `<SWHID>`/`<SWHID>.json` files under `ab/cd/` dirs to avoid
 exploding the number of dir entries under `archive/` and `meta/`
-
-**Zack:** how about making the sharding depth a CLI-option, defaulting to 1?
-(i.e., `ab/<SWHID>`, `cd/<SWHID>`, …)
+(cf. [T2694](https://forge.softwareheritage.org/T2694))
 
 ```
 
@@ -143,13 +141,10 @@ SWH FUSE retrieves both metadata and file contents from the Software Heritage
 archive via the network. In order to obtain reasonable performances several
 caches are used to minimize network transfer.
 
-Caches are stored on disk in a single SQLite DB located at
-`$XDG_CACHE_HOME/swh/fuse/cache.sqlite`.
+Caches are stored on disk in SQLite DB(s) located under
+`$XDG_CACHE_HOME/swh/fuse/`.
 
 ```{todo}
-
-- potential improvement: use a separate DB for the blob cache, so that it's
-easier to delete
 
 - potential improvement: store blobs larger than a threshold on disk as files
 rather than in SQLite, e.g., under `$XDG_CACHE_HOME/swh/fuse/objects/`
@@ -173,6 +168,8 @@ The metadata cache map each SWHID to the complete metadata of the referenced
 object. This is analogous to what is available in `meta/<SWHID>.json` file (and
 generally used as data source for returning the content of those files).
 
+Cache location on-disk: `$XDG_CACHE_HOME/swh/fuse/metadata.sqlite`
+
 
 ### Blob cache
 
@@ -188,6 +185,8 @@ The blob cache entry for a given content object is populated, at the latest, the
 first time the object is `open()`-d. It might be populated earlier on due to
 prefetching, e.g., when a directory pointing to the given content is listed for
 the first time.
+
+Cache location on-disk: `$XDG_CACHE_HOME/swh/fuse/blob.sqlite`
 
 
 ### Dentry cache
@@ -219,13 +218,3 @@ of the revision virtual directory is listed. More aggressive prefetching might
 happen. For instance, when first opening a rev virtual directory a recursive
 listing of all its ancestor can be retrieved from the remote backend and used to
 recursively populate the parents cache for all ancestors.
-
-
-## Examples
-
-```{todo}
-
-show the swh/graph/tests/dataset/example graph image and corresponding mounting
-points + examples of different level of information (storage, edge labels, etc.)
-
-```
