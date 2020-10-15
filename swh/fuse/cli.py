@@ -84,11 +84,11 @@ def cli(ctx):
     help="YAML configuration file",
 )
 @click.option(
-    "-f",
-    "--foreground",
-    is_flag=True,
-    show_default=True,
-    help="Run FUSE system in foreground instead of daemon",
+    "-f/-d",
+    "--foreground/--daemon",
+    default=False,
+    help="whether to run FUSE attached to the console (foreground) "
+    "or daemonized in the background (default: daemon)",
 )
 @click.pass_context
 def mount(ctx, swhids, path, config_file, foreground):
