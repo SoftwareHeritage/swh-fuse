@@ -6,6 +6,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, AsyncIterator, List
+import urllib.parse
 
 from swh.fuse.fs.entry import (
     EntryMode,
@@ -15,7 +16,7 @@ from swh.fuse.fs.entry import (
     FuseSymlinkEntry,
 )
 from swh.model.from_disk import DentryPerms
-from swh.model.identifiers import CONTENT, DIRECTORY, RELEASE, REVISION, SWHID
+from swh.model.identifiers import CONTENT, DIRECTORY, RELEASE, REVISION, SNAPSHOT, SWHID
 
 
 @dataclass
@@ -264,9 +265,38 @@ class ReleaseType(FuseFileEntry):
         return len(await self.get_content())
 
 
+@dataclass
+class Snapshot(FuseDirEntry):
+    """ Software Heritage snapshot artifact.
+
+    Attributes:
+        swhid: Software Heritage persistent identifier
+
+    Snapshot nodes are represented on the file-system as directories with one
+    entry for each branch in the snapshot. Each entry is a symlink pointing into
+    `archive/` to the branch target SWHID. Branch names are URL encoded (hence
+    '/' are replaced with '%2F'). """
+
+    swhid: SWHID
+
+    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+        metadata = await self.fuse.get_metadata(self.swhid)
+        root_path = self.get_relative_root_path()
+
+        for branch_name, branch_meta in metadata.items():
+            # Mangle branch name to create a valid UNIX filename
+            name = urllib.parse.quote_plus(branch_name)
+            yield self.create_child(
+                FuseSymlinkEntry,
+                name=name,
+                target=Path(root_path, f"archive/{branch_meta['target']}"),
+            )
+
+
 OBJTYPE_GETTERS = {
     CONTENT: Content,
     DIRECTORY: Directory,
     REVISION: Revision,
     RELEASE: Release,
+    SNAPSHOT: Snapshot,
 }

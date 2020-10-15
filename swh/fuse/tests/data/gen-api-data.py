@@ -17,6 +17,7 @@ from swh.model.identifiers import (
     DIRECTORY,
     RELEASE,
     REVISION,
+    SNAPSHOT,
     SWHID,
     parse_swhid,
 )
@@ -36,6 +37,7 @@ def swhid2url(swhid: SWHID) -> str:
         DIRECTORY: "directory/",
         REVISION: "revision/",
         RELEASE: "release/",
+        SNAPSHOT: "snapshot/",
     }
 
     return f"{prefix[swhid.object_type]}{swhid.object_id}/"
@@ -47,6 +49,7 @@ def get_short_type(object_type: str) -> str:
         DIRECTORY: "dir",
         REVISION: "rev",
         RELEASE: "rel",
+        SNAPSHOT: "snp",
     }
     return short_type[object_type]
 
@@ -90,7 +93,8 @@ for entry in ALL_ENTRIES:
 print("# GENERATED FILE, DO NOT EDIT.")
 print("# Run './gen-api-data.py > api_data.py' instead.")
 print("# flake8: noqa")
+print("from typing import Any, Dict")
 print("")
 print(f"API_URL = '{API_URL_test}'\n")
-print(f"SWHID2URL = {SWHID2URL}\n")
-print(f"MOCK_ARCHIVE = {MOCK_ARCHIVE}")
+print(f"SWHID2URL: Dict[str, str] = {SWHID2URL}\n")
+print(f"MOCK_ARCHIVE: Dict[str, Any] = {MOCK_ARCHIVE}")

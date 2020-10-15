@@ -14,7 +14,12 @@ def get_data_from_archive(swhid: str, raw: bool = False) -> Any:
     url = SWHID2URL[swhid]
     if raw:
         url += "raw/"
-    return MOCK_ARCHIVE[url]
+
+    # Special case: snapshots Web API and Web Client API differ a bit in format
+    if url.startswith("snapshot"):
+        return MOCK_ARCHIVE[url]["branches"]
+    else:
+        return MOCK_ARCHIVE[url]
 
 
 def get_dir_name_entries(swhid: str) -> List[str]:

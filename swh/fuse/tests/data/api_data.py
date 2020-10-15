@@ -1,10 +1,11 @@
 # GENERATED FILE, DO NOT EDIT.
 # Run './gen-api-data.py > api_data.py' instead.
 # flake8: noqa
+from typing import Any, Dict
 
 API_URL = "https://invalid-test-only.archive.softwareheritage.org/api/1"
 
-SWHID2URL = {
+SWHID2URL: Dict[str, str] = {
     "swh:1:cnt:61d3c9e1157203f0c4ed5165608d92294eaca808": "content/sha1_git:61d3c9e1157203f0c4ed5165608d92294eaca808/",
     "swh:1:dir:c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578": "directory/c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578/",
     "swh:1:dir:80ae84abc6122c47aae597fde99645f8663d1aba": "directory/80ae84abc6122c47aae597fde99645f8663d1aba/",
@@ -21,9 +22,11 @@ SWHID2URL = {
     "swh:1:cnt:be5effea679c057aec2bb020f0241b1d1d660840": "content/sha1_git:be5effea679c057aec2bb020f0241b1d1d660840/",
     "swh:1:rel:3a7b2dfffed2945d2933ba4ebc063adba35ddb2e": "release/3a7b2dfffed2945d2933ba4ebc063adba35ddb2e/",
     "swh:1:dir:b24d39c928b9c3f440f8e2ec06c78f43d28d87d6": "directory/b24d39c928b9c3f440f8e2ec06c78f43d28d87d6/",
+    "swh:1:snp:02db117fef22434f1658b833a756775ca6effed0": "snapshot/02db117fef22434f1658b833a756775ca6effed0/",
+    "swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91": "revision/430a9fd4c797c50cea26157141b2408073b2ed91/",
 }
 
-MOCK_ARCHIVE = {
+MOCK_ARCHIVE: Dict[str, Any] = {
     "content/sha1_git:61d3c9e1157203f0c4ed5165608d92294eaca808/": {
         "length": 10084,
         "status": "visible",
@@ -1317,4 +1320,215 @@ MOCK_ARCHIVE = {
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:d8d2804032211fec42ec197827b049d5dea40ea7/",
         },
     ],
+    "snapshot/02db117fef22434f1658b833a756775ca6effed0/": {
+        "id": "02db117fef22434f1658b833a756775ca6effed0",
+        "branches": {
+            "refs/heads/auto": {
+                "target": "a0eb7a2c6da31b44718188002ac0cec12a3c86ee",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/a0eb7a2c6da31b44718188002ac0cec12a3c86ee/",
+            },
+            "refs/heads/beta": {
+                "target": "c980aba9a88704717229da3c1ec02685333c0db2",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/c980aba9a88704717229da3c1ec02685333c0db2/",
+            },
+            "refs/heads/grammer": {
+                "target": "d7b93216cdeb477e1af813f898096af867550338",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/d7b93216cdeb477e1af813f898096af867550338/",
+            },
+            "refs/heads/master": {
+                "target": "430a9fd4c797c50cea26157141b2408073b2ed91",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/430a9fd4c797c50cea26157141b2408073b2ed91/",
+            },
+            "refs/heads/snap-stage3": {
+                "target": "a5c12f4e39d32af3c951b66bd2839bc0b5a1125b",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/a5c12f4e39d32af3c951b66bd2839bc0b5a1125b/",
+            },
+            "refs/heads/stable": {
+                "target": "082e4763615bdbe7b4dd3dfd6fc2210b7773edf5",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/082e4763615bdbe7b4dd3dfd6fc2210b7773edf5/",
+            },
+            "refs/heads/tmp": {
+                "target": "a0eb7a2c6da31b44718188002ac0cec12a3c86ee",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/a0eb7a2c6da31b44718188002ac0cec12a3c86ee/",
+            },
+            "refs/heads/try": {
+                "target": "b53c0f93eedcdedd4fd89bccc5a3a09d1c5cd23e",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/b53c0f93eedcdedd4fd89bccc5a3a09d1c5cd23e/",
+            },
+            "refs/tags/0.1": {
+                "target": "16e4369fe3b5f00aa3cdc584a4e41c51c0d3ca8a",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/16e4369fe3b5f00aa3cdc584a4e41c51c0d3ca8a/",
+            },
+            "refs/tags/0.10": {
+                "target": "46867cc3e4ddcbb1d359a315805de00094dacaf9",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/46867cc3e4ddcbb1d359a315805de00094dacaf9/",
+            },
+            "refs/tags/0.11.0": {
+                "target": "aa1163b92de7717eb7c5eba002b4012e0574a7fe",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/aa1163b92de7717eb7c5eba002b4012e0574a7fe/",
+            },
+            "refs/tags/0.12.0": {
+                "target": "ba4081a5a8573875fed17545846f6f6902c8ba8d",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/ba4081a5a8573875fed17545846f6f6902c8ba8d/",
+            },
+            "refs/tags/0.2": {
+                "target": "0622a74c48a708aec28d25964f4e9b4489580bc7",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/0622a74c48a708aec28d25964f4e9b4489580bc7/",
+            },
+            "refs/tags/0.3": {
+                "target": "2f32a1581f522e524009138b33b1c7049ced668d",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/2f32a1581f522e524009138b33b1c7049ced668d/",
+            },
+            "refs/tags/0.4": {
+                "target": "39c0d3591e0326874b7263a621ce09ecd64f0eb2",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/39c0d3591e0326874b7263a621ce09ecd64f0eb2/",
+            },
+            "refs/tags/0.5": {
+                "target": "8b98e5a296d95c5e832db0756828e5bec31c6f50",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/8b98e5a296d95c5e832db0756828e5bec31c6f50/",
+            },
+            "refs/tags/0.6": {
+                "target": "00dbbd01c2aee72982b3e0f9511ae1d4428c3ba9",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/00dbbd01c2aee72982b3e0f9511ae1d4428c3ba9/",
+            },
+            "refs/tags/0.7": {
+                "target": "a2db7c15ce9f586164cabb15d83fb3f6bbeb3cf5",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/a2db7c15ce9f586164cabb15d83fb3f6bbeb3cf5/",
+            },
+            "refs/tags/0.8": {
+                "target": "8a4f0fa6c518eb634687abe9659601d9d2a61899",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/8a4f0fa6c518eb634687abe9659601d9d2a61899/",
+            },
+            "refs/tags/0.9": {
+                "target": "7613b15fdbbb9bf770a2c731f4135886b0ff3cf0",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/7613b15fdbbb9bf770a2c731f4135886b0ff3cf0/",
+            },
+            "refs/tags/1.0.0": {
+                "target": "a59de37e99060162a2674e3ff45409ac73595c0e",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/a59de37e99060162a2674e3ff45409ac73595c0e/",
+            },
+            "refs/tags/1.0.0-alpha": {
+                "target": "44a287e6eb22ec3c2a687fc156813577464017f7",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/44a287e6eb22ec3c2a687fc156813577464017f7/",
+            },
+            "refs/tags/1.0.0-alpha.2": {
+                "target": "522d09dfecbeca1595f25ac58c6d0178bbd21d7d",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/522d09dfecbeca1595f25ac58c6d0178bbd21d7d/",
+            },
+            "refs/tags/1.0.0-beta": {
+                "target": "9854143cba679834bc4ef932858cd5303f015a0e",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/9854143cba679834bc4ef932858cd5303f015a0e/",
+            },
+            "refs/tags/1.1.0": {
+                "target": "35ceea3997c79a3b7562e89b462ab76af5b86b22",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/35ceea3997c79a3b7562e89b462ab76af5b86b22/",
+            },
+            "refs/tags/homu-tmp": {
+                "target": "1fe32ca12c51afcd761d9962f51a74ff0d07a591",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/1fe32ca12c51afcd761d9962f51a74ff0d07a591/",
+            },
+            "refs/tags/release-0.1": {
+                "target": "16e4369fe3b5f00aa3cdc584a4e41c51c0d3ca8a",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/16e4369fe3b5f00aa3cdc584a4e41c51c0d3ca8a/",
+            },
+            "refs/tags/release-0.2": {
+                "target": "0622a74c48a708aec28d25964f4e9b4489580bc7",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/0622a74c48a708aec28d25964f4e9b4489580bc7/",
+            },
+            "refs/tags/release-0.3": {
+                "target": "2f32a1581f522e524009138b33b1c7049ced668d",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/2f32a1581f522e524009138b33b1c7049ced668d/",
+            },
+            "refs/tags/release-0.3.1": {
+                "target": "33a055638c637d2f63d1d7a18b235c93c08d10b8",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/33a055638c637d2f63d1d7a18b235c93c08d10b8/",
+            },
+            "refs/tags/release-0.4": {
+                "target": "39c0d3591e0326874b7263a621ce09ecd64f0eb2",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/39c0d3591e0326874b7263a621ce09ecd64f0eb2/",
+            },
+            "refs/tags/release-0.5": {
+                "target": "8b98e5a296d95c5e832db0756828e5bec31c6f50",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/8b98e5a296d95c5e832db0756828e5bec31c6f50/",
+            },
+            "refs/tags/release-0.6": {
+                "target": "00dbbd01c2aee72982b3e0f9511ae1d4428c3ba9",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/00dbbd01c2aee72982b3e0f9511ae1d4428c3ba9/",
+            },
+            "refs/tags/release-0.7": {
+                "target": "a2db7c15ce9f586164cabb15d83fb3f6bbeb3cf5",
+                "target_type": "revision",
+                "target_url": "https://archive.softwareheritage.org/api/1/revision/a2db7c15ce9f586164cabb15d83fb3f6bbeb3cf5/",
+            },
+        },
+        "next_branch": None,
+    },
+    "revision/430a9fd4c797c50cea26157141b2408073b2ed91/": {
+        "message": 'Auto merge of #27534 - alexcrichton:revert-adding-gdb-pp-tests, r=michaelwoerister\n\nâ€¦ are not actually broken."\r\n\r\nThis reverts commit 354cf4b56b8e2af67cc68965eb816deec0e79e4b.\r\n\r\n\r\nUnfortunately these [tests are failing](http://buildbot.rust-lang.org/builders/nightly-dist-rustc-linux/builds/224/steps/distcheck/logs/stdio) on the snapshot/nightly bots with the [same message](https://gist.github.com/alexcrichton/611705ded07b0d73ded9) found in #27514\r\n',
+        "author": {
+            "fullname": "bors <bors@rust-lang.org>",
+            "name": "bors",
+            "email": "bors@rust-lang.org",
+        },
+        "committer": {
+            "fullname": "bors <bors@rust-lang.org>",
+            "name": "bors",
+            "email": "bors@rust-lang.org",
+        },
+        "date": "2015-08-05T18:48:53+00:00",
+        "committer_date": "2015-08-05T18:48:53+00:00",
+        "type": "git",
+        "directory": "1ac29db0e7280af41064676569a96d1f88ccfa96",
+        "synthetic": False,
+        "metadata": {},
+        "parents": [
+            {
+                "id": "d03456183e85fe7bd465bbe7c8f67885a2528444",
+                "url": "https://archive.softwareheritage.org/api/1/revision/d03456183e85fe7bd465bbe7c8f67885a2528444/",
+            },
+            {
+                "id": "3430532a8ee8fd5a7f47647c8c29403384647095",
+                "url": "https://archive.softwareheritage.org/api/1/revision/3430532a8ee8fd5a7f47647c8c29403384647095/",
+            },
+        ],
+        "id": "430a9fd4c797c50cea26157141b2408073b2ed91",
+        "extra_headers": [],
+        "merge": True,
+        "url": "https://archive.softwareheritage.org/api/1/revision/430a9fd4c797c50cea26157141b2408073b2ed91/",
+        "history_url": "https://archive.softwareheritage.org/api/1/revision/430a9fd4c797c50cea26157141b2408073b2ed91/log/",
+        "directory_url": "https://archive.softwareheritage.org/api/1/directory/1ac29db0e7280af41064676569a96d1f88ccfa96/",
+    },
 }
