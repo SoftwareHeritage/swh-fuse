@@ -108,5 +108,7 @@ def mount(ctx, swhids, path, foreground):
 
     with ExitStack() as stack:
         if not foreground:
-            stack.enter_context(DaemonContext())
+            # Stay in the current working directory when spawning daemon
+            cwd = os.getcwd()
+            stack.enter_context(DaemonContext(working_directory=cwd))
         asyncio.run(fuse.main(swhids, path, ctx.obj["config"]))
