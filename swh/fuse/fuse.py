@@ -216,10 +216,12 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
         fuse_options.add("debug")
-        pyfuse3.init(fs, root_path, fuse_options)
 
         try:
+            pyfuse3.init(fs, root_path, fuse_options)
             await pyfuse3.main()
+        except Exception as e:
+            logging.error(f"Error running FUSE: {e}")
         finally:
             fs.shutdown()
             pyfuse3.close(unmount=True)
