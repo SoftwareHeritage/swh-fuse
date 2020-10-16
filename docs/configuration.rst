@@ -49,11 +49,11 @@ default Web API service:
 
     swh:
       fuse:
-	cache:
-	  metadata:
-	    in-memory: true
-	  blob:
-	    path: "/path/to/cache/blob.sqlite"
-	web-api:
-	  url: "https://archive.softwareheritage.org/api/1/"
-	  auth-token: null
+        cache:
+          metadata:
+            in-memory: true
+          blob:
+            path: "/path/to/cache/blob.sqlite"
+        web-api:
+          url: "https://archive.softwareheritage.org/api/1/"
+          auth-token: null
