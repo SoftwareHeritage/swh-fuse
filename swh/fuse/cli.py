@@ -10,13 +10,14 @@ import os
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
 import click
 from daemon import DaemonContext
 
-# from swh.core import config
+from swh.core import config
 from swh.core.cli import CONTEXT_SETTINGS
+from swh.core.cli import swh as swh_cli_group
 from swh.model.cli import SWHIDParamType
 
 # All generic config code should reside in swh.core.config
@@ -30,45 +31,45 @@ CACHE_HOME_DIR: Path = (
     else Path.home() / ".cache"
 )
 
-DEFAULT_CONFIG: Dict[str, Tuple[str, Any]] = {
-    "cache": (
-        "dict",
-        {
-            "metadata": {"path": CACHE_HOME_DIR / "swh/fuse/metadata.sqlite"},
-            "blob": {"path": CACHE_HOME_DIR / "swh/fuse/blob.sqlite"},
-        },
-    ),
-    "web-api": (
-        "dict",
-        {"url": "https://archive.softwareheritage.org/api/1", "auth-token": None,},
-    ),
+DEFAULT_CONFIG: Dict[str, Any] = {
+    "cache": {
+        "metadata": {"path": CACHE_HOME_DIR / "swh/fuse/metadata.sqlite"},
+        "blob": {"path": CACHE_HOME_DIR / "swh/fuse/blob.sqlite"},
+    },
+    "web-api": {
+        "url": "https://archive.softwareheritage.org/api/1",
+        "auth-token": None,
+    },
 }
 
 
-@click.group(name="fuse", context_settings=CONTEXT_SETTINGS)
-# XXX  conffile logic temporarily commented out due to:
-# XXX  https://forge.softwareheritage.org/T2632
-# @click.option(
-#     "-C",
-#     "--config-file",
-#     default=DEFAULT_CONFIG_PATH,
-#     type=click.Path(exists=True, dir_okay=False, path_type=str),
-#     help="YAML configuration file",
-# )
+@swh_cli_group.group(name="fuse", context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "-C",
+    "--config-file",
+    default=None,
+    type=click.Path(exists=True, dir_okay=False, path_type=str),
+    help="YAML configuration file",
+)
 @click.pass_context
-def cli(ctx):
+def fuse(ctx, config_file):
     """Software Heritage virtual file system"""
 
-    # # recursive merge not done by config.read
-    # conf = config.read_raw_config(config.config_basepath(config_file))
-    # conf = config.merge_configs(DEFAULT_CONFIG, conf)
-    conf = {}
+    if not config_file and config.config_exists(DEFAULT_CONFIG_PATH):
+        config_file = DEFAULT_CONFIG_PATH
+
+    if not config_file:
+        conf = DEFAULT_CONFIG
+    else:
+        # recursive merge not done by config.read
+        conf = config.read_raw_config(config.config_basepath(config_file))
+        conf = config.merge_configs(DEFAULT_CONFIG, conf)
 
     ctx.ensure_object(dict)
     ctx.obj["config"] = conf
 
 
-@cli.command()
+@fuse.command(name="mount")
 @click.argument(
     "path",
     required=True,
@@ -77,13 +78,6 @@ def cli(ctx):
 )
 @click.argument("swhids", nargs=-1, metavar="[SWHID]...", type=SWHIDParamType())
 @click.option(
-    "--config-file",
-    "-C",
-    default=None,
-    type=click.Path(exists=True, dir_okay=False,),
-    help="YAML configuration file",
-)
-@click.option(
     "-f/-d",
     "--foreground/--daemon",
     default=False,
@@ -91,7 +85,7 @@ def cli(ctx):
     "or daemonized in the background (default: daemon)",
 )
 @click.pass_context
-def mount(ctx, swhids, path, config_file, foreground):
+def mount(ctx, swhids, path, foreground):
     """Mount the Software Heritage archive at PATH
 
     If specified, objects referenced by the given SWHIDs will be prefetched and used to
@@ -110,11 +104,9 @@ def mount(ctx, swhids, path, config_file, foreground):
 
     """
 
-    from swh.core import config
     from swh.fuse import fuse
 
-    conf = config.read(config_file, DEFAULT_CONFIG)
     with ExitStack() as stack:
         if not foreground:
             stack.enter_context(DaemonContext())
-        asyncio.run(fuse.main(swhids, path, conf))
+        asyncio.run(fuse.main(swhids, path, ctx.obj["config"]))

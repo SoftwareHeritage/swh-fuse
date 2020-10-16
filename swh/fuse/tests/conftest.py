@@ -15,7 +15,7 @@ from click.testing import CliRunner
 import pytest
 import yaml
 
-from swh.fuse import cli
+import swh.fuse.cli as cli
 from swh.fuse.tests.data.api_data import API_URL, MOCK_ARCHIVE
 
 
@@ -46,7 +46,14 @@ def fuse_mntdir(web_api_mock):
             config_path = Path(config_path.name)
             config_path.write_text(yaml.dump(config))
             CliRunner().invoke(
-                cli.mount, args=[mntdir, "--foreground", "--config-file", config_path,],
+                cli.fuse,
+                args=[
+                    "--config-file",
+                    str(config_path),
+                    "mount",
+                    mntdir,
+                    "--foreground",
+                ],
             )
 
     fuse = Process(target=fuse_process, args=[tmpdir, tmpfile])

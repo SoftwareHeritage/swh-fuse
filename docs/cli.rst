@@ -3,6 +3,6 @@
 Command-line interface
 ======================
 
-.. click:: swh.fuse.cli:cli
+.. click:: swh.fuse.cli:fuse
   :prog: swh fuse
   :show-nested:

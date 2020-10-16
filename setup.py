@@ -53,7 +53,7 @@ setup(
     include_package_data=True,
     entry_points="""
         [swh.cli.subcommands]
-        fuse=swh.fuse.cli:cli
+        fuse=swh.fuse.cli
     """,
     classifiers=[
         "Programming Language :: Python :: 3",
