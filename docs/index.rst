@@ -8,5 +8,6 @@
    :caption: Overview
 
    cli
+   configuration
    Design notes <design>
-   /apidoc/swh.fuse
+   API reference </apidoc/swh.fuse>

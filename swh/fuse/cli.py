@@ -49,7 +49,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "--config-file",
     default=None,
     type=click.Path(exists=True, dir_okay=False, path_type=str),
-    help="YAML configuration file",
+    help=f"Configuration file (default: {DEFAULT_CONFIG_PATH})",
 )
 @click.pass_context
 def fuse(ctx, config_file):

@@ -1,48 +1,59 @@
 .. _swh-fuse-config:
 
+
 Configuration
 =============
 
-All configuration for the Software Heritage virtual file system should be done
-in a single `.yml` file, containing the following fields:
+The configuration for the Software Heritage virtual file system resides in the
+``swh > fuse`` section of the shared `YAML <https://yaml.org/>`_ configuration
+file used by all Software Heritage tools, located by default at
+``~/.config/swh/global.yml``.
 
-- `cache`:
+The configuration file location is subject to the `XDG Base Directory
+<https://wiki.archlinux.org/index.php/XDG_Base_Directory>`_ specification as
+well as explicitly overridden on the :ref:`command line <swh-fuse-cli>` via the
+``-C/--config-file`` flag.
 
-  - `metadata`: where to store the metadata cache, must have either a
-    `in-memory` boolean entry or a `path` string entry (with the corresponding
-    disk path)
-  - `blob`: where to store the blob cache, same entries as the `metadata` cache
+The following sub-sections and fields can be used within the `swh > fuse`
+stanza:
 
-- `web-api`:
+- ``cache``:
 
-  - `url`: archive API URL
-  - `auth-token`: authentication token used with the API URL
+  - ``metadata``: where to store the metadata cache, must have either a
+    ``in-memory`` boolean entry or a ``path`` string entry (with the
+    corresponding disk path)
+  - ``blob``: where to store the blob cache, same entries as the ``metadata``
+    cache
 
-Set the `-C/--config-file` option of the :ref:`CLI <swh-fuse-cli>` to use your
-configuration file.
+- ``web-api``:
+
+  - ``url``: archive API URL
+  - ``auth-token``: authentication token used with the API URL
 
 If no configuration is given, default values are:
 
-- `cache`: all cache files are stored in `$XDG_CACHE_HOME/swh/fuse/` (or
-  `$HOME/.cache/swh/fuse` if `XDG_CACHE_HOME` is not set)
-- `web-api`: default URL is https://archive.softwareheritage.org/api/1/ (with no
-  authentication token)
+- ``cache``: all cache files are stored in ``$XDG_CACHE_HOME/swh/fuse/`` (or
+  ``~/.cache/swh/fuse`` if ``XDG_CACHE_HOME`` is not set)
+- ``web-api``: default URL is <https://archive.softwareheritage.org/api/1/>,
+  with no authentication token
 
 
 Example
 -------
 
-Here is a complete example showcasing different cache storage strategies
-(in-memory for metadata and on-disk for blob), using the default Web API
-service:
+Here is a full ``~/.config/swh/global.yml`` example, showcasing different cache
+storage strategies (in-memory for metadata and on-disk for blob), using the
+default Web API service:
 
 .. code:: yaml
 
-    cache:
-      metadata:
-        in-memory: true
-      blob:
-        path: "/path/to/cache/blob.sqlite"
-    web-api:
-      url: "https://archive.softwareheritage.org/api/1/"
-      auth-token: null
+    swh:
+      fuse:
+	cache:
+	  metadata:
+	    in-memory: true
+	  blob:
+	    path: "/path/to/cache/blob.sqlite"
+	web-api:
+	  url: "https://archive.softwareheritage.org/api/1/"
+	  auth-token: null
