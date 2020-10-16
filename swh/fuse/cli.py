@@ -132,3 +132,21 @@ def mount(ctx, swhids, path, foreground):
             )
 
         asyncio.run(fuse.main(swhids, path, ctx.obj["config"]))
+
+
+@fuse.command()
+@click.pass_context
+def clean(ctx):
+    """Clean on-disk cache(s)
+
+    """
+
+    def rm_cache(conf, cache_name):
+        try:
+            conf["cache"][cache_name]["path"].unlink(missing_ok=True)
+        except KeyError:
+            pass
+
+    conf = ctx.obj["config"]
+    for cache_name in ["blob", "metadata"]:
+        rm_cache(conf, cache_name)
