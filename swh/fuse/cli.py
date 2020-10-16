@@ -87,7 +87,7 @@ def fuse(ctx, config_file):
 )
 @click.pass_context
 def mount(ctx, swhids, path, foreground):
-    """Mount the Software Heritage archive at PATH
+    """Mount the Software Heritage virtual file system at PATH.
 
     If specified, objects referenced by the given SWHIDs will be prefetched and used to
     populate the virtual file system (VFS). Otherwise the VFS will be populated
@@ -137,7 +137,7 @@ def mount(ctx, swhids, path, foreground):
 @fuse.command()
 @click.pass_context
 def clean(ctx):
-    """Clean on-disk cache(s)
+    """Clean on-disk cache(s).
 
     """
 
