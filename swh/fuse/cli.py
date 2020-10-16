@@ -135,6 +135,33 @@ def mount(ctx, swhids, path, foreground):
 
 
 @fuse.command()
+@click.argument(
+    "path",
+    required=True,
+    metavar="PATH",
+    type=click.Path(exists=True, dir_okay=True, file_okay=False),
+)
+@click.pass_context
+def umount(ctx, path):
+    """Unmount a mounted virtual file system.
+
+    Note: this is equivalent to ``fusermount -u PATH``, which can be used to unmount any
+    FUSE-based virtual file system. See ``man fusermount3``.
+
+    """
+    import subprocess
+
+    try:
+        subprocess.run(["fusermount", "-u", path], check=True)
+    except subprocess.CalledProcessError as err:
+        logging.error(
+            f"cannot unmount virtual file system: "
+            f"\"{' '.join(err.cmd)}\" returned exit status {err.returncode}"
+        )
+        ctx.exit(1)
+
+
+@fuse.command()
 @click.pass_context
 def clean(ctx):
     """Clean on-disk cache(s).
