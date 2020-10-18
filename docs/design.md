@@ -1,33 +1,34 @@
-# SWH FUSE — Design notes
+# Software Heritage virtual filesystem (SwhFS) --- Design notes
 
 ```{warning}
 
-this document describes design notes for SWH FUSE, which is still under active
-development and hence **not yet available** for general use.
+this document describes design notes for the Software Heritage virtual
+filesystem (SwhFS), which is still under active development and hence **not yet
+available** for general use.
 
 ```
 
-The [Software Heritage](https://www.softwareheritage.org/)
-{ref}`data model <data-model>` is a [Direct Acyclic
-Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAG) with nodes of
-different types that correspond to source code artifacts such as directories,
-commits, etc. Using this
-[FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) module (*SWH FUSE*
-for short) you can locally mount, and then navigate as a (virtual) file system,
-parts of the archive identified by
-{ref}`Software Heritage identifiers <persistent-identifiers>` (SWHIDs).
+The [Software Heritage](https://www.softwareheritage.org/) {ref}`data model
+<data-model>` is
+a [Direct Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)
+(DAG) with nodes of different types that correspond to source code artifacts
+such as directories, commits, etc. Using
+this [FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) module
+(*SwhFS* for short) you can locally mount, and then navigate as a (virtual)
+file system, parts of the archive identified by {ref}`Software Heritage
+identifiers <persistent-identifiers>` (SWHIDs).
 
-To retrieve information about the source code artifacts the FUSE module
-interacts over the network with the Software Heritage archive via its
-{ref}`Web API <swh-web-api-urls>`.
+To retrieve information about the source code artifacts, SwhFS interacts over
+the network with the Software Heritage archive via its {ref}`Web API
+<swh-web-api-urls>`.
 
 
 ## Command-line interface
 
     $ swh fuse mount <DIR> [SWHID]...
 
-will mount the Software Heritage archive at the local `<DIR>`, the *SWH FUSE
-mount point*. From there, the user will be able to lazily load and navigate the
+will mount the Software Heritage archive at the local `<DIR>`, the *SwhFS mount
+point*. From there, the user will be able to lazily load and navigate the
 archive using SWHID at entry points.
 
 If one or more SWHIDs are also specified, the corresponding objects will be pre-
@@ -38,7 +39,7 @@ For more details see the {ref}`CLI documentation <swh-graph-cli>`.
 
 ## Mount point
 
-The SWH FUSE mount point contain:
+The SwhFS mount point contain:
 
 - `archive/`: initially empty, this directory is lazily populated with one entry
 per accessed SWHID, having actual SWHIDs as names.
@@ -83,7 +84,7 @@ Directory nodes are represented as directories on the file-system, containing
 one entry for each entry of the archived directory. Entry names and other
 metadata, including permissions, will correspond to the archived entry metadata.
 
-Note that the FUSE mount is read-only, no matter what the permissions say. So it
+Note that SwhFS is mounted read-only, no matter what the permissions say. So it
 is possible that, in the context of a directory, a file is presented as
 writable, whereas actually writing to it will fail with `EPERM`.
 
@@ -137,7 +138,7 @@ Each entry is a symlink pointing into `archive/` to the branch target SWHID.
 
 ## Caching
 
-SWH FUSE retrieves both metadata and file contents from the Software Heritage
+SwhFS retrieves both metadata and file contents from the Software Heritage
 archive via the network. In order to obtain reasonable performances several
 caches are used to minimize network transfer.
 
@@ -151,8 +152,8 @@ rather than in SQLite, e.g., under `$XDG_CACHE_HOME/swh/fuse/objects/`
 
 ```
 
-All caches are persistent (i.e., they survive the restart of the SWH FUSE
-process) and global (i.e., they are shared by concurrent SWH FUSE processes).
+All caches are persistent (i.e., they survive the restart of the SwhFS process)
+and global (i.e., they are shared by concurrent SwhFS processes).
 
 We assume that no cache *invalidation* is necessary, due to intrinsic properties
 of the Software Heritage archive, such as integrity verification and append-only

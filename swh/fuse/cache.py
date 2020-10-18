@@ -15,21 +15,22 @@ from swh.web.client.client import typify_json
 
 
 class FuseCache:
-    """ SWH FUSE retrieves both metadata and file contents from the Software
-    Heritage archive via the network. In order to obtain reasonable performances
-    several caches are used to minimize network transfer.
+    """SwhFS retrieves both metadata and file contents from the Software Heritage archive
+    via the network. In order to obtain reasonable performances several caches are used
+    to minimize network transfer.
 
     Caches are stored on disk in SQLite databases located at
     `$XDG_CACHE_HOME/swh/fuse/`.
 
-    All caches are persistent (i.e., they survive the restart of the SWH FUSE
-    process) and global (i.e., they are shared by concurrent SWH FUSE
-    processes).
+    All caches are persistent (i.e., they survive the restart of the SwhFS process) and
+    global (i.e., they are shared by concurrent SwhFS processes).
 
     We assume that no cache *invalidation* is necessary, due to intrinsic
     properties of the Software Heritage archive, such as integrity verification
     and append-only archive changes. To clean the caches one can just remove the
-    corresponding files from disk. """
+    corresponding files from disk.
+
+    """
 
     def __init__(self, cache_conf: Dict[str, Any]):
         self.cache_conf = cache_conf
