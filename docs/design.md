@@ -34,7 +34,7 @@ archive using SWHID at entry points.
 If one or more SWHIDs are also specified, the corresponding objects will be pre-
 fetched from the archive at mount-time and available at `<DIR>/archive/<SWHID>`.
 
-For more details see the {ref}`CLI documentation <swh-graph-cli>`.
+For more details see the {ref}`CLI documentation <swh-fuse-cli>`.
 
 
 ## Mount point
