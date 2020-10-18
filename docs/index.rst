@@ -10,4 +10,5 @@
    cli
    configuration
    Design notes <design>
+   Tutorial <tutorial>
    API reference </apidoc/swh.fuse>
