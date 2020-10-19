@@ -234,7 +234,8 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
-        fuse_options.add("debug")
+        if logging.root.level <= logging.DEBUG:
+            fuse_options.add("debug")
 
         try:
             pyfuse3.init(fs, root_path, fuse_options)
