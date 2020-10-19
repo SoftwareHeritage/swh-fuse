@@ -56,16 +56,30 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 def fuse(ctx, config_file):
     """Software Heritage virtual file system"""
 
-    if not config_file and config.config_exists(DEFAULT_CONFIG_PATH):
-        config_file = DEFAULT_CONFIG_PATH
+    import pprint
 
     if not config_file:
-        conf = DEFAULT_CONFIG
-    else:
-        # recursive merge not done by config.read
-        conf = config.read_raw_config(config.config_basepath(config_file))
-        conf = config.merge_configs(DEFAULT_CONFIG, conf)
+        config_file = DEFAULT_CONFIG_PATH
 
+    try:
+        logging.info(f"Loading configuration from: {config_file}")
+        conf = config.read_raw_config(config.config_basepath(config_file))
+        if not conf:
+            raise ValueError(f"Cannot parse configuration file: {config_file}")
+
+        if config_file == DEFAULT_CONFIG_PATH:
+            try:
+                conf = conf["swh"]["fuse"]
+            except KeyError:
+                pass
+
+        # recursive merge not done by config.read
+        conf = config.merge_configs(DEFAULT_CONFIG, conf)
+    except Exception as err:
+        logging.warning(f"Using default configuration (cannot load custom one: {err})")
+        conf = DEFAULT_CONFIG
+
+    logging.info(f"Read configuration: \n{pprint.pformat(conf)}")
     ctx.ensure_object(dict)
     ctx.obj["config"] = conf
 
@@ -131,7 +145,8 @@ def mount(ctx, swhids, path, foreground):
                 }
             )
 
-        asyncio.run(fuse.main(swhids, path, ctx.obj["config"]))
+        conf = ctx.obj["config"]
+        asyncio.run(fuse.main(swhids, path, conf))
 
 
 @fuse.command()
