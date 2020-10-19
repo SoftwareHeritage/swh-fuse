@@ -23,7 +23,7 @@ from swh.fuse.tests.data.api_data import API_URL, MOCK_ARCHIVE
 def web_api_mock(requests_mock):
     for api_call, data in MOCK_ARCHIVE.items():
         # Convert Python dict JSON into a string (only for non-raw API call)
-        if not api_call.endswith("raw/"):
+        if not api_call.endswith("raw/") and not api_call.startswith("graph/"):
             data = json.dumps(data)
         requests_mock.get(f"{API_URL}/{api_call}", text=data)
     return requests_mock
@@ -35,7 +35,11 @@ def fuse_mntdir(web_api_mock):
     tmpfile = NamedTemporaryFile(suffix=".swh-fuse-test.yml")
 
     config = {
-        "cache": {"metadata": {"in-memory": True}, "blob": {"in-memory": True}},
+        "cache": {
+            "metadata": {"in-memory": True},
+            "blob": {"in-memory": True},
+            "history": {"in-memory": True},
+        },
         "web-api": {"url": API_URL, "auth-token": None},
     }
 

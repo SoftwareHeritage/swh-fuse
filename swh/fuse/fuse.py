@@ -18,7 +18,7 @@ import requests
 from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
-from swh.model.identifiers import CONTENT, SWHID
+from swh.model.identifiers import CONTENT, REVISION, SWHID
 from swh.web.client.client import WebAPIClient
 
 
@@ -76,7 +76,6 @@ class Fuse(pyfuse3.Operations):
             return cache
 
         try:
-            # TODO: swh-graph API
             typify = False  # Get the raw JSON from the API
             # TODO: async web API
             loop = asyncio.get_event_loop()
@@ -111,6 +110,30 @@ class Fuse(pyfuse3.Operations):
         except requests.HTTPError as err:
             logging.error(f"Cannot fetch blob for object {swhid}: {err}")
             raise
+
+    async def get_history(self, swhid: SWHID) -> List[SWHID]:
+        if swhid.object_type != REVISION:
+            raise pyfuse3.FUSEError(errno.EINVAL)
+
+        cache = await self.cache.history.get(swhid)
+        if cache:
+            return cache
+
+        try:
+            # Use the swh-graph API to retrieve the full history very fast
+            call = f"graph/visit/edges/{swhid}?edges=rev:rev"
+            loop = asyncio.get_event_loop()
+            history = await loop.run_in_executor(None, self.web_api._call, call)
+            await self.cache.history.set(history.text)
+            # Retrieve it from cache so it is correctly typed
+            return await self.cache.history.get(swhid)
+        except requests.HTTPError as err:
+            logging.error(f"Cannot fetch history for object {swhid}: {err}")
+            # Ignore exception since swh-graph does not necessarily contain the
+            # most recent artifacts from the archive. Computing the full history
+            # from the Web API is too computationally intensive so simply return
+            # an empty list.
+            return []
 
     async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
         """ Return entry attributes """

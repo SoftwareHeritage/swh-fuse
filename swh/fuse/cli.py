@@ -30,6 +30,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "cache": {
         "metadata": {"path": CACHE_HOME_DIR / "swh/fuse/metadata.sqlite"},
         "blob": {"path": CACHE_HOME_DIR / "swh/fuse/blob.sqlite"},
+        "history": {"path": CACHE_HOME_DIR / "swh/fuse/history.sqlite"},
     },
     "web-api": {
         "url": "https://archive.softwareheritage.org/api/1",
@@ -194,5 +195,5 @@ def clean(ctx):
             pass
 
     conf = ctx.obj["config"]
-    for cache_name in ["blob", "metadata"]:
+    for cache_name in ["blob", "metadata", "history"]:
         rm_cache(conf, cache_name)

@@ -17,6 +17,6 @@ def test_list_branches(fuse_mntdir):
 def test_access_rev_target(fuse_mntdir):
     branch_name = urllib.parse.quote_plus("refs/heads/master")
     dir_path = fuse_mntdir / "archive" / ROOT_SNP / branch_name
-    expected = ["meta.json", "root", "parent", "parents"]
+    expected = ["meta.json", "root", "parent", "parents", "history"]
     actual = os.listdir(dir_path)
     assert set(actual) == set(expected)

@@ -31,9 +31,9 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "length": 10084,
         "status": "visible",
         "checksums": {
-            "sha256": "7152be0097b003d148f773ce0be0a695219c636f4f20073993335758c810166c",
-            "sha1": "0d84ad5f5167010347a13cf0be95f47a3cb99dfa",
             "blake2s256": "fe43b0ad08a9bf943a912f67b5e7d98e58fbd4ff318dcd9a1edaceceefe9ebca",
+            "sha1": "0d84ad5f5167010347a13cf0be95f47a3cb99dfa",
+            "sha256": "7152be0097b003d148f773ce0be0a695219c636f4f20073993335758c810166c",
             "sha1_git": "61d3c9e1157203f0c4ed5165608d92294eaca808",
         },
         "data_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:61d3c9e1157203f0c4ed5165608d92294eaca808/raw/",
@@ -52,8 +52,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 357,
             "checksums": {
-                "sha256": "59a397e1ac39dd858750476ebd621ad0b468e511c3bea56fb8b507849409bdde",
                 "sha1": "ce9cce2dad1505a8d35c229943925046d3a4cbc8",
+                "sha256": "59a397e1ac39dd858750476ebd621ad0b468e511c3bea56fb8b507849409bdde",
                 "sha1_git": "a7de7ce85593c140267bd3bafa3812859d8f259f",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:a7de7ce85593c140267bd3bafa3812859d8f259f/",
@@ -67,8 +67,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 1054,
             "checksums": {
-                "sha256": "d0d262bc2f18bda49a434222ff508f8fe43da72b31b06138cb81b9d8fc6c471a",
                 "sha1": "874e94541299f36e7d45d5e60252cc360421d921",
+                "sha256": "d0d262bc2f18bda49a434222ff508f8fe43da72b31b06138cb81b9d8fc6c471a",
                 "sha1_git": "d9761ce40927ce92d29daa23b4496e04b9e97e4f",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:d9761ce40927ce92d29daa23b4496e04b9e97e4f/",
@@ -82,8 +82,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 1638,
             "checksums": {
-                "sha256": "429734af1b42ca1d4e7b8112a9fbcb0d13ec8a89cc92864bddd6a4036a68ead9",
                 "sha1": "2728096a9234a05c2e246dbf437cc99969a7ed73",
+                "sha256": "429734af1b42ca1d4e7b8112a9fbcb0d13ec8a89cc92864bddd6a4036a68ead9",
                 "sha1_git": "003e50d0788e4c6efb0d4315556a8c1ce0cf73ef",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:003e50d0788e4c6efb0d4315556a8c1ce0cf73ef/",
@@ -97,8 +97,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 16168,
             "checksums": {
-                "sha256": "8b0443f512c8540b2942bfad7b2057bf05d3718c8d00e4e04099575a1b3cba1d",
                 "sha1": "272e26eb45fbe4d57d2b3ef771b728aa37d45f04",
+                "sha256": "8b0443f512c8540b2942bfad7b2057bf05d3718c8d00e4e04099575a1b3cba1d",
                 "sha1_git": "6ab6be26cf101388162fbec2a942d5352ecea49a",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:6ab6be26cf101388162fbec2a942d5352ecea49a/",
@@ -112,8 +112,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 131,
             "checksums": {
-                "sha256": "3c4d1c4de2e6991695f5dc495f7530ecb188dfafdb1f47a1323ce7159987accd",
                 "sha1": "8242335087079c2fafb18c1f6f89bcdb8f6ba647",
+                "sha256": "3c4d1c4de2e6991695f5dc495f7530ecb188dfafdb1f47a1323ce7159987accd",
                 "sha1_git": "e3708bc485399fd42b32c6a1c24491771afa1a04",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:e3708bc485399fd42b32c6a1c24491771afa1a04/",
@@ -127,8 +127,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 21302,
             "checksums": {
-                "sha256": "0ce1302f56e93ac9cee754253690d5400f907e80d63d175e603ef26a537c5131",
                 "sha1": "3439b8ccdf39af7b95a646c6ae3fa18fe86e6420",
+                "sha256": "0ce1302f56e93ac9cee754253690d5400f907e80d63d175e603ef26a537c5131",
                 "sha1_git": "fc8ca5d07b21280c575477457b8e4e3e953b26b4",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:fc8ca5d07b21280c575477457b8e4e3e953b26b4/",
@@ -142,8 +142,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 9322,
             "checksums": {
-                "sha256": "401266ab45019fe25d501eb10f11b85140ecf54a739fc1e3d26800ed276f899a",
                 "sha1": "9fa123623c5ecf1fa171c3a211c41dc1b4767fe8",
+                "sha256": "401266ab45019fe25d501eb10f11b85140ecf54a739fc1e3d26800ed276f899a",
                 "sha1_git": "dc9abf84b8e5a4d3b6ab5472883f0997fa0454cc",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:dc9abf84b8e5a4d3b6ab5472883f0997fa0454cc/",
@@ -157,8 +157,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 116575,
             "checksums": {
-                "sha256": "8a0f9f9557435540a797032ae005fa40cae933cf906730bf95cf1d12e850e0a0",
                 "sha1": "cb30c3049af7a34291af1fff80ecb91f8728879a",
+                "sha256": "8a0f9f9557435540a797032ae005fa40cae933cf906730bf95cf1d12e850e0a0",
                 "sha1_git": "80c90243e5db7130efa10f96e19fb65a9cbcf140",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:80c90243e5db7130efa10f96e19fb65a9cbcf140/",
@@ -172,8 +172,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 2436,
             "checksums": {
-                "sha256": "5eefbe2e4fad05f80b63450a764b646dd3c691376cbe8aaf7ef68b9911ea5704",
                 "sha1": "037cc780fa9836ec344fe02b47ab5c3642fe26b1",
+                "sha256": "5eefbe2e4fad05f80b63450a764b646dd3c691376cbe8aaf7ef68b9911ea5704",
                 "sha1_git": "9d5c27b96df5d435daaded1ece44d1c8b6b613c1",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:9d5c27b96df5d435daaded1ece44d1c8b6b613c1/",
@@ -187,8 +187,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 9723,
             "checksums": {
-                "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
                 "sha1": "6e5c4711bcae04967d7f5b5e01cf56ae03bebe7a",
+                "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
                 "sha1_git": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d/",
@@ -202,8 +202,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 1023,
             "checksums": {
-                "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
                 "sha1": "ce3a2603094e799f42ce99c40941544dfcc5c4a5",
+                "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
                 "sha1_git": "31aa79387f27e730e33d871925e152e35e428031",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:31aa79387f27e730e33d871925e152e35e428031/",
@@ -217,8 +217,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 10084,
             "checksums": {
-                "sha256": "7152be0097b003d148f773ce0be0a695219c636f4f20073993335758c810166c",
                 "sha1": "0d84ad5f5167010347a13cf0be95f47a3cb99dfa",
+                "sha256": "7152be0097b003d148f773ce0be0a695219c636f4f20073993335758c810166c",
                 "sha1_git": "61d3c9e1157203f0c4ed5165608d92294eaca808",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:61d3c9e1157203f0c4ed5165608d92294eaca808/",
@@ -232,8 +232,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 436110,
             "checksums": {
-                "sha256": "9efd0b82142e37f24948d185a359c84d57c8894ef32480a98e963c5076400f7f",
                 "sha1": "971916d3e574a3b1caa332e144d3cd85d396aa39",
+                "sha256": "9efd0b82142e37f24948d185a359c84d57c8894ef32480a98e963c5076400f7f",
                 "sha1_git": "77d0bbe57912bed5a90c2f1d3628eb7bdcab0dd8",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:77d0bbe57912bed5a90c2f1d3628eb7bdcab0dd8/",
@@ -247,8 +247,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 22148,
             "checksums": {
-                "sha256": "f77840688189e2a3fb1f7921886e763382d7c65b7b044bb4d92f21957c7773e2",
                 "sha1": "604c62c6a08002c18795f0e3c70bdc454ad8889c",
+                "sha256": "f77840688189e2a3fb1f7921886e763382d7c65b7b044bb4d92f21957c7773e2",
                 "sha1_git": "c9e17337ee23f801857093ec1237bbb833ae17b3",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:c9e17337ee23f801857093ec1237bbb833ae17b3/",
@@ -262,8 +262,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 275,
             "checksums": {
-                "sha256": "5f6e26a0f2993b96749fce11791631e8b0085f344f8c135b710e182c4d6dd420",
                 "sha1": "f6a766df481855359c1dac80c0262a5e6c3f3aab",
+                "sha256": "5f6e26a0f2993b96749fce11791631e8b0085f344f8c135b710e182c4d6dd420",
                 "sha1_git": "eeb8d081d34549f5ca2b19f703bbb4e547264e46",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:eeb8d081d34549f5ca2b19f703bbb4e547264e46/",
@@ -277,8 +277,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 1014,
             "checksums": {
-                "sha256": "37bcf3d674319038e17f9d607a5df81b93ea2b96408db43ba9920c6bbafad47a",
                 "sha1": "b778b5d9c139074d0eba57486419d2513af537ec",
+                "sha256": "37bcf3d674319038e17f9d607a5df81b93ea2b96408db43ba9920c6bbafad47a",
                 "sha1_git": "73f8cc1ff68c68bbbbfe6216f4b0f00626701672",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:73f8cc1ff68c68bbbbfe6216f4b0f00626701672/",
@@ -301,8 +301,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 971,
             "checksums": {
-                "sha256": "f405f6325384e99729cc883ff871512f1be4829259059d2d59a7b47e3062ef90",
                 "sha1": "07d3df8565a55d2ddf1502b7fb0b173d128e3fda",
+                "sha256": "f405f6325384e99729cc883ff871512f1be4829259059d2d59a7b47e3062ef90",
                 "sha1_git": "7ece7f977ce2a39b76c002105aacb1598885a36a",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:7ece7f977ce2a39b76c002105aacb1598885a36a/",
@@ -316,8 +316,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 270,
             "checksums": {
-                "sha256": "3573a0e5a4def372ad5800b3f76aa4163b60bce4596fac892de737e409380baf",
                 "sha1": "6eb663ee7ac8d3849139dca2e60c00f2935915eb",
+                "sha256": "3573a0e5a4def372ad5800b3f76aa4163b60bce4596fac892de737e409380baf",
                 "sha1_git": "7973730ef177cd600aaf4baebe1b40a81ed1b085",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:7973730ef177cd600aaf4baebe1b40a81ed1b085/",
@@ -342,8 +342,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 92,
             "checksums": {
-                "sha256": "3cfb6483c2ff498754aa2cf9ef41347cc5fe41c7753bc74c1db5f3160d07d0b4",
                 "sha1": "a5f982a0831d5c563610de8d3f82ab3a574e6f97",
+                "sha256": "3cfb6483c2ff498754aa2cf9ef41347cc5fe41c7753bc74c1db5f3160d07d0b4",
                 "sha1_git": "f4898dc676530356e86b287c42018a2ad4cd5699",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:f4898dc676530356e86b287c42018a2ad4cd5699/",
@@ -357,8 +357,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 94,
             "checksums": {
-                "sha256": "10e8220d761c9ff87954417effad9c6c381739732e12e7975129c845beda6721",
                 "sha1": "609a26fbd8a91083d7fb551d5e1096ed7e95987d",
+                "sha256": "10e8220d761c9ff87954417effad9c6c381739732e12e7975129c845beda6721",
                 "sha1_git": "920c6edc389fe8aafdd17f582df8af6aed80cf2e",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:920c6edc389fe8aafdd17f582df8af6aed80cf2e/",
@@ -372,8 +372,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 93,
             "checksums": {
-                "sha256": "0d402aa08c59e2f134f0bc6696c4d81cbda379772a8b4a4f959270ef1713ed42",
                 "sha1": "dd14bfdaf0b97f433c6a107942b4bfb3f9080a86",
+                "sha256": "0d402aa08c59e2f134f0bc6696c4d81cbda379772a8b4a4f959270ef1713ed42",
                 "sha1_git": "b44de8e2cb32d3cd72213bcb4228870f1edcf0dc",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:b44de8e2cb32d3cd72213bcb4228870f1edcf0dc/",
@@ -405,8 +405,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 72,
             "checksums": {
-                "sha256": "6ce1630d627e002c01e21bb1c14994cf814ebe00fab6ca6e97d4c051a9fccc83",
                 "sha1": "f054d111eeef94a0337a06e2d2b81b9a276cdab3",
+                "sha256": "6ce1630d627e002c01e21bb1c14994cf814ebe00fab6ca6e97d4c051a9fccc83",
                 "sha1_git": "8f881657bdc1a1965140ab4941436a06bee2f3ba",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:8f881657bdc1a1965140ab4941436a06bee2f3ba/",
@@ -420,8 +420,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 362,
             "checksums": {
-                "sha256": "93aa2c5f3a3a890581870a66d6233b5fdb181901694c8f95c8155ed621ada30c",
                 "sha1": "c255bb1015b2da689f615cd4b8dd0a8c04eab4fd",
+                "sha256": "93aa2c5f3a3a890581870a66d6233b5fdb181901694c8f95c8155ed621ada30c",
                 "sha1_git": "77e151235e822d4281d365d6908d13bf8073a231",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:77e151235e822d4281d365d6908d13bf8073a231/",
@@ -435,8 +435,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 265,
             "checksums": {
-                "sha256": "7fea658f27efcb8eea07748e98b2fbc80523ff5c2aadd39556f65c7ccd9da4bc",
                 "sha1": "1e450161ad277053fe76c03a209de22b59a4b534",
+                "sha256": "7fea658f27efcb8eea07748e98b2fbc80523ff5c2aadd39556f65c7ccd9da4bc",
                 "sha1_git": "604a65dc8a9b98cd797e6555d1802a49c6067cef",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:604a65dc8a9b98cd797e6555d1802a49c6067cef/",
@@ -450,8 +450,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 267,
             "checksums": {
-                "sha256": "da97f73a003c3a658500547e8a97be80b0481c5aa753681f8391e9fd24a28349",
                 "sha1": "26b33551387b7defe83d0ec2f69e70bc2df5a4df",
+                "sha256": "da97f73a003c3a658500547e8a97be80b0481c5aa753681f8391e9fd24a28349",
                 "sha1_git": "4501d74073e900846f0bcf13196bfca39f6e9484",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:4501d74073e900846f0bcf13196bfca39f6e9484/",
@@ -465,8 +465,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 139,
             "checksums": {
-                "sha256": "5aa7054e3c2238dc093c46547604beece9b91e186364b1fe2bd5029a9676643b",
                 "sha1": "a5481e1cb75eed8d90663e33d3ac6d9c4ac47c56",
+                "sha256": "5aa7054e3c2238dc093c46547604beece9b91e186364b1fe2bd5029a9676643b",
                 "sha1_git": "85badc11d64f03de8b2fd9262b1fb2cf0470cbcb",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:85badc11d64f03de8b2fd9262b1fb2cf0470cbcb/",
@@ -480,8 +480,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 126,
             "checksums": {
-                "sha256": "17b521b83aef7183c2c22841ebf2ac1e2f5a42712de7467e859dc4c7b752fbb1",
                 "sha1": "0212ebfaed13a7847a49588c6197d02f7198efcc",
+                "sha256": "17b521b83aef7183c2c22841ebf2ac1e2f5a42712de7467e859dc4c7b752fbb1",
                 "sha1_git": "fd71d3e3c8e79e1030039dc17f587cda6018df3a",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:fd71d3e3c8e79e1030039dc17f587cda6018df3a/",
@@ -495,8 +495,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 132,
             "checksums": {
-                "sha256": "aade247c7f69aba4248450f5f1a8be77ae87c94fc73e597d1edfe134df911214",
                 "sha1": "88e47f1c32dd2df8d338ccfa378e056ac5979dfd",
+                "sha256": "aade247c7f69aba4248450f5f1a8be77ae87c94fc73e597d1edfe134df911214",
                 "sha1_git": "1130a10bd1c5540c1f3f5be2a0da56fda1acb444",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:1130a10bd1c5540c1f3f5be2a0da56fda1acb444/",
@@ -510,8 +510,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 115,
             "checksums": {
-                "sha256": "194a44f13a9806027e6f39fdd3cf2d32cea9591ebf8eed88eac76bfd70a76c17",
                 "sha1": "9ba9912b177cb33b2a42651780fdb597e1ded091",
+                "sha256": "194a44f13a9806027e6f39fdd3cf2d32cea9591ebf8eed88eac76bfd70a76c17",
                 "sha1_git": "228cb3c624f8958abc5526886745f03dbf912fac",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:228cb3c624f8958abc5526886745f03dbf912fac/",
@@ -525,8 +525,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 143,
             "checksums": {
-                "sha256": "df1ea1cff3fe6082222840754dbb440980cd9cf04d85e5287d9f23d5db5ea863",
                 "sha1": "3c1ec7447489a516cd4d9e1389073e1862d5ff22",
+                "sha256": "df1ea1cff3fe6082222840754dbb440980cd9cf04d85e5287d9f23d5db5ea863",
                 "sha1_git": "767dafc5baf9208e3927680947fe3da83c493201",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:767dafc5baf9208e3927680947fe3da83c493201/",
@@ -540,8 +540,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 135,
             "checksums": {
-                "sha256": "b8b132edf8d80694638dbb85f84ca8a098103618fc92ca1a2c2f06f45cdbd955",
                 "sha1": "7a5ecf2d63691280e4fb433ed6dc2c9335d3b917",
+                "sha256": "b8b132edf8d80694638dbb85f84ca8a098103618fc92ca1a2c2f06f45cdbd955",
                 "sha1_git": "6c511548789b73656a9303f5dbf153274d62f4de",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:6c511548789b73656a9303f5dbf153274d62f4de/",
@@ -555,8 +555,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 293,
             "checksums": {
-                "sha256": "9eb9ba201ac0a4c1347db17e89cdbdfdf7e682cf9ecb26dc5aa7d86454facfd2",
                 "sha1": "6abd35d1edcb1569ce8fa82c87b71ecef5ba49e2",
+                "sha256": "9eb9ba201ac0a4c1347db17e89cdbdfdf7e682cf9ecb26dc5aa7d86454facfd2",
                 "sha1_git": "bafdb2fe0bbc3790867d1e8a117226f033c298ae",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:bafdb2fe0bbc3790867d1e8a117226f033c298ae/",
@@ -570,8 +570,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 120,
             "checksums": {
-                "sha256": "4a9a99fe8de30d497d3995b2767ded900449a56153da144bc5d78eec30262d79",
                 "sha1": "d70b2391cc30674d1b0d32f69a02f87ce59d961f",
+                "sha256": "4a9a99fe8de30d497d3995b2767ded900449a56153da144bc5d78eec30262d79",
                 "sha1_git": "d030614489bccfd3ad87f3619003fe43ed65a7f6",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:d030614489bccfd3ad87f3619003fe43ed65a7f6/",
@@ -585,8 +585,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 139,
             "checksums": {
-                "sha256": "cacfb85fcf58614e40a91b112ae7e6d7a3132a4d5d43c24d2163a03a183b7eb1",
                 "sha1": "0c649ef00ae61445fde8f6509b82b1b3998e14cf",
+                "sha256": "cacfb85fcf58614e40a91b112ae7e6d7a3132a4d5d43c24d2163a03a183b7eb1",
                 "sha1_git": "21217bf54d7693e50a4777601536f2fca935edc0",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:21217bf54d7693e50a4777601536f2fca935edc0/",
@@ -600,8 +600,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 125,
             "checksums": {
-                "sha256": "61af0dc860ae011b5a4e8eba990d3bc581ace146736247b8e450f4c663f664cd",
                 "sha1": "d85d294a9ed8d11d31e2e25b6272e8e6e3058e00",
+                "sha256": "61af0dc860ae011b5a4e8eba990d3bc581ace146736247b8e450f4c663f664cd",
                 "sha1_git": "28d9fb48b73e74485f6a8b930428a7fbb6db81ef",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:28d9fb48b73e74485f6a8b930428a7fbb6db81ef/",
@@ -615,8 +615,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 134,
             "checksums": {
-                "sha256": "4a5e663d343fcbd8fb69bbbd4a1b0566862cea079c7517cafdb261b775e6195a",
                 "sha1": "5122f12a66652ebc5d2357a25695590eb6a60b4f",
+                "sha256": "4a5e663d343fcbd8fb69bbbd4a1b0566862cea079c7517cafdb261b775e6195a",
                 "sha1_git": "3c1a82d0174494f9c276eca6c20801fc2fdb1a6b",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:3c1a82d0174494f9c276eca6c20801fc2fdb1a6b/",
@@ -630,8 +630,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 108,
             "checksums": {
-                "sha256": "b25c83b21ca63b3c896ba37452d5b1f1b6d159b4458ec53f72972d56ab19de3f",
                 "sha1": "cb4ff4bf5f73aabeb72b51fae345a355d047381c",
+                "sha256": "b25c83b21ca63b3c896ba37452d5b1f1b6d159b4458ec53f72972d56ab19de3f",
                 "sha1_git": "b9e70e7cfd7e06f27160657e9bb509011b5bf89a",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:b9e70e7cfd7e06f27160657e9bb509011b5bf89a/",
@@ -645,8 +645,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 4366,
             "checksums": {
-                "sha256": "353459533ed0b76facfb75b57f690d754360b9cd8d7bce8195191d3e5d40ac1b",
                 "sha1": "cede6ea0203a41976e3a729426e94c769d8af9ea",
+                "sha256": "353459533ed0b76facfb75b57f690d754360b9cd8d7bce8195191d3e5d40ac1b",
                 "sha1_git": "0a2a80e8fd6e2b4d62dcf9a93f2dc5983b0da249",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:0a2a80e8fd6e2b4d62dcf9a93f2dc5983b0da249/",
@@ -660,8 +660,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 150,
             "checksums": {
-                "sha256": "0d48afe88e4ff6e88b7b09b35f02f368ca29a80a8a823be9051746e8dc279059",
                 "sha1": "e51eb22fb0afc96a6cda88204bd37ef363518d4c",
+                "sha256": "0d48afe88e4ff6e88b7b09b35f02f368ca29a80a8a823be9051746e8dc279059",
                 "sha1_git": "48712d8d49b55f3f70c5134247dfc54ce46744e2",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:48712d8d49b55f3f70c5134247dfc54ce46744e2/",
@@ -693,8 +693,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 2639,
             "checksums": {
-                "sha256": "3e12811e42249800a98e69e31d1b9ed7941749981f77f618f97c707a5c24b7e8",
                 "sha1": "9656218548d47dda0b43ad16f617914a283ae804",
+                "sha256": "3e12811e42249800a98e69e31d1b9ed7941749981f77f618f97c707a5c24b7e8",
                 "sha1_git": "d26fcfc0168d7676138a74ac2ef336b115268b30",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:d26fcfc0168d7676138a74ac2ef336b115268b30/",
@@ -708,8 +708,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 118,
             "checksums": {
-                "sha256": "254be837de875bb8bf0e650ad1c94090eebf52c754e174e9c3fade6867263a88",
                 "sha1": "05a24674274e70062bdc0088a31f3126a0f898fc",
+                "sha256": "254be837de875bb8bf0e650ad1c94090eebf52c754e174e9c3fade6867263a88",
                 "sha1_git": "33e3860c2a4340ba428e789a980bafeeb7982b02",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:33e3860c2a4340ba428e789a980bafeeb7982b02/",
@@ -732,8 +732,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 137,
             "checksums": {
-                "sha256": "f7e15476ea21caf0a81e74a7e2389e88eaa8e177268924b04b7619dc9ef92f0f",
                 "sha1": "4b7736799c39dc3636fe0c8d4494bfef774f8e79",
+                "sha256": "f7e15476ea21caf0a81e74a7e2389e88eaa8e177268924b04b7619dc9ef92f0f",
                 "sha1_git": "fdeea17ed1124bde8b8453bd4c6b0a6035079074",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:fdeea17ed1124bde8b8453bd4c6b0a6035079074/",
@@ -747,8 +747,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 762,
             "checksums": {
-                "sha256": "1d5fc8b3d3dc393ba1e67b4b0b267ec4b14357fb6c3990ace2e0f03c4aa7c719",
                 "sha1": "0590cfcec734441c5d9f1ea46f445c80becd27c6",
+                "sha256": "1d5fc8b3d3dc393ba1e67b4b0b267ec4b14357fb6c3990ace2e0f03c4aa7c719",
                 "sha1_git": "61ee12739fb37426603b65e857060f03aefb3434",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:61ee12739fb37426603b65e857060f03aefb3434/",
@@ -771,8 +771,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 7604,
             "checksums": {
-                "sha256": "029da15998da9bf0bd9c6ea190cdfbf3a3563ae18bfe50674efd99eca62a3a85",
                 "sha1": "6e86ec1077ef0c268a373b42ecf173de45e4891f",
+                "sha256": "029da15998da9bf0bd9c6ea190cdfbf3a3563ae18bfe50674efd99eca62a3a85",
                 "sha1_git": "a92d4ff54db837a6e64dd260d66b3bc5e2e60f43",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:a92d4ff54db837a6e64dd260d66b3bc5e2e60f43/",
@@ -786,8 +786,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 108,
             "checksums": {
-                "sha256": "c474313aabfbc668f205eaf146c31bc47470fb322d1fd96008ac8ddbb585273f",
                 "sha1": "014d60b4041b6135c2e2c6a2c47d99334de473f6",
+                "sha256": "c474313aabfbc668f205eaf146c31bc47470fb322d1fd96008ac8ddbb585273f",
                 "sha1_git": "5008b228c5c85fe04df289f4180a83fd4f5ce7b9",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:5008b228c5c85fe04df289f4180a83fd4f5ce7b9/",
@@ -819,8 +819,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 5192,
             "checksums": {
-                "sha256": "0898345d1f94b6b15f324a1c9afa4df85fc45fb05960879ac61e9a9ac0b47835",
                 "sha1": "e584054db3a809e089d84b1680d78cadb7eacb1f",
+                "sha256": "0898345d1f94b6b15f324a1c9afa4df85fc45fb05960879ac61e9a9ac0b47835",
                 "sha1_git": "dfd8e9db3c5c9cacb236c7d1cacc84791649920f",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:dfd8e9db3c5c9cacb236c7d1cacc84791649920f/",
@@ -843,8 +843,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 84,
             "checksums": {
-                "sha256": "5d5ebec01e6606b7f0f8ff2fac793a8b870847b715d069c1ff88b81ddb1ecdc1",
                 "sha1": "85f5f5a92b0904bcfcf0eb4b54dae893b2b17d52",
+                "sha256": "5d5ebec01e6606b7f0f8ff2fac793a8b870847b715d069c1ff88b81ddb1ecdc1",
                 "sha1_git": "d4a25efec17f6895baeed32178ca69baad319159",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:d4a25efec17f6895baeed32178ca69baad319159/",
@@ -858,8 +858,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 177,
             "checksums": {
-                "sha256": "6d2a400c36e46a97acadeecac8103ef603cd1bf5533df453cf519d4a4a769193",
                 "sha1": "98bbf3d1c8e78e1ab161de9a5385499668d516f1",
+                "sha256": "6d2a400c36e46a97acadeecac8103ef603cd1bf5533df453cf519d4a4a769193",
                 "sha1_git": "320283f31b51feb3e3fd24a632195fcb42a5181a",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:320283f31b51feb3e3fd24a632195fcb42a5181a/",
@@ -882,8 +882,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 342,
             "checksums": {
-                "sha256": "5c43d83bf45d7a0e8e10f2f66730d8e8a737c77668e1f7a522444d46e613efcf",
                 "sha1": "4b4cfe57c5e1aab39eac235699a14dded2c565b0",
+                "sha256": "5c43d83bf45d7a0e8e10f2f66730d8e8a737c77668e1f7a522444d46e613efcf",
                 "sha1_git": "7215e4f13c9bb4d914032eda4192430e69c51a41",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:7215e4f13c9bb4d914032eda4192430e69c51a41/",
@@ -1229,9 +1229,9 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "length": 5279,
         "status": "visible",
         "checksums": {
-            "sha256": "d3923bc07a944321af5eb781c1ae7b86b1f8c07385dce3adad1eee052f2cda47",
-            "sha1": "c640e23feb6f93b02878de5b02d70e87388a2bd2",
             "blake2s256": "6f515bb07318b5730f7c2d0aa4dbe24fe1b65ed4f38cf3500a8ffbdbb1ea3cfe",
+            "sha1": "c640e23feb6f93b02878de5b02d70e87388a2bd2",
+            "sha256": "d3923bc07a944321af5eb781c1ae7b86b1f8c07385dce3adad1eee052f2cda47",
             "sha1_git": "be5effea679c057aec2bb020f0241b1d1d660840",
         },
         "data_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:be5effea679c057aec2bb020f0241b1d1d660840/raw/",
@@ -1274,8 +1274,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 27,
             "checksums": {
-                "sha256": "28d6e007e8ba8de537247c2e4dce5ea081919da9eabd2a1cd580afd02425275b",
                 "sha1": "e757103bdac5b2be6e8f28b47595862dd3d36b2b",
+                "sha256": "28d6e007e8ba8de537247c2e4dce5ea081919da9eabd2a1cd580afd02425275b",
                 "sha1_git": "53ea710b37aef348b3e09478b18e2bfd180efb43",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:53ea710b37aef348b3e09478b18e2bfd180efb43/",
@@ -1298,8 +1298,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 1216,
             "checksums": {
-                "sha256": "e6ab5dc18e4ca7612439c28a991d5a5c09ed2006a5efa2e9034ced6ee995cf1e",
                 "sha1": "37a14e4c123ae1d5006665ef867f84bc23ca2fe8",
+                "sha256": "e6ab5dc18e4ca7612439c28a991d5a5c09ed2006a5efa2e9034ced6ee995cf1e",
                 "sha1_git": "5ddf82d3f5330bad8c830ac6b21bab2e912bee6e",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:5ddf82d3f5330bad8c830ac6b21bab2e912bee6e/",
@@ -1313,8 +1313,8 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "status": "visible",
             "length": 915,
             "checksums": {
-                "sha256": "c63c6cbe41d8fc6fcc3401f0d4d993e42a7ae873dd97fda9dc4cfc2132d61c03",
                 "sha1": "bf83eda0827a970c3cccc9d3ba681c497b1108e9",
+                "sha256": "c63c6cbe41d8fc6fcc3401f0d4d993e42a7ae873dd97fda9dc4cfc2132d61c03",
                 "sha1_git": "d8d2804032211fec42ec197827b049d5dea40ea7",
             },
             "target_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:d8d2804032211fec42ec197827b049d5dea40ea7/",
@@ -1531,4 +1531,6 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/430a9fd4c797c50cea26157141b2408073b2ed91/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/1ac29db0e7280af41064676569a96d1f88ccfa96/",
     },
+    "graph/visit/nodes/swh:1:rev:b8cedc00407a4c56a3bda1ed605c6fc166655447": "swh:1:rev:b08d07143d2b61777d341f8658281adc0f2ac809\nswh:1:rev:133f659766c60ff7a33288ae6f33b0c272792f57",
+    "graph/visit/nodes/swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91": "swh:1:rev:d03456183e85fe7bd465bbe7c8f67885a2528444\nswh:1:rev:3430532a8ee8fd5a7f47647c8c29403384647095",
 }

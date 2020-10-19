@@ -102,6 +102,10 @@ symlink pointing into `archive/`, to the SWHID file for the given parent commit
 - `parent` (note the singular): present if and only if the current commit has a
 single parent commit (which is the most common case). When present it is a
 symlink pointing into `archive/` to the SWHID for the sole parent commit
+- `history`: a virtual directory containing all the parents commit until the
+root commit. Entries are listed as symlinks with the SWHID as directory name,
+pointing into `archive/SWHID`, and are returned in a topological ordering
+similar to `git log` ordering.
 - `meta.json`: metadata for the current node, as a symlink pointing to the
 relevant `meta/<SWHID>.json` file
 
@@ -219,3 +223,15 @@ of the revision virtual directory is listed. More aggressive prefetching might
 happen. For instance, when first opening a rev virtual directory a recursive
 listing of all its ancestor can be retrieved from the remote backend and used to
 recursively populate the parents cache for all ancestors.
+
+
+### History cache
+
+    rev SWHID → ancestor SWHIDs
+
+The history cache map SWHIDs of type `rev` to a list of `rev` SWHIDs
+corresponding to all its revision ancestors, sorted in reverse topological
+order. As the parents cache, the history cache is lazily populated and can be
+prefetched. To efficiently store the ancestor lists, the history cache
+represents ancestors as graph edges (a pair of two SWHID nodes), meaning the
+history cache is shared amongst all revisions parents.

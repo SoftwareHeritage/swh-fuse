@@ -5,11 +5,13 @@
 
 from abc import ABC
 import json
+import logging
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import aiosqlite
 
+from swh.model.exceptions import ValidationError
 from swh.model.identifiers import SWHID, parse_swhid
 from swh.web.client.client import typify_json
 
@@ -38,13 +40,16 @@ class FuseCache:
     async def __aenter__(self):
         self.metadata = MetadataCache(self.cache_conf["metadata"])
         self.blob = BlobCache(self.cache_conf["blob"])
+        self.history = HistoryCache(self.cache_conf["history"])
         await self.metadata.__aenter__()
         await self.blob.__aenter__()
+        await self.history.__aenter__()
         return self
 
     async def __aexit__(self, type=None, val=None, tb=None) -> None:
         await self.metadata.__aexit__()
         await self.blob.__aexit__()
+        await self.history.__aexit__()
 
     async def get_cached_swhids(self) -> AsyncGenerator[SWHID, None]:
         """ Return a list of all previously cached SWHID """
@@ -141,5 +146,68 @@ class BlobCache(AbstractCache):
     async def set(self, swhid: SWHID, blob: bytes) -> None:
         await self.conn.execute(
             "insert into blob_cache values (?, ?)", (str(swhid), blob)
+        )
+        await self.conn.commit()
+
+
+class HistoryCache(AbstractCache):
+    """ The history cache map SWHIDs of type `rev` to a list of `rev` SWHIDs
+    corresponding to all its revision ancestors, sorted in reverse topological
+    order. As the parents cache, the history cache is lazily populated and can
+    be prefetched. To efficiently store the ancestor lists, the history cache
+    represents ancestors as graph edges (a pair of two SWHID nodes), meaning the
+    history cache is shared amongst all revisions parents. """
+
+    async def __aenter__(self):
+        await super().__aenter__()
+        await self.conn.execute(
+            """
+            create table if not exists history_graph (
+                src text not null,
+                dst text not null,
+                unique(src, dst)
+            )
+            """
+        )
+        await self.conn.execute(
+            "create index if not exists index_history_graph on history_graph(src)"
+        )
+        await self.conn.commit()
+        return self
+
+    async def get(self, swhid: SWHID) -> Optional[List[SWHID]]:
+        cursor = await self.conn.execute(
+            """
+            with recursive
+            dfs(node) AS (
+                values(?)
+                union
+                select history_graph.dst
+                from history_graph
+                join dfs on history_graph.src = dfs.node
+            )
+            -- Do not keep the root node since it is not an ancestor
+            select * from dfs limit -1 offset 1
+            """,
+            (str(swhid),),
+        )
+        cache = await cursor.fetchall()
+        if not cache:
+            return None
+
+        history = []
+        for parent in cache:
+            parent = parent[0]
+            try:
+                history.append(parse_swhid(parent))
+            except ValidationError:
+                logging.warning(f"Cannot parse object from history cache: {parent}")
+        return history
+
+    async def set(self, history: str) -> None:
+        history = history.strip()
+        edges = [edge.split(" ") for edge in history.split("\n")]
+        await self.conn.executemany(
+            "insert or ignore into history_graph values (?, ?)", edges
         )
         await self.conn.commit()

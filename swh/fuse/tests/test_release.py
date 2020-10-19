@@ -20,7 +20,7 @@ def test_access_meta(fuse_mntdir):
 
 def test_access_rev_target(fuse_mntdir):
     target_path = fuse_mntdir / "archive" / ROOT_REL / "target"
-    expected = ["meta.json", "root", "parent", "parents"]
+    expected = ["meta.json", "root", "parent", "parents", "history"]
     actual = os.listdir(target_path)
     assert set(actual) == set(expected)
 

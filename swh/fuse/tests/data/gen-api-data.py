@@ -11,7 +11,7 @@ from typing import Any, Dict
 
 import requests
 
-from swh.fuse.tests.data.config import ALL_ENTRIES
+from swh.fuse.tests.data.config import ALL_ENTRIES, ROOT_REV, ROOT_SNP_MASTER_BRANCH
 from swh.model.identifiers import (
     CONTENT,
     DIRECTORY,
@@ -89,6 +89,18 @@ def generate_archive_data(
 for entry in ALL_ENTRIES:
     swhid = parse_swhid(entry)
     generate_archive_data(swhid, recursive=True)
+
+# XXX: temporary fix, this should be retrieved from the public archive but at
+# the moment the /graph API is only for authorized accounts
+# TODO: pick a revision with very few parents and put all history
+MOCK_ARCHIVE[
+    f"graph/visit/nodes/{ROOT_REV}"
+] = """swh:1:rev:b08d07143d2b61777d341f8658281adc0f2ac809
+swh:1:rev:133f659766c60ff7a33288ae6f33b0c272792f57"""
+MOCK_ARCHIVE[
+    f"graph/visit/nodes/{ROOT_SNP_MASTER_BRANCH}"
+] = """swh:1:rev:d03456183e85fe7bd465bbe7c8f67885a2528444
+swh:1:rev:3430532a8ee8fd5a7f47647c8c29403384647095"""
 
 print("# GENERATED FILE, DO NOT EDIT.")
 print("# Run './gen-api-data.py > api_data.py' instead.")

@@ -139,6 +139,9 @@ class Revision(FuseDirEntry):
     - `parent` (note the singular): present if and only if the current commit
       has at least one parent commit (which is the most common case). When
       present it is a symlink pointing into `parents/1/`
+    - `history`: a virtual directory listing all its revision ancestors, sorted
+      in reverse topological order. Each entry is a symlink pointing into
+      `archive/SWHID`.
     - `meta.json`: metadata for the current node, as a symlink pointing to the
       relevant `meta/<SWHID>.json` file """
 
@@ -173,6 +176,13 @@ class Revision(FuseDirEntry):
                 FuseSymlinkEntry, name="parent", target="parents/1/",
             )
 
+        yield self.create_child(
+            RevisionHistory,
+            name="history",
+            mode=int(EntryMode.RDONLY_DIR),
+            swhid=self.swhid,
+        )
+
 
 @dataclass
 class RevisionParents(FuseDirEntry):
@@ -187,6 +197,23 @@ class RevisionParents(FuseDirEntry):
                 FuseSymlinkEntry,
                 name=str(i + 1),
                 target=Path(root_path, f"archive/{parent}"),
+            )
+
+
+@dataclass
+class RevisionHistory(FuseDirEntry):
+    """ Revision virtual `history/` directory """
+
+    swhid: SWHID
+
+    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+        history = await self.fuse.get_history(self.swhid)
+        root_path = self.get_relative_root_path()
+        for swhid in history:
+            yield self.create_child(
+                FuseSymlinkEntry,
+                name=str(swhid),
+                target=Path(root_path, f"archive/{swhid}"),
             )
 
 
