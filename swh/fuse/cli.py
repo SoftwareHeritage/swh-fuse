@@ -3,20 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import asyncio
-from contextlib import ExitStack
-import logging
-import os
-
 # WARNING: do not import unnecessary things here to keep cli startup time under
 # control
+import os
 from pathlib import Path
 from typing import Any, Dict
 
 import click
-from daemon import DaemonContext
 
-from swh.core import config
 from swh.core.cli import CONTEXT_SETTINGS
 from swh.core.cli import swh as swh_cli_group
 from swh.model.cli import SWHIDParamType
@@ -56,7 +50,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 def fuse(ctx, config_file):
     """Software Heritage virtual file system"""
 
+    import logging
     import pprint
+
+    from swh.core import config
 
     if not config_file:
         config_file = DEFAULT_CONFIG_PATH
@@ -119,6 +116,12 @@ def mount(ctx, swhids, path, foreground):
 
     """
 
+    import asyncio
+    from contextlib import ExitStack
+    import logging
+
+    from daemon import DaemonContext
+
     from swh.fuse import fuse
 
     # TODO: set default logging settings when --log-config is not passed
@@ -164,6 +167,7 @@ def umount(ctx, path):
     FUSE-based virtual file system. See ``man fusermount3``.
 
     """
+    import logging
     import subprocess
 
     try:
