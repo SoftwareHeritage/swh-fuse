@@ -84,8 +84,9 @@ class Fuse(pyfuse3.Operations):
             await self.cache.metadata.set(swhid, metadata)
             # Retrieve it from cache so it is correctly typed
             return await self.cache.metadata.get(swhid)
-        except requests.HTTPError:
-            logging.error(f"Unknown SWHID: '{swhid}'")
+        except requests.HTTPError as err:
+            logging.error(f"Cannot fetch metadata for object {swhid}: {err}")
+            raise
 
     async def get_blob(self, swhid: SWHID) -> bytes:
         """ Retrieve the blob bytes for a given content SWHID using Software
@@ -101,11 +102,15 @@ class Fuse(pyfuse3.Operations):
         if cache:
             return cache
 
-        loop = asyncio.get_event_loop()
-        resp = await loop.run_in_executor(None, self.web_api.content_raw, swhid)
-        blob = b"".join(list(resp))
-        await self.cache.blob.set(swhid, blob)
-        return blob
+        try:
+            loop = asyncio.get_event_loop()
+            resp = await loop.run_in_executor(None, self.web_api.content_raw, swhid)
+            blob = b"".join(list(resp))
+            await self.cache.blob.set(swhid, blob)
+            return blob
+        except requests.HTTPError as err:
+            logging.error(f"Cannot fetch blob for object {swhid}: {err}")
+            raise
 
     async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
         """ Return entry attributes """
@@ -147,18 +152,22 @@ class Fuse(pyfuse3.Operations):
         assert isinstance(direntry, FuseDirEntry)
         next_id = offset + 1
         i = 0
-        async for entry in direntry:
-            if i < offset:
-                i += 1
-                continue
+        try:
+            async for entry in direntry:
+                if i < offset:
+                    i += 1
+                    continue
 
-            name = os.fsencode(entry.name)
-            attrs = await self.get_attrs(entry)
-            if not pyfuse3.readdir_reply(token, name, attrs, next_id):
-                break
+                name = os.fsencode(entry.name)
+                attrs = await self.get_attrs(entry)
+                if not pyfuse3.readdir_reply(token, name, attrs, next_id):
+                    break
 
-            next_id += 1
-            self._inode2entry[attrs.st_ino] = entry
+                next_id += 1
+                self._inode2entry[attrs.st_ino] = entry
+        except Exception as err:
+            logging.error(f"Cannot readdir: {err}")
+            raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def open(
         self, inode: int, _flags: int, _ctx: pyfuse3.RequestContext
@@ -176,8 +185,12 @@ class Fuse(pyfuse3.Operations):
 
         entry = self.inode2entry(inode)
         assert isinstance(entry, FuseFileEntry)
-        data = await entry.get_content()
-        return data[offset : offset + length]
+        try:
+            data = await entry.get_content()
+            return data[offset : offset + length]
+        except Exception as err:
+            logging.error(f"Cannot read: {err}")
+            raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def lookup(
         self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
@@ -187,11 +200,14 @@ class Fuse(pyfuse3.Operations):
         name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
         assert isinstance(parent_entry, FuseDirEntry)
-        lookup_entry = await parent_entry.lookup(name)
-        if lookup_entry:
-            return await self.get_attrs(lookup_entry)
-        else:
-            logging.error(f"Unknown name during lookup: '{name}'")
+        try:
+            lookup_entry = await parent_entry.lookup(name)
+            if lookup_entry:
+                return await self.get_attrs(lookup_entry)
+            else:
+                raise ValueError(f"unknown name: {name}")
+        except Exception as err:
+            logging.error(f"Cannot lookup: {err}")
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
@@ -211,7 +227,10 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
 
         # Initially populate the cache
         for swhid in swhids:
-            await fs.get_metadata(swhid)
+            try:
+                await fs.get_metadata(swhid)
+            except Exception as err:
+                logging.error(f"Cannot prefetch object {swhid}: {err}")
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
@@ -220,8 +239,8 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
         try:
             pyfuse3.init(fs, root_path, fuse_options)
             await pyfuse3.main()
-        except Exception as e:
-            logging.error(f"Error running FUSE: {e}")
+        except Exception as err:
+            logging.error(f"Error running FUSE: {err}")
         finally:
             fs.shutdown()
             pyfuse3.close(unmount=True)
