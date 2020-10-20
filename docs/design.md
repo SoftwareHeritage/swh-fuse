@@ -25,7 +25,7 @@ the network with the Software Heritage archive via its {ref}`Web API
 
 ## Command-line interface
 
-    $ swh fuse mount <DIR> [SWHID]...
+    $ swh fs mount <DIR> [SWHID]...
 
 will mount the Software Heritage archive at the local `<DIR>`, the *SwhFS mount
 point*. From there, the user will be able to lazily load and navigate the

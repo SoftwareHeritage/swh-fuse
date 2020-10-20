@@ -38,7 +38,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 }
 
 
-@swh_cli_group.group(name="fuse", context_settings=CONTEXT_SETTINGS)
+@swh_cli_group.group(name="fs", context_settings=CONTEXT_SETTINGS)
 @click.option(
     "-C",
     "--config-file",
@@ -109,7 +109,7 @@ def mount(ctx, swhids, path, foreground):
 
     \b
       $ mkdir swhfs
-      $ swh fuse mount swhfs/
+      $ swh fs mount swhfs/
       $ grep printf swhfs/archive/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2
           printf("Hello, World!");
       $

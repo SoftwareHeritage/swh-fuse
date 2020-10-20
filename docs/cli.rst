@@ -4,5 +4,5 @@ Command-line interface
 ======================
 
 .. click:: swh.fuse.cli:fuse
-  :prog: swh fuse
+  :prog: swh fs
   :show-nested:
