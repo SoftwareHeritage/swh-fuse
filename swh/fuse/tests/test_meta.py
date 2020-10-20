@@ -1,6 +1,6 @@
 import json
 
-from swh.fuse.tests.common import get_data_from_archive
+from swh.fuse.tests.common import get_data_from_web_archive
 from swh.fuse.tests.data.config import ALL_ENTRIES
 
 
@@ -12,5 +12,5 @@ def test_access_meta_file(fuse_mntdir):
 
         file_path_meta = fuse_mntdir / f"meta/{swhid}.json"
         assert file_path_meta.exists()
-        expected = json.dumps(get_data_from_archive(swhid))
+        expected = json.dumps(get_data_from_web_archive(swhid))
         assert file_path_meta.read_text() == expected

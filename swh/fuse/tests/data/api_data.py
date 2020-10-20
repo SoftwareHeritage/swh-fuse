@@ -5,27 +5,6 @@ from typing import Any, Dict
 
 API_URL = "https://invalid-test-only.archive.softwareheritage.org/api/1"
 
-SWHID2URL: Dict[str, str] = {
-    "swh:1:cnt:61d3c9e1157203f0c4ed5165608d92294eaca808": "content/sha1_git:61d3c9e1157203f0c4ed5165608d92294eaca808/",
-    "swh:1:dir:c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578": "directory/c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578/",
-    "swh:1:dir:80ae84abc6122c47aae597fde99645f8663d1aba": "directory/80ae84abc6122c47aae597fde99645f8663d1aba/",
-    "swh:1:rev:b8cedc00407a4c56a3bda1ed605c6fc166655447": "revision/b8cedc00407a4c56a3bda1ed605c6fc166655447/",
-    "swh:1:rev:87dd6843678575f8dda962f239d14ef4be14b352": "revision/87dd6843678575f8dda962f239d14ef4be14b352/",
-    "swh:1:rev:1a2390247ad6d08160e0dd74f40a01a9578659c2": "revision/1a2390247ad6d08160e0dd74f40a01a9578659c2/",
-    "swh:1:rev:4d78994915af1bde9a95c04a8c27d8dca066232a": "revision/4d78994915af1bde9a95c04a8c27d8dca066232a/",
-    "swh:1:rev:3e6e1001dc6e095dbd5c88005e80969f60e384e1": "revision/3e6e1001dc6e095dbd5c88005e80969f60e384e1/",
-    "swh:1:rev:11e893fc1357bc688418ddf1087c2b7aa25d154d": "revision/11e893fc1357bc688418ddf1087c2b7aa25d154d/",
-    "swh:1:rev:1c2bd024d13f8011307e13386cf1fea2180352b5": "revision/1c2bd024d13f8011307e13386cf1fea2180352b5/",
-    "swh:1:rev:92baf7293dd2d418d2ac4b141b0faa822075d9f7": "revision/92baf7293dd2d418d2ac4b141b0faa822075d9f7/",
-    "swh:1:rel:874f7cbe352033cac5a8bc889847da2fe1d13e9f": "release/874f7cbe352033cac5a8bc889847da2fe1d13e9f/",
-    "swh:1:rel:da5f9898d6248ab26277116f54aca855338401d2": "release/da5f9898d6248ab26277116f54aca855338401d2/",
-    "swh:1:cnt:be5effea679c057aec2bb020f0241b1d1d660840": "content/sha1_git:be5effea679c057aec2bb020f0241b1d1d660840/",
-    "swh:1:rel:3a7b2dfffed2945d2933ba4ebc063adba35ddb2e": "release/3a7b2dfffed2945d2933ba4ebc063adba35ddb2e/",
-    "swh:1:dir:b24d39c928b9c3f440f8e2ec06c78f43d28d87d6": "directory/b24d39c928b9c3f440f8e2ec06c78f43d28d87d6/",
-    "swh:1:snp:02db117fef22434f1658b833a756775ca6effed0": "snapshot/02db117fef22434f1658b833a756775ca6effed0/",
-    "swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91": "revision/430a9fd4c797c50cea26157141b2408073b2ed91/",
-}
-
 MOCK_ARCHIVE: Dict[str, Any] = {
     "content/sha1_git:61d3c9e1157203f0c4ed5165608d92294eaca808/": {
         "length": 10084,
@@ -924,6 +903,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/b8cedc00407a4c56a3bda1ed605c6fc166655447/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578/",
     },
+    "graph/visit/edges/swh:1:rev:b8cedc00407a4c56a3bda1ed605c6fc166655447": "",
     "revision/87dd6843678575f8dda962f239d14ef4be14b352/": {
         "message": "Fix listing numbers (#2227)\n\nFix listing numbers",
         "author": {
@@ -964,6 +944,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/87dd6843678575f8dda962f239d14ef4be14b352/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/4c1b991bc9997e885308de8a87b05bbd9956a4fb/",
     },
+    "graph/visit/edges/swh:1:rev:87dd6843678575f8dda962f239d14ef4be14b352": "",
     "revision/1a2390247ad6d08160e0dd74f40a01a9578659c2/": {
         "message": "Merge pull request #194 from zakaluka/rustup2148\n\nUpdated install and uninstall instructions",
         "author": {
@@ -1004,6 +985,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/1a2390247ad6d08160e0dd74f40a01a9578659c2/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/5f461af28f89e3de5fa7aadbe8e601e61e0318de/",
     },
+    "graph/visit/edges/swh:1:rev:1a2390247ad6d08160e0dd74f40a01a9578659c2": "",
     "revision/4d78994915af1bde9a95c04a8c27d8dca066232a/": {
         "message": "Merge #221\n\n221: Update .gitattributes r=therealprof a=jethrogb\n\nSee https://github.com/rust-lang/rust/pull/57858\n\nCo-authored-by: jethrogb <github@jbeekman.nl>\n",
         "author": {
@@ -1044,6 +1026,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/4d78994915af1bde9a95c04a8c27d8dca066232a/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/aedfd5f87a2bb6f48d748a3d6e11ce755a5fc531/",
     },
+    "graph/visit/edges/swh:1:rev:4d78994915af1bde9a95c04a8c27d8dca066232a": "",
     "revision/3e6e1001dc6e095dbd5c88005e80969f60e384e1/": {
         "message": "Merge pull request #177 from petertodd/2019-12-long-live-contravariance\n\nRemove mention of contravariance possibly getting scrapped",
         "author": {
@@ -1084,6 +1067,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/3e6e1001dc6e095dbd5c88005e80969f60e384e1/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/2c4e09410c52ffd98d771d370948037d192f6178/",
     },
+    "graph/visit/edges/swh:1:rev:3e6e1001dc6e095dbd5c88005e80969f60e384e1": "",
     "revision/11e893fc1357bc688418ddf1087c2b7aa25d154d/": {
         "message": "Merge pull request #726 from phansch/small_pointer_improvement\n\nSmall improvements to types/pointer.md",
         "author": {
@@ -1124,6 +1108,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/11e893fc1357bc688418ddf1087c2b7aa25d154d/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/2892c88f2d5fc8c16adef8dd7e7c649bc194b672/",
     },
+    "graph/visit/edges/swh:1:rev:11e893fc1357bc688418ddf1087c2b7aa25d154d": "",
     "revision/1c2bd024d13f8011307e13386cf1fea2180352b5/": {
         "message": "Merge pull request #1302 from Cawibo/patch-1\n\nCamelCase -> UpperCamelCase",
         "author": {
@@ -1164,6 +1149,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/1c2bd024d13f8011307e13386cf1fea2180352b5/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/07720bc1cae5641b300fadc2aa076b9a5de71d2b/",
     },
+    "graph/visit/edges/swh:1:rev:1c2bd024d13f8011307e13386cf1fea2180352b5": "",
     "revision/92baf7293dd2d418d2ac4b141b0faa822075d9f7/": {
         "message": "Fix link\n",
         "author": {
@@ -1195,6 +1181,39 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/92baf7293dd2d418d2ac4b141b0faa822075d9f7/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/d5b7e02dd66666e7f16066162d3cc9bbc3a2c3d3/",
     },
+    "graph/visit/edges/swh:1:rev:92baf7293dd2d418d2ac4b141b0faa822075d9f7": "",
+    "revision/37426e42cf78a43779312d780eecb21a64006d99/": {
+        "message": "Add sever-glue, for missing first stage of sweep.\n",
+        "author": {
+            "fullname": "Graydon Hoare <graydon@mozilla.com>",
+            "name": "Graydon Hoare",
+            "email": "graydon@mozilla.com",
+        },
+        "committer": {
+            "fullname": "Graydon Hoare <graydon@mozilla.com>",
+            "name": "Graydon Hoare",
+            "email": "graydon@mozilla.com",
+        },
+        "date": "2010-06-25T21:57:46-07:00",
+        "committer_date": "2010-06-25T21:57:46-07:00",
+        "type": "git",
+        "directory": "6eb0b5a43bf0672e2d272f78ef9b939333af47fc",
+        "synthetic": False,
+        "metadata": {},
+        "parents": [
+            {
+                "id": "0cf3c2ad935be699281ed20fb3d2f29554e6229b",
+                "url": "https://archive.softwareheritage.org/api/1/revision/0cf3c2ad935be699281ed20fb3d2f29554e6229b/",
+            }
+        ],
+        "id": "37426e42cf78a43779312d780eecb21a64006d99",
+        "extra_headers": [],
+        "merge": False,
+        "url": "https://archive.softwareheritage.org/api/1/revision/37426e42cf78a43779312d780eecb21a64006d99/",
+        "history_url": "https://archive.softwareheritage.org/api/1/revision/37426e42cf78a43779312d780eecb21a64006d99/log/",
+        "directory_url": "https://archive.softwareheritage.org/api/1/directory/6eb0b5a43bf0672e2d272f78ef9b939333af47fc/",
+    },
+    "graph/visit/edges/swh:1:rev:37426e42cf78a43779312d780eecb21a64006d99": "\nswh:1:rev:37426e42cf78a43779312d780eecb21a64006d99 swh:1:rev:0cf3c2ad935be699281ed20fb3d2f29554e6229b\nswh:1:rev:0cf3c2ad935be699281ed20fb3d2f29554e6229b swh:1:rev:37180552769b316e7239d047008f187127e630e6\nswh:1:rev:37180552769b316e7239d047008f187127e630e6 swh:1:rev:dd2716f56c7cf55f2904fbbf4dfabaab1afbcd88\nswh:1:rev:dd2716f56c7cf55f2904fbbf4dfabaab1afbcd88 swh:1:rev:968ec145278d3d6562e4b5ec4006af97dc0da563\nswh:1:rev:968ec145278d3d6562e4b5ec4006af97dc0da563 swh:1:rev:34dc7053ebfd440648f49dc83d2538ab5e7ceda5\nswh:1:rev:34dc7053ebfd440648f49dc83d2538ab5e7ceda5 swh:1:rev:c56a729ff1d9467d612bf522614519ac7b97f798\nswh:1:rev:c56a729ff1d9467d612bf522614519ac7b97f798 swh:1:rev:eb7807c4fe7a2c2ad3c074705fb70de5eae5abe3\nswh:1:rev:eb7807c4fe7a2c2ad3c074705fb70de5eae5abe3 swh:1:rev:d601b357ecbb1fa33dc10c177bb557868be07deb\nswh:1:rev:d601b357ecbb1fa33dc10c177bb557868be07deb swh:1:rev:2a2474d497ae19472b4366f6d8d62e9a516787c3\nswh:1:rev:2a2474d497ae19472b4366f6d8d62e9a516787c3 swh:1:rev:eed5c0aa249f3e17bbabeeba1650ab699e3dff5a\nswh:1:rev:eed5c0aa249f3e17bbabeeba1650ab699e3dff5a swh:1:rev:67d1f0a9aafaa7dcd63b86032127ab660e630c46\nswh:1:rev:67d1f0a9aafaa7dcd63b86032127ab660e630c46 swh:1:rev:2e3fa5bd68677762c619d83dfdf1a83ba7f0e749\nswh:1:rev:2e3fa5bd68677762c619d83dfdf1a83ba7f0e749 swh:1:rev:a9c639ec8af3a4099108788c1db0176c7fea5799\nswh:1:rev:a9c639ec8af3a4099108788c1db0176c7fea5799 swh:1:rev:c06ea8f9445dbb5eda99ac8730d7fb2177df6816\nswh:1:rev:c06ea8f9445dbb5eda99ac8730d7fb2177df6816 swh:1:rev:422b8a6be4aab120685f450db0a520fcb5a8aa6b\nswh:1:rev:422b8a6be4aab120685f450db0a520fcb5a8aa6b swh:1:rev:e8759934711c70c50b5d616be22104e649abff58\nswh:1:rev:e8759934711c70c50b5d616be22104e649abff58 swh:1:rev:63b5e18207c7f8a261c1f7f50fd8c7bbf9a21bda\nswh:1:rev:63b5e18207c7f8a261c1f7f50fd8c7bbf9a21bda swh:1:rev:5dfe101e5197d6854aa1d8c9907ac7851468d468\nswh:1:rev:5dfe101e5197d6854aa1d8c9907ac7851468d468 swh:1:rev:287d69ddacba3f5945b70695fb721b2f055d3ee6\nswh:1:rev:287d69ddacba3f5945b70695fb721b2f055d3ee6 swh:1:rev:85a701c8f668fc03e6340682956e7ca7d9cf54bc\nswh:1:rev:85a701c8f668fc03e6340682956e7ca7d9cf54bc swh:1:rev:241305caab232b04666704dc6853c41312cd283a\nswh:1:rev:241305caab232b04666704dc6853c41312cd283a swh:1:rev:0d9565a4c144c07dab052161eb5fa3815dcd7f06\nswh:1:rev:0d9565a4c144c07dab052161eb5fa3815dcd7f06 swh:1:rev:72c6c60d80cdfe63af5046a1a98549f0515734f2\nswh:1:rev:72c6c60d80cdfe63af5046a1a98549f0515734f2 swh:1:rev:c483808e0ff9836bc1cda0ce95d77c8b7d3be91c\nswh:1:rev:c483808e0ff9836bc1cda0ce95d77c8b7d3be91c swh:1:rev:1c60be2f32f70f9181a261ae2c2b4efe353d0f85\nswh:1:rev:1c60be2f32f70f9181a261ae2c2b4efe353d0f85 swh:1:rev:bcf29b882acdf477be412fdb401b0fc2a6c819aa\nswh:1:rev:bcf29b882acdf477be412fdb401b0fc2a6c819aa swh:1:rev:261d543920e1c66049c469773ca989aaf9ce480e\nswh:1:rev:261d543920e1c66049c469773ca989aaf9ce480e swh:1:rev:24d5ff75c3abfe7b327c48468ed9a39f0d8a0427\nswh:1:rev:24d5ff75c3abfe7b327c48468ed9a39f0d8a0427 swh:1:rev:d3c0762ff85ff7d29668d1f5d2361df03978bbea\nswh:1:rev:d3c0762ff85ff7d29668d1f5d2361df03978bbea swh:1:rev:af44ec2856603b8a978a1f2582c285c7c0065403\nswh:1:rev:af44ec2856603b8a978a1f2582c285c7c0065403 swh:1:rev:69a34503f4d51b639855501f1b6d6ce2da4e16c7\nswh:1:rev:69a34503f4d51b639855501f1b6d6ce2da4e16c7 swh:1:rev:0364a801bb29211d4731f3f910c7629286b51c45\nswh:1:rev:0364a801bb29211d4731f3f910c7629286b51c45 swh:1:rev:25eb1fd3c9d997e460dff3e03d87e398e616c726\nswh:1:rev:25eb1fd3c9d997e460dff3e03d87e398e616c726 swh:1:rev:4a1f86ccd7e823f63d12208baef79b1e74479203\nswh:1:rev:4a1f86ccd7e823f63d12208baef79b1e74479203 swh:1:rev:0016473117e4bc3c8959bf2fd49368844847d74c\nswh:1:rev:0016473117e4bc3c8959bf2fd49368844847d74c swh:1:rev:935442babcf4f8ae52c1a13bb9ce07270a302886\nswh:1:rev:935442babcf4f8ae52c1a13bb9ce07270a302886 swh:1:rev:1f3cff91f6762b0f47f41025b5e2c5ac942479ba\nswh:1:rev:1f3cff91f6762b0f47f41025b5e2c5ac942479ba swh:1:rev:bc286c7f2ceb5c3d2e06ec72f78d28842f94ef65\nswh:1:rev:bc286c7f2ceb5c3d2e06ec72f78d28842f94ef65 swh:1:rev:f038f4d533f897a29f9422510d1b3f0caac97388\nswh:1:rev:f038f4d533f897a29f9422510d1b3f0caac97388 swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04\nswh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04 swh:1:rev:c01efc669f09508b55eced32d3c88702578a7c3e\n",
     "release/874f7cbe352033cac5a8bc889847da2fe1d13e9f/": {
         "name": "1.42.0",
         "message": "1.42.0 release\n",
@@ -1531,6 +1550,5 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "history_url": "https://archive.softwareheritage.org/api/1/revision/430a9fd4c797c50cea26157141b2408073b2ed91/log/",
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/1ac29db0e7280af41064676569a96d1f88ccfa96/",
     },
-    "graph/visit/nodes/swh:1:rev:b8cedc00407a4c56a3bda1ed605c6fc166655447": "swh:1:rev:b08d07143d2b61777d341f8658281adc0f2ac809\nswh:1:rev:133f659766c60ff7a33288ae6f33b0c272792f57",
-    "graph/visit/nodes/swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91": "swh:1:rev:d03456183e85fe7bd465bbe7c8f67885a2528444\nswh:1:rev:3430532a8ee8fd5a7f47647c8c29403384647095",
+    "graph/visit/edges/swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91": "",
 }

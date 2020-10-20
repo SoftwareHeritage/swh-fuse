@@ -21,6 +21,7 @@ SUBMODULES = [
     "swh:1:rev:1c2bd024d13f8011307e13386cf1fea2180352b5",
     "swh:1:rev:92baf7293dd2d418d2ac4b141b0faa822075d9f7",
 ]
+REV_SMALL_HISTORY = "swh:1:rev:37426e42cf78a43779312d780eecb21a64006d99"
 # Release
 ROOT_REL = "swh:1:rel:874f7cbe352033cac5a8bc889847da2fe1d13e9f"
 # Snapshot
@@ -44,6 +45,7 @@ ALL_ENTRIES = [
     DIR_WITH_SUBMODULES,
     ROOT_REV,
     *SUBMODULES,
+    REV_SMALL_HISTORY,
     ROOT_REL,
     REL_TARGET_CNT,
     REL_TARGET_DIR,

@@ -7,13 +7,16 @@ import os
 from pathlib import Path
 from typing import Any, List
 
-from swh.fuse.tests.data.api_data import MOCK_ARCHIVE, SWHID2URL
+from swh.fuse.tests.api_url import (
+    GRAPH_API_REQUEST,
+    swhid_to_graph_url,
+    swhid_to_web_url,
+)
+from swh.fuse.tests.data.api_data import MOCK_ARCHIVE
 
 
-def get_data_from_archive(swhid: str, raw: bool = False) -> Any:
-    url = SWHID2URL[swhid]
-    if raw:
-        url += "raw/"
+def get_data_from_web_archive(swhid: str, raw: bool = False) -> Any:
+    url = swhid_to_web_url(swhid, raw)
 
     # Special case: snapshots Web API and Web Client API differ a bit in format
     if url.startswith("snapshot"):
@@ -22,8 +25,13 @@ def get_data_from_archive(swhid: str, raw: bool = False) -> Any:
         return MOCK_ARCHIVE[url]
 
 
+def get_data_from_graph_archive(swhid: str, request_type: GRAPH_API_REQUEST) -> Any:
+    url = swhid_to_graph_url(swhid, request_type)
+    return MOCK_ARCHIVE[url]
+
+
 def get_dir_name_entries(swhid: str) -> List[str]:
-    dir_meta = get_data_from_archive(swhid)
+    dir_meta = get_data_from_web_archive(swhid)
     return [x["name"] for x in dir_meta]
 
 
