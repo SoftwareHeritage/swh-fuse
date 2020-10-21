@@ -90,6 +90,7 @@ class MetadataCache(AbstractCache):
         await self.conn.execute(
             "create table if not exists metadata_cache (swhid, metadata)"
         )
+        await self.conn.commit()
         return self
 
     async def get(self, swhid: SWHID, typify: bool = True) -> Any:
@@ -108,6 +109,7 @@ class MetadataCache(AbstractCache):
             "insert into metadata_cache values (?, ?)",
             (str(swhid), json.dumps(metadata)),
         )
+        await self.conn.commit()
 
 
 class BlobCache(AbstractCache):
@@ -122,6 +124,7 @@ class BlobCache(AbstractCache):
     async def __aenter__(self):
         await super().__aenter__()
         await self.conn.execute("create table if not exists blob_cache (swhid, blob)")
+        await self.conn.commit()
         return self
 
     async def get(self, swhid: SWHID) -> Optional[bytes]:
@@ -139,3 +142,4 @@ class BlobCache(AbstractCache):
         await self.conn.execute(
             "insert into blob_cache values (?, ?)", (str(swhid), blob)
         )
+        await self.conn.commit()
