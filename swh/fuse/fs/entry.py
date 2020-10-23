@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
 from stat import S_IFDIR, S_IFLNK, S_IFREG
-from typing import Any, Union
+from typing import Any, AsyncIterator, Sequence, Union
 
 # Avoid cycling import
 Fuse = "Fuse"
@@ -75,15 +75,30 @@ class FuseDirEntry(FuseEntry):
     async def size(self) -> int:
         return 0
 
-    async def __aiter__(self):
+    async def compute_entries(self) -> Sequence[FuseEntry]:
         """ Return the child entries of a directory entry """
 
         raise NotImplementedError
 
+    async def get_entries(self, offset: int = 0) -> AsyncIterator[FuseEntry]:
+        """ Return the child entries of a directory entry using direntry cache """
+
+        cache = self.fuse.cache.direntry.get(self)
+        if cache:
+            entries = cache
+        else:
+            entries = [x async for x in self.compute_entries()]
+            self.fuse.cache.direntry.set(self, entries)
+
+        # Avoid copy by manual iteration (instead of slicing) and use of a
+        # generator (instead of returning the full list every time)
+        for i in range(offset, len(entries)):
+            yield entries[i]
+
     async def lookup(self, name: str) -> FuseEntry:
         """ Look up a FUSE entry by name """
 
-        async for entry in self:
+        async for entry in self.get_entries():
             if entry.name == name:
                 return entry
         return None

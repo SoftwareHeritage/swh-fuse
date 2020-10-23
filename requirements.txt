@@ -1,3 +1,5 @@
 aiosqlite
+psutil
 pyfuse3
+pympler
 python-daemon

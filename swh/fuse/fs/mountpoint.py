@@ -21,7 +21,7 @@ class Root(FuseDirEntry):
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
     depth: int = field(init=False, default=1)
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         yield self.create_child(ArchiveDir)
         yield self.create_child(MetaDir)
 
@@ -46,7 +46,7 @@ class ArchiveDir(FuseDirEntry):
             swhid=swhid,
         )
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         async for swhid in self.fuse.cache.get_cached_swhids():
             yield self.create_child(swhid)
 
@@ -76,7 +76,7 @@ class MetaDir(FuseDirEntry):
     name: str = field(init=False, default="meta")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         async for swhid in self.fuse.cache.get_cached_swhids():
             yield self.create_child(
                 MetaEntry,

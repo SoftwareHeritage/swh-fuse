@@ -69,7 +69,7 @@ class Directory(FuseDirEntry):
 
     swhid: SWHID
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
         for entry in metadata:
             name = entry["name"]
@@ -147,7 +147,7 @@ class Revision(FuseDirEntry):
 
     swhid: SWHID
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
         directory = metadata["directory"]
         parents = metadata["parents"]
@@ -190,7 +190,7 @@ class RevisionParents(FuseDirEntry):
 
     parents: List[SWHID]
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         root_path = self.get_relative_root_path()
         for i, parent in enumerate(self.parents):
             yield self.create_child(
@@ -206,7 +206,7 @@ class RevisionHistory(FuseDirEntry):
 
     swhid: SWHID
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.swhid)
         root_path = self.get_relative_root_path()
         for swhid in history:
@@ -249,7 +249,7 @@ class Release(FuseDirEntry):
         else:
             return None
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
         root_path = self.get_relative_root_path()
 
@@ -306,7 +306,7 @@ class Snapshot(FuseDirEntry):
 
     swhid: SWHID
 
-    async def __aiter__(self) -> AsyncIterator[FuseEntry]:
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
         root_path = self.get_relative_root_path()
 

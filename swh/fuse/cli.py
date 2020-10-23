@@ -31,6 +31,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "metadata": {"path": CACHE_HOME_DIR / "swh/fuse/metadata.sqlite"},
         "blob": {"path": CACHE_HOME_DIR / "swh/fuse/blob.sqlite"},
         "history": {"path": CACHE_HOME_DIR / "swh/fuse/history.sqlite"},
+        "direntry": {"maxram": "10%"},
     },
     "web-api": {
         "url": "https://archive.softwareheritage.org/api/1",

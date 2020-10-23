@@ -169,18 +169,12 @@ class Fuse(pyfuse3.Operations):
 
         # opendir() uses inode as directory handle
         inode = fh
-
-        # TODO: add cache on direntry list?
         direntry = self.inode2entry(inode)
         assert isinstance(direntry, FuseDirEntry)
-        next_id = offset + 1
-        i = 0
-        try:
-            async for entry in direntry:
-                if i < offset:
-                    i += 1
-                    continue
 
+        next_id = offset + 1
+        try:
+            async for entry in direntry.get_entries(offset):
                 name = os.fsencode(entry.name)
                 attrs = await self.get_attrs(entry)
                 if not pyfuse3.readdir_reply(token, name, attrs, next_id):
