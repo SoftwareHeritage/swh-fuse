@@ -23,6 +23,22 @@ the network with the Software Heritage archive via its {ref}`Web API
 <swh-web-api-urls>`.
 
 
+## Architecture
+
+SwhFS in context ([C4](https://en.wikipedia.org/wiki/C4_model) context
+diagram):
+
+```{image} images/arch-context.svg
+:align: center
+```
+
+Main components of SwhFS (C4 container diagram):
+
+```{image} images/arch-container.svg
+:align: center
+```
+
+
 ## Command-line interface
 
     $ swh fs mount <DIR> [SWHID]...

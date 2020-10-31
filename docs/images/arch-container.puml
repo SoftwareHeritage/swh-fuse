@@ -1,0 +1,23 @@
+@startuml arch-container
+' !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+!include c4-plantuml/C4_Container.puml
+
+' title Container diagram for the Software Heritage virtual filesystem (SwhFS)
+left to right direction
+
+Person(user, "User")
+Container(fuse, "FUSE", "kernel", "Delegates filesystem implementation to user space")
+
+System_Boundary(swhfs_bound, "SwhFS") {
+	Container(swh_fuse, "swh.fuse", "pyfuse3, libfuse, FUSE", "Provides a filesystem view of Software Heritage objects")
+	ContainerDb(cache, "Cache", "SQLite or in-memory", "Local cache for objects and metadata")
+	Rel(swh_fuse, cache, "Reads objects and metadata", "SQL")
+}
+
+System_Ext(archive, "Software Heritage archive")
+
+Rel(user, fuse, "Access", "Filesystem")
+Rel(fuse, swh_fuse, "Calls user space daemon", "FUSE API")
+Rel(swh_fuse, archive, "Retrieves objects and metadata", "REST API")
+
+@enduml

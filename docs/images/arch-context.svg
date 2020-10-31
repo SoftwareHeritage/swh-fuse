@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="108px" preserveAspectRatio="none" style="width:796px;height:108px;" version="1.1" viewBox="0 0 796 108" width="796px" zoomAndPan="magnify"><defs/><g><!--MD5=[8fc3522a43f8c7199df5e09e5bb0188e]
+entity user--><rect fill="#08427B" height="52.5938" style="stroke: #073B6F; stroke-width: 1.5;" width="74" x="6" y="27.5"/><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="54" x="16" y="48.6387">«person»</text><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="41" x="22.5" y="66.3203">User</text><!--MD5=[94c53a76601d3b5ed673cabb5209f91e]
+entity swhfs--><rect fill="#1168BD" height="87.5156" style="stroke: #3C7FC0; stroke-width: 1.5;" width="188" x="214" y="10"/><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="56" x="280" y="31.1387">«system»</text><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="162" x="224" y="48.8203">Software Heritage</text><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="152" x="232" y="67.4453">virtual filesystem</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="56" x="280" y="84.2139">(SwhFS)</text><!--MD5=[a8305b23d211bc1ccd9424c697ead2f2]
+entity archive--><rect fill="#999999" height="71.2188" style="stroke: #8A8A8A; stroke-width: 1.5;" width="188" x="597" y="18.5"/><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="110" x="636" y="39.6387">«external_system»</text><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="162" x="607" y="57.3203">Software Heritage</text><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="64" x="659" y="75.9453">archive</text><!--MD5=[15a996fe1ec2f190ff6b000296f7bd56]
+link user to swhfs--><path d="M80.02,54 C113.07,54 163.58,54 208.57,54 " fill="none" id="user-&gt;swhfs" style="stroke: #666666; stroke-width: 1.0;"/><polygon fill="#666666" points="213.75,54,204.75,50,208.75,54,204.75,58,213.75,54" style="stroke: #666666; stroke-width: 1.0;"/><text fill="#666666" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="68" x="113" y="36.0669">Accesses</text><text fill="#666666" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="72" x="111" y="50.2715">[Filesystem]</text><!--MD5=[a7e6bac0ac0369cb26df61e6b3ce9979]
+link swhfs to archive--><path d="M402.2,54 C459.62,54 533.16,54 591.53,54 " fill="none" id="swhfs-&gt;archive" style="stroke: #666666; stroke-width: 1.0;"/><polygon fill="#666666" points="596.77,54,587.77,50,591.77,54,587.77,58,596.77,54" style="stroke: #666666; stroke-width: 1.0;"/><text fill="#666666" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="128" x="433" y="21.0669">Retrieves objects</text><text fill="#666666" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="105" x="447" y="36.1997">and metadata</text><text fill="#666666" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="64" x="467.5" y="50.4043">[REST API]</text><!--MD5=[2039c00102706b142fc8cc9c06a0df85]
+@startuml arch-context
+
+
+
+
+
+skinparam defaultTextAlignment center
+
+skinparam wrapWidth 200
+skinparam maxMessageSize 150
+
+skinparam rectangle {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam database {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam Arrow {
+    Color #666666
+    FontColor #666666
+    FontSize 12
+}
+
+skinparam rectangle<<boundary>> {
+    Shadowing false
+    StereotypeFontSize 0
+    FontColor #444444
+    BorderColor #444444
+    BorderStyle dashed
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam rectangle<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+
+skinparam rectangle<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+
+skinparam rectangle<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+
+skinparam rectangle<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+
+skinparam database<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+
+skinparam database<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+
+
+
+
+
+
+
+
+
+
+
+
+left to right direction
+
+rectangle "==User" <<person>> as user
+rectangle "==Software Heritage virtual filesystem\n(SwhFS)" <<system>> as swhfs
+rectangle "==Software Heritage archive" <<external_system>> as archive
+
+user - -> swhfs : "===Accesses\n//<size:12>[Filesystem]</size>//"
+swhfs - -> archive : "===Retrieves objects and metadata\n//<size:12>[REST API]</size>//"
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 11:22:07 CET 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 14.0.2+12-Debian-1.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

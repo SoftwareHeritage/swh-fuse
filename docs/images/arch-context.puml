@@ -1,0 +1,15 @@
+@startuml arch-context
+' !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+!include c4-plantuml/C4_Context.puml
+
+' title System context diagram for the Software Heritage virtual filesystem (SwhFS)
+left to right direction
+
+Person(user, "User")
+System(swhfs, "Software Heritage virtual filesystem\n(SwhFS)")
+System_Ext(archive, "Software Heritage archive")
+
+Rel(user, swhfs, "Accesses", "Filesystem")
+Rel(swhfs, archive, "Retrieves objects and metadata", "REST API")
+
+@enduml
