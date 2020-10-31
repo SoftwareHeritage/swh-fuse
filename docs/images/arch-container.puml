@@ -11,13 +11,13 @@ Container(fuse, "FUSE", "kernel", "Delegates filesystem implementation to user s
 System_Boundary(swhfs_bound, "SwhFS") {
 	Container(swh_fuse, "swh.fuse", "pyfuse3, libfuse, FUSE", "Provides a filesystem view of Software Heritage objects")
 	ContainerDb(cache, "Cache", "SQLite or in-memory", "Local cache for objects and metadata")
-	Rel(swh_fuse, cache, "Reads objects and metadata", "SQL")
+	Rel(swh_fuse, cache, "Reads objects and metadata from", "SQL")
 }
 
 System_Ext(archive, "Software Heritage archive")
 
-Rel(user, fuse, "Access", "Filesystem")
+Rel(user, fuse, "Accesses", "Filesystem")
 Rel(fuse, swh_fuse, "Calls user space daemon", "FUSE API")
-Rel(swh_fuse, archive, "Retrieves objects and metadata", "REST API")
+Rel(swh_fuse, archive, "Retrieves objects and metadata from", "REST API")
 
 @enduml

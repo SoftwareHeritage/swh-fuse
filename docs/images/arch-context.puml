@@ -10,6 +10,6 @@ System(swhfs, "Software Heritage virtual filesystem\n(SwhFS)")
 System_Ext(archive, "Software Heritage archive")
 
 Rel(user, swhfs, "Accesses", "Filesystem")
-Rel(swhfs, archive, "Retrieves objects and metadata", "REST API")
+Rel(swhfs, archive, "Retrieves objects and metadata from", "REST API")
 
 @enduml
