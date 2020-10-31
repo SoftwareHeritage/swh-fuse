@@ -1,13 +1,5 @@
 # Software Heritage virtual filesystem (SwhFS) --- Design notes
 
-```{warning}
-
-this document describes design notes for the Software Heritage virtual
-filesystem (SwhFS), which is still under active development and hence **not yet
-available** for general use.
-
-```
-
 The [Software Heritage](https://www.softwareheritage.org/) {ref}`data model
 <data-model>` is
 a [Direct Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)
@@ -57,8 +49,9 @@ For more details see the {ref}`CLI documentation <swh-fuse-cli>`.
 
 The SwhFS mount point contain:
 
-- `archive/`: initially empty, this directory is lazily populated with one entry
-per accessed SWHID, having actual SWHIDs as names.
+- `archive/`: initially empty, this directory is lazily populated with one
+entry per accessed SWHID, having actual SWHIDs as names (possibly sharded into
+`xy/../SWHID` paths to avoid overcrowding `archive/`).
 
 - `meta/`: initially empty, this directory contains one `<SWHID>.json` file for
 each `<SWHID>` entry under `archive/`. The JSON file contain all available meta
@@ -66,14 +59,6 @@ information about the given SWHID, as returned by the Software Heritage Web API
 for that object. Note that, in case of pagination (e.g., snapshot objects with
 many branches) the JSON file will contain a complete version with all pages
 merged together.
-
-```{todo}
-
-Consider sharding `<SWHID>`/`<SWHID>.json` files under `ab/cd/` dirs to avoid
-exploding the number of dir entries under `archive/` and `meta/`
-(cf. [T2694](https://forge.softwareheritage.org/T2694))
-
-```
 
 
 ## File system representation
@@ -142,18 +127,15 @@ relevant `meta/<SWHID>.json` file
 
 ### `snp` nodes (snapshots)
 
-Snapshot nodes are represented on the file-system as directories with on entry
+Snapshot nodes are represented on the file-system as directories with one entry
 for each branch in the snapshot.
 
-Branch names are mangled by replacing...
+Branch names are subject to URL encoding, in order to avoid problematic
+characters (e.g., `/` are replaced by `%2F`).
 
-```{todo}
-
-decide how to do branch name escaping and describe it here
-
-```
-
-Each entry is a symlink pointing into `archive/` to the branch target SWHID.
+Each entry is a symlink named as the branch name, URL encoded (to avoid
+problematic characters such as `/`, which becomes `%2F`). The symlink target
+points into `archive/` to the SWHID corresponding to the branch target.
 
 
 ## Caching
