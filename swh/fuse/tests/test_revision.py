@@ -8,6 +8,7 @@ from swh.fuse.tests.common import (
     get_data_from_web_archive,
 )
 from swh.fuse.tests.data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
+from swh.model.identifiers import parse_swhid
 
 
 def test_access_meta(fuse_mntdir):
@@ -38,13 +39,18 @@ def test_list_parent(fuse_mntdir):
 
 
 def test_list_history(fuse_mntdir):
-    dir_path = fuse_mntdir / "archive" / REV_SMALL_HISTORY / "history"
+    dir_path = fuse_mntdir / "archive" / REV_SMALL_HISTORY / "history/by-hash"
     history_meta = get_data_from_graph_archive(
         REV_SMALL_HISTORY, GRAPH_API_REQUEST.HISTORY
     )
     history = history_meta.strip()
     # Only keep second node in the edge because first node is redundant
     # information or the root node (hence not an ancestor)
-    expected = [edge.split(" ")[1] for edge in history.split("\n")]
-    actual = os.listdir(dir_path)
-    assert set(actual) == set(expected)
+    expected = set([edge.split(" ")[1] for edge in history.split("\n")])
+
+    for swhid in expected:
+        swhid = parse_swhid(swhid)
+        depth1 = swhid.object_id[:2]
+        depth2 = str(swhid)
+        assert (dir_path / depth1).exists()
+        assert depth2 in (os.listdir(dir_path / depth1))

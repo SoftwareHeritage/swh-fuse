@@ -35,6 +35,7 @@ class Fuse(pyfuse3.Operations):
         self._inode2entry: Dict[int, FuseEntry] = {}
 
         self.root = Root(fuse=self)
+        self.conf = conf
 
         self.time_ns: int = time.time_ns()  # start time, used as timestamp
         self.gid = os.getgid()

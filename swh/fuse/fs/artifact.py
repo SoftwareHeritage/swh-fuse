@@ -11,6 +11,7 @@ import urllib.parse
 from swh.fuse.fs.entry import (
     EntryMode,
     FuseDirEntry,
+    FuseDirEntryShardByHash,
     FuseEntry,
     FuseFileEntry,
     FuseSymlinkEntry,
@@ -208,13 +209,12 @@ class RevisionHistory(FuseDirEntry):
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.swhid)
-        root_path = self.get_relative_root_path()
-        for swhid in history:
-            yield self.create_child(
-                FuseSymlinkEntry,
-                name=str(swhid),
-                target=Path(root_path, f"archive/{swhid}"),
-            )
+        yield self.create_child(
+            FuseDirEntryShardByHash,
+            name="by-hash",
+            mode=int(EntryMode.RDONLY_DIR),
+            swhids=history,
+        )
 
 
 @dataclass

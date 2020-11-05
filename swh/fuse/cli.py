@@ -37,6 +37,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "url": "https://archive.softwareheritage.org/api/1",
         "auth-token": None,
     },
+    "sharding": {"depth": 1, "length": 2,},
 }
 
 

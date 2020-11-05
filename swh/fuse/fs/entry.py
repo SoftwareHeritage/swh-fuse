@@ -9,7 +9,9 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
 from stat import S_IFDIR, S_IFLNK, S_IFREG
-from typing import Any, AsyncIterator, Sequence, Union
+from typing import Any, AsyncIterator, List, Sequence, Union
+
+from swh.model.identifiers import SWHID
 
 # Avoid cycling import
 Fuse = "Fuse"
@@ -102,6 +104,60 @@ class FuseDirEntry(FuseEntry):
             if entry.name == name:
                 return entry
         return None
+
+
+@dataclass
+class FuseDirEntryShardByHash(FuseDirEntry):
+    """ FUSE virtual directory entry sharded by SWHID hash """
+
+    swhids: List[SWHID]
+    prefix: str = field(default="")
+
+    def get_full_sharded_name(self, swhid: SWHID) -> str:
+        sharding_depth = self.fuse.conf["sharding"]["depth"]
+        sharding_length = self.fuse.conf["sharding"]["length"]
+        if sharding_depth <= 0:
+            return str(swhid)
+        else:
+            basename = swhid.object_id
+            name, i = "", 0
+            for _ in range(sharding_depth):
+                name += basename[i : i + sharding_length]
+                name += "/"
+                i += sharding_length
+            # Always keep the full SWHID as the path basename (otherwise we
+            # loose the SWHID object type information)
+            name += str(swhid)
+            return name
+
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
+        current_sharding_depth = self.prefix.count("/")
+        if current_sharding_depth == self.fuse.conf["sharding"]["depth"]:
+            root_path = self.get_relative_root_path()
+            for swhid in self.swhids:
+                yield self.create_child(
+                    FuseSymlinkEntry,
+                    name=str(swhid),
+                    target=Path(root_path, f"archive/{swhid}"),
+                )
+        else:
+            subdirs = {}
+            sharding_length = self.fuse.conf["sharding"]["length"]
+            prefix_length = len(self.prefix)
+            for swhid in self.swhids:
+                name = self.get_full_sharded_name(swhid)
+                next_prefix = name[prefix_length : prefix_length + sharding_length]
+                subdirs.setdefault(next_prefix, []).append(swhid)
+
+            # Recursive intermediate sharded directories
+            for subdir, subentries in subdirs.items():
+                yield self.create_child(
+                    FuseDirEntryShardByHash,
+                    name=subdir,
+                    mode=int(EntryMode.RDONLY_DIR),
+                    prefix=f"{self.prefix}{subdir}/",
+                    swhids=subentries,
+                )
 
 
 @dataclass
