@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, AsyncIterator, List
 import urllib.parse
@@ -11,7 +11,6 @@ import urllib.parse
 from swh.fuse.fs.entry import (
     EntryMode,
     FuseDirEntry,
-    FuseDirEntryShardByHash,
     FuseEntry,
     FuseFileEntry,
     FuseSymlinkEntry,
@@ -209,12 +208,85 @@ class RevisionHistory(FuseDirEntry):
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.swhid)
-        yield self.create_child(
-            FuseDirEntryShardByHash,
+        by_hash = self.create_child(
+            RevisionHistoryShardByHash,
             name="by-hash",
             mode=int(EntryMode.RDONLY_DIR),
-            swhids=history,
+            history_swhid=self.swhid,
         )
+        by_hash.fill_direntry_cache(history)
+        yield by_hash
+
+
+@dataclass
+class RevisionHistoryShardByHash(FuseDirEntry):
+    """ Revision virtual `history/by-hash` sharded directory """
+
+    history_swhid: SWHID
+    prefix: str = field(default="")
+
+    def get_full_sharded_name(self, swhid: SWHID) -> str:
+        sharding_depth = self.fuse.conf["sharding"]["depth"]
+        sharding_length = self.fuse.conf["sharding"]["length"]
+        if sharding_depth <= 0:
+            return str(swhid)
+        else:
+            basename = swhid.object_id
+            parts = [
+                basename[i * sharding_length : (i + 1) * sharding_length]
+                for i in range(sharding_depth)
+            ]
+            # Always keep the full SWHID as the path basename (otherwise we
+            # loose the SWHID object type information)
+            parts.append(str(swhid))
+            path = Path(*parts)
+            return str(path)
+
+    def fill_direntry_cache(self, swhids: List[SWHID]):
+        sharding_depth = self.fuse.conf["sharding"]["depth"]
+        sharding_length = self.fuse.conf["sharding"]["length"]
+        depth = self.prefix.count("/")
+        children = []
+        if depth == sharding_depth:
+            root_path = self.get_relative_root_path()
+            for swhid in swhids:
+                children.append(
+                    self.create_child(
+                        FuseSymlinkEntry,
+                        name=str(swhid),
+                        target=Path(root_path, f"archive/{swhid}"),
+                    )
+                )
+        else:
+            subdirs = {}
+            prefix_len = len(self.prefix)
+            for swhid in swhids:
+                name = self.get_full_sharded_name(swhid)
+                next_prefix = name[prefix_len : prefix_len + sharding_length]
+                subdirs.setdefault(next_prefix, []).append(swhid)
+
+            # Recursive intermediate sharded directories
+            for subdir, subentries in subdirs.items():
+                child_prefix = f"{self.prefix}{subdir}/"
+                child = self.create_child(
+                    RevisionHistoryShardByHash,
+                    name=subdir,
+                    mode=int(EntryMode.RDONLY_DIR),
+                    prefix=child_prefix,
+                    history_swhid=self.history_swhid,
+                )
+                children.append(child)
+                child.fill_direntry_cache(subentries)
+        self.fuse.cache.direntry.set(self, children)
+        return children
+
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
+        history = await self.fuse.get_history(self.history_swhid)
+        hash_prefix = self.prefix.replace("/", "")
+        swhids = [s for s in history if s.object_id.startswith(hash_prefix)]
+
+        for entry in self.fill_direntry_cache(swhids):
+            yield entry
 
 
 @dataclass
