@@ -15,7 +15,6 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import aiosqlite
 from psutil import virtual_memory
-from pympler import asizeof
 
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
 from swh.fuse.fs.mountpoint import ArchiveDir, MetaDir
@@ -240,7 +239,10 @@ class DirEntryCache:
     class LRU(OrderedDict):
         max_ram: int
         used_ram: int = field(init=False, default=0)
-        object_size: Dict[Any, int] = field(init=False, default_factory=dict)
+
+        def sizeof(self, value: Any) -> int:
+            # Rough size estimate in bytes for a list of entries
+            return len(value) * 1000
 
         def __getitem__(self, key: Any) -> Any:
             value = super().__getitem__(key)
@@ -251,15 +253,13 @@ class DirEntryCache:
             if key in self:
                 self.move_to_end(key)
             else:
-                nb_bytes = asizeof.asizeof(value)
-                self.used_ram += nb_bytes
-                self.object_size[key] = nb_bytes
+                self.used_ram += self.sizeof(value)
 
             super().__setitem__(key, value)
 
             while self.used_ram > self.max_ram and self:
                 oldest = next(iter(self))
-                self.used_ram -= self.object_size[oldest]
+                self.used_ram -= self.sizeof(oldest)
                 del self[oldest]
 
     def __init__(self, conf: Dict[str, Any]):
