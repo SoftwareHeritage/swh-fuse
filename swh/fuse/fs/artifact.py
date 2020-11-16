@@ -208,6 +208,7 @@ class RevisionHistory(FuseDirEntry):
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.swhid)
+
         by_hash = self.create_child(
             RevisionHistoryShardByHash,
             name="by-hash",
@@ -216,6 +217,15 @@ class RevisionHistory(FuseDirEntry):
         )
         by_hash.fill_direntry_cache(history)
         yield by_hash
+
+        by_page = self.create_child(
+            RevisionHistoryShardByPage,
+            name="by-page",
+            mode=int(EntryMode.RDONLY_DIR),
+            history_swhid=self.swhid,
+        )
+        by_page.fill_direntry_cache(history)
+        yield by_page
 
 
 @dataclass
@@ -286,6 +296,57 @@ class RevisionHistoryShardByHash(FuseDirEntry):
         swhids = [s for s in history if s.object_id.startswith(hash_prefix)]
 
         for entry in self.fill_direntry_cache(swhids):
+            yield entry
+
+
+@dataclass
+class RevisionHistoryShardByPage(FuseDirEntry):
+    """ Revision virtual `history/by-page` sharded directory """
+
+    history_swhid: SWHID
+
+    PAGE_SIZE = 10_000
+    PAGE_FMT = "{page_number:03d}"
+
+    def fill_direntry_cache(self, swhids: List[SWHID]):
+        page_number = -1
+        page = None
+        page_root_path = None
+        page_children = []
+        pages = []
+        for idx, swhid in enumerate(swhids):
+            if idx % self.PAGE_SIZE == 0:
+                if page:
+                    self.fuse.cache.direntry.set(page, page_children)
+                    pages.append(page)
+
+                page_number += 1
+                page = self.create_child(
+                    RevisionHistoryShardByPage,
+                    name=self.PAGE_FMT.format(page_number=page_number),
+                    mode=int(EntryMode.RDONLY_DIR),
+                    history_swhid=self.history_swhid,
+                )
+                page_root_path = page.get_relative_root_path()
+                page_children = []
+
+            page_children.append(
+                page.create_child(
+                    FuseSymlinkEntry,
+                    name=str(swhid),
+                    target=Path(page_root_path, f"archive/{swhid}"),
+                )
+            )
+
+        if page:
+            self.fuse.cache.direntry.set(page, page_children)
+            pages.append(page)
+        self.fuse.cache.direntry.set(self, pages)
+        return pages
+
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
+        history = await self.fuse.get_history(self.history_swhid)
+        for entry in self.fill_direntry_cache(history):
             yield entry
 
 

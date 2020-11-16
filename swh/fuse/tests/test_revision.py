@@ -1,6 +1,7 @@
 import json
 import os
 
+from swh.fuse.fs.artifact import RevisionHistoryShardByPage
 from swh.fuse.tests.api_url import GRAPH_API_REQUEST
 from swh.fuse.tests.common import (
     check_dir_name_entries,
@@ -39,18 +40,30 @@ def test_list_parent(fuse_mntdir):
 
 
 def test_list_history(fuse_mntdir):
-    dir_path = fuse_mntdir / "archive" / REV_SMALL_HISTORY / "history/by-hash"
+    dir_path = fuse_mntdir / "archive" / REV_SMALL_HISTORY / "history"
+    assert os.listdir(dir_path) == ["by-hash", "by-page"]
+
     history_meta = get_data_from_graph_archive(
         REV_SMALL_HISTORY, GRAPH_API_REQUEST.HISTORY
     )
     history = history_meta.strip()
     # Only keep second node in the edge because first node is redundant
     # information or the root node (hence not an ancestor)
-    expected = set([edge.split(" ")[1] for edge in history.split("\n")])
+    expected = set(
+        map(parse_swhid, [edge.split(" ")[1] for edge in history.split("\n")])
+    )
 
+    dir_by_hash = dir_path / "by-hash"
     for swhid in expected:
-        swhid = parse_swhid(swhid)
         depth1 = swhid.object_id[:2]
         depth2 = str(swhid)
-        assert (dir_path / depth1).exists()
-        assert depth2 in (os.listdir(dir_path / depth1))
+        assert (dir_by_hash / depth1).exists()
+        assert depth2 in (os.listdir(dir_by_hash / depth1))
+
+    dir_by_page = dir_path / "by-page"
+    for idx, swhid in enumerate(expected):
+        page_number = idx // RevisionHistoryShardByPage.PAGE_SIZE
+        depth1 = RevisionHistoryShardByPage.PAGE_FMT.format(page_number=page_number)
+        depth2 = str(swhid)
+        assert (dir_by_page / depth1).exists()
+        assert depth2 in (os.listdir(dir_by_page / depth1))
