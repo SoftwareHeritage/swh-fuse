@@ -184,7 +184,7 @@ class Fuse(pyfuse3.Operations):
                 next_id += 1
                 self._inode2entry[attrs.st_ino] = entry
         except Exception as err:
-            logging.debug(f"Cannot readdir: {err}")
+            logging.exception(f"Cannot readdir: {err}")
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def open(
@@ -207,7 +207,7 @@ class Fuse(pyfuse3.Operations):
             data = await entry.get_content()
             return data[offset : offset + length]
         except Exception as err:
-            logging.debug(f"Cannot read: {err}")
+            logging.exception(f"Cannot read: {err}")
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def lookup(
@@ -225,7 +225,7 @@ class Fuse(pyfuse3.Operations):
             else:
                 raise ValueError(f"unknown name: {name}")
         except Exception as err:
-            logging.debug(f"Cannot lookup: {err}")
+            logging.exception(f"Cannot lookup: {err}")
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
@@ -248,7 +248,7 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
             try:
                 await fs.get_metadata(swhid)
             except Exception as err:
-                logging.error(f"Cannot prefetch object {swhid}: {err}")
+                logging.exception(f"Cannot prefetch object {swhid}: {err}")
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
