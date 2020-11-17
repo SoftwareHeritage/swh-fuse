@@ -3,9 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, AsyncIterator, List
+from typing import Any, AsyncIterator, Dict, List
 import urllib.parse
 
 from swh.fuse.fs.entry import (
@@ -209,6 +210,17 @@ class RevisionHistory(FuseDirEntry):
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.swhid)
 
+        by_date = self.create_child(
+            RevisionHistoryShardByDate,
+            name="by-date",
+            mode=int(EntryMode.RDONLY_DIR),
+            history_swhid=self.swhid,
+        )
+        # Populate the by-date/ directory in parallel because it needs to pull
+        # from the Web API all history SWHIDs date metadata
+        asyncio.create_task(by_date.fill_metadata_cache(history))
+        yield by_date
+
         by_hash = self.create_child(
             RevisionHistoryShardByHash,
             name="by-hash",
@@ -226,6 +238,76 @@ class RevisionHistory(FuseDirEntry):
         )
         by_page.fill_direntry_cache(history)
         yield by_page
+
+
+@dataclass
+class RevisionHistoryShardByDate(FuseDirEntry):
+    """ Revision virtual `history/by-date` sharded directory """
+
+    history_swhid: SWHID
+    prefix: str = field(default="")
+    is_status_done: bool = field(default=False)
+
+    @dataclass
+    class StatusFile(FuseFileEntry):
+        """ Temporary file used to indicate loading progress in by-date/ """
+
+        name: str = field(init=False, default=".status")
+        mode: int = field(init=False, default=int(EntryMode.RDONLY_FILE))
+        done: int
+        todo: int
+
+        async def get_content(self) -> bytes:
+            fmt = f"Done: {self.done}/{self.todo}\n"
+            return fmt.encode()
+
+        async def size(self) -> int:
+            return len(await self.get_content())
+
+    async def fill_metadata_cache(self, swhids: List[SWHID]) -> None:
+        for swhid in swhids:
+            await self.fuse.get_metadata(swhid)
+
+    def get_full_sharded_name(self, meta: Dict[str, Any]) -> str:
+        date = meta["date"]
+        return f"{date.year:04d}/{date.month:02d}/{date.day:02d}"
+
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
+        history = await self.fuse.get_history(self.history_swhid)
+        self.is_status_done = True
+        depth = self.prefix.count("/")
+        subdirs = set()
+        nb_entries = 0
+        for swhid in history:
+            # Only check for cached revisions since fetching all of them with
+            # the Web API would take too long
+            meta = await self.fuse.cache.metadata.get(swhid)
+            if not meta:
+                self.is_status_done = False
+                continue
+
+            nb_entries += 1
+            name = self.get_full_sharded_name(meta)
+            if not name.startswith(self.prefix):
+                continue
+
+            next_prefix = name.split("/")[depth]
+            if next_prefix not in subdirs:
+                subdirs.add(next_prefix)
+                yield self.create_child(
+                    RevisionHistoryShardByDate,
+                    name=next_prefix,
+                    mode=int(EntryMode.RDONLY_DIR),
+                    prefix=f"{self.prefix}{next_prefix}/",
+                    history_swhid=self.history_swhid,
+                )
+
+        if not self.is_status_done:
+            yield self.create_child(
+                RevisionHistoryShardByDate.StatusFile,
+                done=nb_entries,
+                todo=len(history),
+            )
 
 
 @dataclass

@@ -83,9 +83,7 @@ def generate_archive_graph_api(swhid: SWHID) -> None:
         MOCK_ARCHIVE[url] = ""
         if str(swhid) == REV_SMALL_HISTORY:
             # TODO: temporary fix, retrieve from the graph API once it is public
-            MOCK_ARCHIVE[
-                url
-            ] = """
+            history = """
 swh:1:rev:37426e42cf78a43779312d780eecb21a64006d99 swh:1:rev:0cf3c2ad935be699281ed20fb3d2f29554e6229b
 swh:1:rev:0cf3c2ad935be699281ed20fb3d2f29554e6229b swh:1:rev:37180552769b316e7239d047008f187127e630e6
 swh:1:rev:37180552769b316e7239d047008f187127e630e6 swh:1:rev:dd2716f56c7cf55f2904fbbf4dfabaab1afbcd88
@@ -128,6 +126,16 @@ swh:1:rev:bc286c7f2ceb5c3d2e06ec72f78d28842f94ef65 swh:1:rev:f038f4d533f897a29f9
 swh:1:rev:f038f4d533f897a29f9422510d1b3f0caac97388 swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04
 swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04 swh:1:rev:c01efc669f09508b55eced32d3c88702578a7c3e
 """  # NoQA: E501
+            MOCK_ARCHIVE[url] = history
+
+            hist_nodes = set(
+                map(
+                    parse_swhid,
+                    [edge.split(" ")[1] for edge in history.strip().split("\n")],
+                )
+            )
+            for swhid in hist_nodes:
+                generate_archive_web_api(swhid, recursive=False)
 
 
 for entry in ALL_ENTRIES:

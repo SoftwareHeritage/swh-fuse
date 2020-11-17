@@ -16,6 +16,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 import aiosqlite
 from psutil import virtual_memory
 
+from swh.fuse.fs.artifact import RevisionHistoryShardByDate
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
 from swh.fuse.fs.mountpoint import ArchiveDir, MetaDir
 from swh.model.exceptions import ValidationError
@@ -287,6 +288,13 @@ class DirEntryCache:
         if isinstance(direntry, ArchiveDir) or isinstance(direntry, MetaDir):
             # The `archive/` and `meta/` are populated on the fly so we should
             # never cache them
+            pass
+        elif (
+            isinstance(direntry, RevisionHistoryShardByDate)
+            and not direntry.is_status_done
+        ):
+            # The `by-date/' directory is populated in parallel so only cache it
+            # once it has finished fetching all data from the API
             pass
         else:
             self.lru_cache[direntry.inode] = entries

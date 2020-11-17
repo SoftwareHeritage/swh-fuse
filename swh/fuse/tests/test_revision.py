@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 from swh.fuse.fs.artifact import RevisionHistoryShardByPage
 from swh.fuse.tests.api_url import GRAPH_API_REQUEST
@@ -41,7 +42,7 @@ def test_list_parent(fuse_mntdir):
 
 def test_list_history(fuse_mntdir):
     dir_path = fuse_mntdir / "archive" / REV_SMALL_HISTORY / "history"
-    assert os.listdir(dir_path) == ["by-hash", "by-page"]
+    assert os.listdir(dir_path) == ["by-date", "by-hash", "by-page"]
 
     history_meta = get_data_from_graph_archive(
         REV_SMALL_HISTORY, GRAPH_API_REQUEST.HISTORY
@@ -67,3 +68,13 @@ def test_list_history(fuse_mntdir):
         depth2 = str(swhid)
         assert (dir_by_page / depth1).exists()
         assert depth2 in (os.listdir(dir_by_page / depth1))
+
+    dir_by_date = dir_path / "by-date"
+    # Wait max 1 second to populate by-date/ dir
+    for i in range(100):
+        if ".status" not in os.listdir(dir_by_date):
+            break
+        time.sleep(0.01)
+    assert os.listdir(dir_by_date) == ["2010"]
+    assert os.listdir(dir_by_date / "2010") == ["06"]
+    assert os.listdir(dir_by_date / "2010/06") == ["25", "24", "23", "16"]
