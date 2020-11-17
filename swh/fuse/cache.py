@@ -214,11 +214,12 @@ class HistoryCache(AbstractCache):
 
     async def set(self, history: str) -> None:
         history = history.strip()
-        edges = [edge.split(" ") for edge in history.split("\n")]
-        await self.conn.executemany(
-            "insert or ignore into history_graph values (?, ?)", edges
-        )
-        await self.conn.commit()
+        if history:
+            edges = [edge.split(" ") for edge in history.split("\n")]
+            await self.conn.executemany(
+                "insert or ignore into history_graph values (?, ?)", edges
+            )
+            await self.conn.commit()
 
 
 class DirEntryCache:
