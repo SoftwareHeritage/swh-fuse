@@ -17,9 +17,10 @@ System_Boundary(swhfs_bound, "SwhFS") {
 
 System_Ext(archive, "Software Heritage archive")
 
+Rel(user, swhfs_bound, "Controls user-space daemon", "Command-line interface")
 Rel(user, fuse, "Browses", "POSIX filesystem")
 Rel(tool, fuse, "Accesses", "POSIX filesystem")
-Rel(fuse, swh_fuse, "Calls user space daemon", "FUSE API")
+Rel(fuse, swh_fuse, "Calls user-space daemon", "FUSE API")
 Rel(swh_fuse, archive, "Retrieves objects and metadata from", "REST API")
 
 @enduml
