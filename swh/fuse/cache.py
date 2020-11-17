@@ -209,7 +209,7 @@ class HistoryCache(AbstractCache):
             try:
                 history.append(parse_swhid(parent))
             except ValidationError:
-                logging.warning(f"Cannot parse object from history cache: {parent}")
+                logging.warning("Cannot parse object from history cache: %s", parent)
         return history
 
     async def set(self, history: str) -> None:
@@ -265,7 +265,7 @@ class DirEntryCache:
     def __init__(self, conf: Dict[str, Any]):
         m = re.match(r"(\d+)\s*(.+)\s*", conf["maxram"])
         if not m:
-            logging.error(f"Cannot parse direntry maxram config: {conf['maxram']}")
+            logging.error("Cannot parse direntry maxram config: %s", conf["maxram"])
             sys.exit(1)
 
         num = float(m.group(1))

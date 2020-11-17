@@ -85,7 +85,7 @@ class Fuse(pyfuse3.Operations):
             # Retrieve it from cache so it is correctly typed
             return await self.cache.metadata.get(swhid)
         except requests.HTTPError as err:
-            logging.error(f"Cannot fetch metadata for object {swhid}: {err}")
+            logging.error("Cannot fetch metadata for object %s: %s", swhid, err)
             raise
 
     async def get_blob(self, swhid: SWHID) -> bytes:
@@ -109,7 +109,7 @@ class Fuse(pyfuse3.Operations):
             await self.cache.blob.set(swhid, blob)
             return blob
         except requests.HTTPError as err:
-            logging.error(f"Cannot fetch blob for object {swhid}: {err}")
+            logging.error("Cannot fetch blob for object %s: %s", swhid, err)
             raise
 
     async def get_history(self, swhid: SWHID) -> List[SWHID]:
@@ -129,7 +129,7 @@ class Fuse(pyfuse3.Operations):
             # Retrieve it from cache so it is correctly typed
             return await self.cache.history.get(swhid)
         except requests.HTTPError as err:
-            logging.error(f"Cannot fetch history for object {swhid}: {err}")
+            logging.error("Cannot fetch history for object %s: %s", swhid, err)
             # Ignore exception since swh-graph does not necessarily contain the
             # most recent artifacts from the archive. Computing the full history
             # from the Web API is too computationally intensive so simply return
@@ -184,7 +184,7 @@ class Fuse(pyfuse3.Operations):
                 next_id += 1
                 self._inode2entry[attrs.st_ino] = entry
         except Exception as err:
-            logging.exception(f"Cannot readdir: {err}")
+            logging.exception("Cannot readdir: %s", err)
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def open(
@@ -207,7 +207,7 @@ class Fuse(pyfuse3.Operations):
             data = await entry.get_content()
             return data[offset : offset + length]
         except Exception as err:
-            logging.exception(f"Cannot read: {err}")
+            logging.exception("Cannot read: %s", err)
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def lookup(
@@ -225,7 +225,7 @@ class Fuse(pyfuse3.Operations):
             else:
                 raise ValueError(f"unknown name: {name}")
         except Exception as err:
-            logging.exception(f"Cannot lookup: {err}")
+            logging.exception("Cannot lookup: %s", err)
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
@@ -248,7 +248,7 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
             try:
                 await fs.get_metadata(swhid)
             except Exception as err:
-                logging.exception(f"Cannot prefetch object {swhid}: {err}")
+                logging.exception("Cannot prefetch object %s: %s", swhid, err)
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
@@ -259,7 +259,7 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
             pyfuse3.init(fs, root_path, fuse_options)
             await pyfuse3.main()
         except Exception as err:
-            logging.error(f"Error running FUSE: {err}")
+            logging.error("Error running FUSE: %s", err)
         finally:
             fs.shutdown()
             pyfuse3.close(unmount=True)
