@@ -5,7 +5,8 @@
 ' title Container diagram for the Software Heritage virtual filesystem (SwhFS)
 left to right direction
 
-Person(user, "User")
+Person(user, "Developer")
+System(tool, "Programming Tool")
 Container(fuse, "FUSE", "kernel", "Delegates filesystem implementation to user space")
 
 System_Boundary(swhfs_bound, "SwhFS") {
@@ -16,7 +17,8 @@ System_Boundary(swhfs_bound, "SwhFS") {
 
 System_Ext(archive, "Software Heritage archive")
 
-Rel(user, fuse, "Accesses", "Filesystem")
+Rel(user, fuse, "Browses", "POSIX filesystem")
+Rel(tool, fuse, "Accesses", "POSIX filesystem")
 Rel(fuse, swh_fuse, "Calls user space daemon", "FUSE API")
 Rel(swh_fuse, archive, "Retrieves objects and metadata from", "REST API")
 
