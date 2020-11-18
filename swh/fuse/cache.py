@@ -125,6 +125,23 @@ class MetadataCache(AbstractCache):
         )
         await self.conn.commit()
 
+    async def get_cached_subset(self, swhids: List[SWHID]) -> List[SWHID]:
+        swhids_str = ",".join(f'"{x}"' for x in swhids)
+        cursor = await self.conn.execute(
+            f"select swhid from metadata_cache where swhid in ({swhids_str})"
+        )
+        cache = await cursor.fetchall()
+
+        res = []
+        for row in cache:
+            swhid = row[0]
+            try:
+                res.append(parse_swhid(swhid))
+            except ValidationError:
+                logging.warning("Cannot parse object from metadata cache: %s", swhid)
+
+        return res
+
 
 class BlobCache(AbstractCache):
     """ The blob cache map SWHIDs of type `cnt` to the bytes of their archived
@@ -205,8 +222,8 @@ class HistoryCache(AbstractCache):
             return None
 
         history = []
-        for parent in cache:
-            parent = parent[0]
+        for row in cache:
+            parent = row[0]
             try:
                 history.append(parse_swhid(parent))
             except ValidationError:

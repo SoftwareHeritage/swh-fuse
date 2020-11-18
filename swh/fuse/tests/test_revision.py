@@ -2,7 +2,9 @@ import json
 import os
 import time
 
-from swh.fuse.fs.artifact import RevisionHistoryShardByPage
+import dateutil.parser
+
+from swh.fuse.fs.artifact import RevisionHistoryShardByDate, RevisionHistoryShardByPage
 from swh.fuse.tests.api_url import GRAPH_API_REQUEST
 from swh.fuse.tests.common import (
     check_dir_name_entries,
@@ -75,6 +77,12 @@ def test_list_history(fuse_mntdir):
         if ".status" not in os.listdir(dir_by_date):
             break
         time.sleep(0.01)
-    assert os.listdir(dir_by_date) == ["2010"]
-    assert os.listdir(dir_by_date / "2010") == ["06"]
-    assert os.listdir(dir_by_date / "2010/06") == ["25", "24", "23", "16"]
+    for swhid in expected:
+        meta = get_data_from_web_archive(str(swhid))
+        date = dateutil.parser.parse(meta["date"])
+        depth1 = RevisionHistoryShardByDate.DATE_FMT.format(
+            year=date.year, month=date.month, day=date.day
+        )
+        depth2 = str(swhid)
+        assert (dir_by_date / depth1).exists()
+        assert depth2 in (os.listdir(dir_by_date / depth1))
