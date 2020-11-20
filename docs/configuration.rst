@@ -4,7 +4,7 @@
 Configuration
 =============
 
-The configuration for the Software Heritage virtual file system resides in the
+The configuration for the Software Heritage Filesystem resides in the
 ``swh > fuse`` section of the shared `YAML <https://yaml.org/>`_ configuration
 file used by all Software Heritage tools, located by default at
 ``~/.config/swh/global.yml``.

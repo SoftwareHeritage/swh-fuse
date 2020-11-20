@@ -1,4 +1,4 @@
-# Software Heritage virtual filesystem (SwhFS) --- Design notes
+# Software Heritage Filesystem (SwhFS) --- Design notes
 
 The [Software Heritage](https://www.softwareheritage.org/) {ref}`data model
 <data-model>` is
@@ -6,8 +6,8 @@ a [Direct Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)
 (DAG) with nodes of different types that correspond to source code artifacts
 such as directories, commits, etc. Using
 this [FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) module
-(*SwhFS* for short) you can locally mount, and then navigate as a (virtual)
-file system, parts of the archive identified by {ref}`Software Heritage
+(*SwhFS* for short) you can locally mount, and then navigate as a
+filesystem, parts of the archive identified by {ref}`Software Heritage
 identifiers <persistent-identifiers>` (SWHIDs).
 
 To retrieve information about the source code artifacts, SwhFS interacts over

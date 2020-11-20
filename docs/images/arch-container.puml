@@ -2,7 +2,7 @@
 ' !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
 !include c4-plantuml/C4_Container.puml
 
-' title Container diagram for the Software Heritage virtual filesystem (SwhFS)
+' title Container diagram for the Software Heritage Filesystem (SwhFS)
 left to right direction
 
 Person(user, "Developer")
