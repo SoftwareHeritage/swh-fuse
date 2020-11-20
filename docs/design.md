@@ -1,18 +1,18 @@
 # Software Heritage Filesystem (SwhFS) --- Design notes
 
-The [Software Heritage](https://www.softwareheritage.org/) {ref}`data model
-<data-model>` is
+The [Software Heritage](https://www.softwareheritage.org/)
+{ref}`data model <data-model>` is
 a [Direct Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)
 (DAG) with nodes of different types that correspond to source code artifacts
 such as directories, commits, etc. Using
 this [FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) module
 (*SwhFS* for short) you can locally mount, and then navigate as a
-filesystem, parts of the archive identified by {ref}`Software Heritage
-identifiers <persistent-identifiers>` (SWHIDs).
+filesystem, parts of the archive identified by
+{ref}`Software Heritage identifiers <persistent-identifiers>` (SWHIDs).
 
 To retrieve information about the source code artifacts, SwhFS interacts over
-the network with the Software Heritage archive via its {ref}`Web API
-<swh-web-api-urls>`.
+the network with the Software Heritage archive via its
+{ref}`Web API <swh-web-api-urls>`.
 
 
 ## Architecture
