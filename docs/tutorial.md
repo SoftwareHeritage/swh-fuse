@@ -21,6 +21,7 @@ mount the Software Heritage archive, use the `swh fs mount` command:
 
     $ mkdir swhfs
     $ swh fs mount swhfs/  # mount the archive
+
     $ ls -1F swhfs/  # list entry points
     archive/  # <- start browsing from here
     meta/
@@ -68,8 +69,8 @@ prefixing it with `swh:1:rev:` to obtain
 Here is a SwhFS Hello World:
 
     $ cd swhfs/
-    $ cat archive/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2
 
+    $ cat archive/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2
     #include <stdio.h>
 
     int main(void) {
@@ -85,7 +86,7 @@ corresponding to what the [Software Heritage Web API][webapi] will return. For
 example, here is what the Software Heritage archive knows about the above Hello
 World implementation:
 
-    $ cat meta/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2.json | jq
+    $ jq meta/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2.json
     {
       "length": 67,
       "status": "visible",
@@ -112,8 +113,10 @@ code directories. Here is the historical Apollo 11 source code, where we can
 find interesting comments about the antenna during landing:
 
     $ cd archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030
+
     $ ls | wc -l
     127
+
     $ grep -i antenna THE_LUNAR_LANDING.s | cut -f 5
     # IS THE LR ANTENNA IN POSITION 1 YET
     # BRANCH IF ANTENNA ALREADY IN POSITION 1
@@ -122,8 +125,14 @@ We can checkout the commit of a more modern code base, like jQuery, and count
 its JavaScript lines of code (SLOC):
 
     $ cd archive/swh:1:rev:9d76c0b163675505d1a901e5fe5249a2c55609bc
+
     $ ls -F
-    history/  meta.json@  parent@  parents/  root@
+    history/
+    meta.json@
+    parent@
+    parents/
+    root@
+
     $ find root/src/ -type f -name '*.js' | xargs cat | wc -l
     10136
 
@@ -132,10 +141,10 @@ its JavaScript lines of code (SLOC):
 
 `meta.json` files of revision objects contain complete commit metadata, e.g.:
 
-    $ jq .author.name,.date,.message meta.json
+    $ jq '.author.name, .date, .message' meta.json
     "Michal Golebiowski-Owczarek"
     "2020-03-02T23:02:42+01:00"
-    "Prevent collision with Object.prototype ..."
+    "Data:Event:Manipulation: Prevent collisions with Object.prototype ..."
 
 Commit history can be browsed commit-by-commit digging into directories
 `parent(s)/` directories or, more efficiently, using the history summaries
@@ -143,20 +152,37 @@ located under `history/`:
 
     $ ls -f history/by-page/000/ | wc -l
     6469
-    $ ls -f history/by-page/000/ | head -n 2
-    swh:1:rev:358b769a00c3a09a...
-    swh:1:rev:4a7fc8544e2020c7...
+
+    $ ls -f history/by-page/000/ | head -n 5
+    swh:1:rev:358b769a00c3a09a8ec621b8dcb2d5e31b7da69a
+    swh:1:rev:4a7fc8544e2020c75047456d11979e4e3a517fdf
+    swh:1:rev:364476c3dc1231603ba61fc08068fa89fb095e1a
+    swh:1:rev:721744a9fab5b597febea64e466272eabfdb9463
+    swh:1:rev:4592595b478be979141ce35c693dbc6b65647173
 
 The jQuery commit at hand is preceded by 6469 commits, which can be listed in
 `git log` order via the `by-page` view. The `by-hash` and `by-date` views list
 commits sharded by commit identifier and timestamp:
 
-    $ ls history/by-hash/00/ | head -n 1
-    swh:1:rev:0018f7700bf8004d...
+    $ ls history/by-hash/00/ | head -n 5
+    swh:1:rev:00a9c2e5f4c855382435cec6b3908eb9bd5a53b7
+    swh:1:rev:005040379d8b64aacbe54941d878efa6e86df1cc
+    swh:1:rev:00cc67af23bf9cf2cdbaeaeee6ded76baf0292f0
+    swh:1:rev:00575d4d8c7421c5119f181009374ff2e7736127
+    swh:1:rev:0019a463bdcb81dc6ba3434505a45774ca27f363
+
     $ ls -F history/by-date/
-    2006/  2007/  2008/  ...  2018/  2019/  2020/
+    2006/
+    2007/
+    2008/
+    ...
+    2018/
+    2019/
+    2020/
+
     $ ls -f history/by-date/2020/03/16/
-    swh:1:rev:90fed4b453a5bec...
+    swh:1:ref:90fed4b453a5becdb7f173d9e3c1492390a1441f
+
     $ jq .date history/by-date/2020/03/16/*/meta.json
     "2020-03-16T21:49:29+01:00"
 
@@ -174,15 +200,20 @@ the [Unix history repository](https://github.com/dspinellis/unix-history-repo),
 which uses historical Unix releases as branch names:
 
     $ cd archive/swh:1:snp:2ca5d6eff8f04a671c0d5b13646cede522c64b7d
-    $ ls -f | wc -l ; ls -f | grep Bell
+
+    $ ls -f | wc -l
     210
+
+    $ ls -f | grep Bell
     refs%2Fheads%2FBell-32V-Snapshot-Development
     refs%2Fheads%2FBell-Release
     refs%2Ftags%2FBell-32V
+
     $ cd refs%2Fheads%2FBell-Release
     $ jq .message,.date meta.json
     "Bell 32V release ..."
     "1979-05-02T23:26:55-05:00"
+
     $ grep core root/usr/src/games/fortune.c
             printf("Memory fault -- core dumped\n");
 
