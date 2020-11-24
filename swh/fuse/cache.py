@@ -117,7 +117,13 @@ class MetadataCache(AbstractCache):
             "create table if not exists metadata_cache (swhid, metadata, date)"
         )
         await self.conn.execute(
+            "create index if not exists idx_metadata on metadata_cache(swhid)"
+        )
+        await self.conn.execute(
             "create table if not exists visits_cache (url, metadata)"
+        )
+        await self.conn.execute(
+            "create index if not exists idx_visits on visits_cache(url)"
         )
         await self.conn.commit()
         return self
@@ -182,6 +188,9 @@ class BlobCache(AbstractCache):
     async def __aenter__(self):
         await super().__aenter__()
         await self.conn.execute("create table if not exists blob_cache (swhid, blob)")
+        await self.conn.execute(
+            "create index if not exists idx_blob on blob_cache(swhid)"
+        )
         await self.conn.commit()
         return self
 
@@ -223,7 +232,7 @@ class HistoryCache(AbstractCache):
             """
         )
         await self.conn.execute(
-            "create index if not exists index_history_graph on history_graph(src)"
+            "create index if not exists idx_history on history_graph(src)"
         )
         await self.conn.commit()
         return self
