@@ -11,16 +11,17 @@ import logging
 from pathlib import Path
 import re
 import sys
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
 import aiosqlite
+import dateutil.parser
 from psutil import virtual_memory
 
 from swh.fuse.fs.artifact import RevisionHistoryShardByDate
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
 from swh.fuse.fs.mountpoint import ArchiveDir, MetaDir
 from swh.model.exceptions import ValidationError
-from swh.model.identifiers import SWHID, parse_swhid
+from swh.model.identifiers import REVISION, SWHID, parse_swhid
 from swh.web.client.client import ORIGIN_VISIT, typify_json
 
 
@@ -46,9 +47,10 @@ class FuseCache:
         self.cache_conf = cache_conf
 
     async def __aenter__(self):
+        # TODO: unified name for metadata/history?
         self.metadata = MetadataCache(self.cache_conf["metadata"])
         self.blob = BlobCache(self.cache_conf["blob"])
-        self.history = HistoryCache(self.cache_conf["history"])
+        self.history = HistoryCache(self.cache_conf["metadata"])
         self.direntry = DirEntryCache(self.cache_conf["direntry"])
         await self.metadata.__aenter__()
         await self.blob.__aenter__()
@@ -90,11 +92,13 @@ class AbstractCache(ABC):
     async def __aenter__(self):
         # In-memory (thus temporary) caching is useful for testing purposes
         if self.conf.get("in-memory", False):
-            path = ":memory:"
+            path = "file::memory:?cache=shared"
+            uri = True
         else:
             path = Path(self.conf["path"])
             path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = await aiosqlite.connect(path)
+            uri = False
+        self.conn = await aiosqlite.connect(path, uri=uri)
         return self
 
     async def __aexit__(self, type=None, val=None, tb=None) -> None:
@@ -110,7 +114,7 @@ class MetadataCache(AbstractCache):
     async def __aenter__(self):
         await super().__aenter__()
         await self.conn.execute(
-            "create table if not exists metadata_cache (swhid, metadata)"
+            "create table if not exists metadata_cache (swhid, metadata, date)"
         )
         await self.conn.execute(
             "create table if not exists visits_cache (url, metadata)"
@@ -145,10 +149,18 @@ class MetadataCache(AbstractCache):
             return None
 
     async def set(self, swhid: SWHID, metadata: Any) -> None:
+        swhid_date = ""
+        if swhid.object_type == REVISION:
+            date = dateutil.parser.parse(metadata["date"])
+            swhid_date = RevisionHistoryShardByDate.DATE_FMT.format(
+                year=date.year, month=date.month, day=date.day
+            )
+
         await self.conn.execute(
-            "insert into metadata_cache values (?, ?)",
-            (str(swhid), json.dumps(metadata)),
+            "insert into metadata_cache values (?, ?, ?)",
+            (str(swhid), json.dumps(metadata), swhid_date),
         )
+
         await self.conn.commit()
 
     async def set_visits(self, url_encoded: str, visits: List[Dict[str, Any]]) -> None:
@@ -156,23 +168,6 @@ class MetadataCache(AbstractCache):
             "insert into visits_cache values (?, ?)", (url_encoded, json.dumps(visits)),
         )
         await self.conn.commit()
-
-    async def get_cached_subset(self, swhids: List[SWHID]) -> List[SWHID]:
-        swhids_str = ",".join(f'"{x}"' for x in swhids)
-        cursor = await self.conn.execute(
-            f"select swhid from metadata_cache where swhid in ({swhids_str})"
-        )
-        cache = await cursor.fetchall()
-
-        res = []
-        for row in cache:
-            swhid = row[0]
-            try:
-                res.append(parse_swhid(swhid))
-            except ValidationError:
-                logging.warning("Cannot parse object from metadata cache: %s", swhid)
-
-        return res
 
 
 class BlobCache(AbstractCache):
@@ -233,31 +228,53 @@ class HistoryCache(AbstractCache):
         await self.conn.commit()
         return self
 
-    async def get(self, swhid: SWHID) -> Optional[List[SWHID]]:
-        cursor = await self.conn.execute(
-            """
-            with recursive
-            dfs(node) AS (
-                values(?)
-                union
-                select history_graph.dst
-                from history_graph
-                join dfs on history_graph.src = dfs.node
-            )
-            -- Do not keep the root node since it is not an ancestor
-            select * from dfs limit -1 offset 1
-            """,
-            (str(swhid),),
+    HISTORY_REC_QUERY = """
+        with recursive
+        dfs(node) AS (
+            values(?)
+            union
+            select history_graph.dst
+            from history_graph
+            join dfs on history_graph.src = dfs.node
         )
+        -- Do not keep the root node since it is not an ancestor
+        select * from dfs limit -1 offset 1
+    """
+
+    async def get(self, swhid: SWHID) -> Optional[List[SWHID]]:
+        cursor = await self.conn.execute(self.HISTORY_REC_QUERY, (str(swhid),),)
         cache = await cursor.fetchall()
         if not cache:
             return None
-
         history = []
         for row in cache:
             parent = row[0]
             try:
                 history.append(parse_swhid(parent))
+            except ValidationError:
+                logging.warning("Cannot parse object from history cache: %s", parent)
+        return history
+
+    async def get_with_date_prefix(
+        self, swhid: SWHID, date_prefix
+    ) -> List[Tuple[SWHID, str]]:
+        cursor = await self.conn.execute(
+            f"""
+            select swhid, date from ( {self.HISTORY_REC_QUERY} ) as history
+            join metadata_cache on history.node = metadata_cache.swhid
+            where metadata_cache.date like '{date_prefix}%'
+            """,
+            (str(swhid),),
+        )
+        cache = await cursor.fetchall()
+        if not cache:
+            return []
+
+        history = []
+        for row in cache:
+            parent, date = row[0], row[1]
+            try:
+                history.append((parse_swhid(parent), date))
             except ValidationError:
                 logging.warning("Cannot parse object from history cache: %s", parent)
         return history

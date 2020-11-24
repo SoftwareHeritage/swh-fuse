@@ -35,11 +35,7 @@ def fuse_mntdir(web_api_mock):
     tmpfile = NamedTemporaryFile(suffix=".swh-fuse-test.yml")
 
     config = {
-        "cache": {
-            "metadata": {"in-memory": True},
-            "blob": {"in-memory": True},
-            "history": {"in-memory": True},
-        },
+        "cache": {"metadata": {"in-memory": True}, "blob": {"in-memory": True},},
         "web-api": {"url": API_URL, "auth-token": None},
         "json-indent": None,
     }

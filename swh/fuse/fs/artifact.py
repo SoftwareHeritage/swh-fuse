@@ -265,20 +265,17 @@ class RevisionHistoryShardByDate(FuseDirEntry):
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.history_swhid)
-        # Only check for cached revisions since fetching all of them with the
-        # Web API would take too long
-        swhids = await self.fuse.cache.metadata.get_cached_subset(history)
+        # Only check for cached revisions with the appropriate prefix, since
+        # fetching all of them with the Web API would take too long
+        swhids = await self.fuse.cache.history.get_with_date_prefix(
+            self.history_swhid, date_prefix=self.prefix
+        )
 
         depth = self.prefix.count("/")
         root_path = self.get_relative_root_path()
         sharded_dirs = set()
 
-        for swhid in swhids:
-            meta = await self.fuse.cache.metadata.get(swhid)
-            date = meta["date"]
-            sharded_name = self.DATE_FMT.format(
-                year=date.year, month=date.month, day=date.day
-            )
+        for (swhid, sharded_name) in swhids:
             if not sharded_name.startswith(self.prefix):
                 continue
 
@@ -301,6 +298,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
                         history_swhid=self.history_swhid,
                     )
 
+        # TODO: store len(history) somewhere to avoid recompute?
         self.is_status_done = len(swhids) == len(history)
         if not self.is_status_done and depth == 0:
             yield self.create_child(
