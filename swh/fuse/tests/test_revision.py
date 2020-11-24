@@ -72,8 +72,8 @@ def test_list_history(fuse_mntdir):
         assert depth2 in (os.listdir(dir_by_page / depth1))
 
     dir_by_date = dir_path / "by-date"
-    # Wait max 1 second to populate by-date/ dir
-    for i in range(100):
+    # Wait max 3 seconds to populate by-date/ dir
+    for i in range(300):
         if ".status" not in os.listdir(dir_by_date):
             break
         time.sleep(0.01)
