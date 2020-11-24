@@ -5,11 +5,13 @@
 
 import asyncio
 import errno
+import functools
 import logging
 import os
 from pathlib import Path
 import time
 from typing import Any, Dict, List
+import urllib.parse
 
 import pyfuse3
 import pyfuse3_asyncio
@@ -135,6 +137,29 @@ class Fuse(pyfuse3.Operations):
             # from the Web API is too computationally intensive so simply return
             # an empty list.
             return []
+
+    async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
+        """ Retrieve origin visits given an encoded-URL using Software Heritage API """
+
+        cache = await self.cache.metadata.get_visits(url_encoded)
+        if cache:
+            return cache
+
+        try:
+            typify = False  # Get the raw JSON from the API
+            loop = asyncio.get_event_loop()
+            # Web API only takes non-encoded URL
+            url = urllib.parse.unquote_plus(url_encoded)
+            visits_it = await loop.run_in_executor(
+                None, functools.partial(self.web_api.visits, url, typify=typify)
+            )
+            visits = list(visits_it)
+            await self.cache.metadata.set_visits(url_encoded, visits)
+            # Retrieve it from cache so it is correctly typed
+            return await self.cache.metadata.get_visits(url_encoded)
+        except requests.HTTPError as err:
+            logging.error("Cannot fetch visits for object %s: %s", url_encoded, err)
+            raise
 
     async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
         """ Return entry attributes """

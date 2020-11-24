@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 import json
 from typing import AsyncIterator
 
-from swh.fuse.fs.artifact import OBJTYPE_GETTERS
+from swh.fuse.fs.artifact import OBJTYPE_GETTERS, Origin
 from swh.fuse.fs.entry import EntryMode, FuseDirEntry, FuseEntry, FuseFileEntry
 from swh.model.exceptions import ValidationError
 from swh.model.identifiers import CONTENT, SWHID, parse_swhid
@@ -24,6 +24,7 @@ class Root(FuseDirEntry):
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         yield self.create_child(ArchiveDir)
         yield self.create_child(MetaDir)
+        yield self.create_child(OriginDir)
 
 
 @dataclass
@@ -101,3 +102,35 @@ class MetaEntry(FuseFileEntry):
 
     async def size(self) -> int:
         return len(await self.get_content())
+
+
+@dataclass
+class OriginDir(FuseDirEntry):
+    """ The origin/ directory is lazily populated with one entry per accessed
+    origin URL (mangled to create a valid UNIX filename). The URL encoding is
+    done using the percent-encoding mechanism described in RFC 3986. """
+
+    name: str = field(init=False, default="origin")
+    mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
+
+    def create_child(self, url_encoded: str) -> FuseEntry:
+        return super().create_child(
+            Origin, name=url_encoded, mode=int(EntryMode.RDONLY_DIR),
+        )
+
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
+        async for url in self.fuse.cache.get_cached_visits():
+            yield self.create_child(url)
+
+    async def lookup(self, name: str) -> FuseEntry:
+        entry = await super().lookup(name)
+        if entry:
+            return entry
+
+        # On the fly mounting of new origin url
+        try:
+            url_encoded = name
+            await self.fuse.get_visits(url_encoded)
+            return self.create_child(url_encoded)
+        except ValidationError:
+            return None

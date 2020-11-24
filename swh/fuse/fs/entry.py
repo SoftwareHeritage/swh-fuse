@@ -68,6 +68,9 @@ class FuseFileEntry(FuseEntry):
 
         raise NotImplementedError
 
+    async def size(self) -> int:
+        return len(await self.get_content())
+
 
 class FuseDirEntry(FuseEntry):
     """ FUSE virtual directory entry """

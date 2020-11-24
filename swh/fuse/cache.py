@@ -21,7 +21,7 @@ from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
 from swh.fuse.fs.mountpoint import ArchiveDir, MetaDir
 from swh.model.exceptions import ValidationError
 from swh.model.identifiers import SWHID, parse_swhid
-from swh.web.client.client import typify_json
+from swh.web.client.client import ORIGIN_VISIT, typify_json
 
 
 class FuseCache:
@@ -71,6 +71,14 @@ class FuseCache:
         for raw_swhid in swhids:
             yield parse_swhid(raw_swhid[0])
 
+    async def get_cached_visits(self) -> AsyncGenerator[str, None]:
+        """ Return a list of all previously cached visit URL """
+
+        cursor = await self.metadata.conn.execute("select url from visits_cache")
+        urls = await cursor.fetchall()
+        for raw_url in urls:
+            yield raw_url[0]
+
 
 class AbstractCache(ABC):
     """ Abstract cache implementation to share common behavior between cache
@@ -104,6 +112,9 @@ class MetadataCache(AbstractCache):
         await self.conn.execute(
             "create table if not exists metadata_cache (swhid, metadata)"
         )
+        await self.conn.execute(
+            "create table if not exists visits_cache (url, metadata)"
+        )
         await self.conn.commit()
         return self
 
@@ -118,10 +129,31 @@ class MetadataCache(AbstractCache):
         else:
             return None
 
+    async def get_visits(
+        self, url_encoded: str, typify: bool = True
+    ) -> Optional[List[Dict[str, Any]]]:
+        cursor = await self.conn.execute(
+            "select metadata from visits_cache where url=?", (url_encoded,)
+        )
+        cache = await cursor.fetchone()
+        if cache:
+            visits = json.loads(cache[0])
+            if typify:
+                visits = [typify_json(v, ORIGIN_VISIT) for v in visits]
+            return visits
+        else:
+            return None
+
     async def set(self, swhid: SWHID, metadata: Any) -> None:
         await self.conn.execute(
             "insert into metadata_cache values (?, ?)",
             (str(swhid), json.dumps(metadata)),
+        )
+        await self.conn.commit()
+
+    async def set_visits(self, url_encoded: str, visits: List[Dict[str, Any]]) -> None:
+        await self.conn.execute(
+            "insert into visits_cache values (?, ?)", (url_encoded, json.dumps(visits)),
         )
         await self.conn.commit()
 

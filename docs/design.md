@@ -60,6 +60,10 @@ for that object. Note that, in case of pagination (e.g., snapshot objects with
 many branches) the JSON file will contain a complete version with all pages
 merged together.
 
+- `origin/`: initially empty, this directory is lazily populated with one
+entry per accessed origin URL, having encoded URL as names. The URL encoding is
+done using the percent-encoding mechanism described in RFC 3986.
+
 
 ## File system representation
 
@@ -136,6 +140,17 @@ characters (e.g., `/` are replaced by `%2F`).
 Each entry is a symlink named as the branch name, URL encoded (to avoid
 problematic characters such as `/`, which becomes `%2F`). The symlink target
 points into `archive/` to the SWHID corresponding to the branch target.
+
+
+### `ori` nodes (origins)
+
+Origin nodes are represented on the file-system as directories with one entry
+for each origin visit.
+
+The visits directories are named after the visit date (`YYYY-MM-DD`, if multiple
+visits occur the same day only the first one is kept).  Each visit directory
+contains a `meta.json` with associated metadata for the origin node, and
+potentially a `snapshot` symlink pointing to the visit's snapshot node.
 
 
 ## Caching

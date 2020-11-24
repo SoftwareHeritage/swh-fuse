@@ -16,7 +16,7 @@ from swh.fuse.tests.api_url import (
     swhid_to_graph_url,
     swhid_to_web_url,
 )
-from swh.fuse.tests.data.config import ALL_ENTRIES, REV_SMALL_HISTORY
+from swh.fuse.tests.data.config import ALL_ENTRIES, ORIGIN_URL, REV_SMALL_HISTORY
 from swh.model.identifiers import (
     CONTENT,
     DIRECTORY,
@@ -138,10 +138,20 @@ swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04 swh:1:rev:c01efc669f09508b55e
                 generate_archive_web_api(swhid, recursive=False)
 
 
+def generate_origin_archive_web_api(url: str):
+    url = f"origin/{url}/visits/"
+    data = requests.get(f"{API_URL_real}/{url}").text
+    data = json.loads(data)
+    MOCK_ARCHIVE[url] = data
+
+
 for entry in ALL_ENTRIES:
     swhid = parse_swhid(entry)
     generate_archive_web_api(swhid, recursive=True)
     generate_archive_graph_api(swhid)
+
+# Origin artifacts are not identified by SWHID but using an URL
+generate_origin_archive_web_api(ORIGIN_URL)
 
 print("# GENERATED FILE, DO NOT EDIT.")
 print("# Run './gen-api-data.py > api_data.py' instead.")

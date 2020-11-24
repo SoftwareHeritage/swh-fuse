@@ -5,8 +5,10 @@
 
 import asyncio
 from dataclasses import dataclass, field
+import json
+import logging
 from pathlib import Path
-from typing import Any, AsyncIterator, List
+from typing import Any, AsyncIterator, Dict, List
 import urllib.parse
 
 from swh.fuse.fs.entry import (
@@ -49,7 +51,7 @@ class Content(FuseFileEntry):
         if self.prefetch:
             return self.prefetch["length"]
         else:
-            return len(await self.get_content())
+            return await super().size()
 
 
 @dataclass
@@ -261,9 +263,6 @@ class RevisionHistoryShardByDate(FuseDirEntry):
             fmt = f"Done: {self.done}/{self.todo}\n"
             return fmt.encode()
 
-        async def size(self) -> int:
-            return len(await self.get_content())
-
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.history_swhid)
         # Only check for cached revisions since fetching all of them with the
@@ -456,9 +455,6 @@ class ReleaseType(FuseFileEntry):
     async def get_content(self) -> bytes:
         return str.encode(self.target_type + "\n")
 
-    async def size(self) -> int:
-        return len(await self.get_content())
-
 
 @dataclass
 class Snapshot(FuseDirEntry):
@@ -486,6 +482,72 @@ class Snapshot(FuseDirEntry):
                 name=name,
                 target=Path(root_path, f"archive/{branch_meta['target']}"),
             )
+
+
+@dataclass
+class Origin(FuseDirEntry):
+    """ Software Heritage origin artifact.
+
+    Origin nodes are represented on the file-system as directories with one
+    entry for each origin visit.
+
+    The visits directories are named after the visit date (`YYYY-MM-DD`, if
+    multiple visits occur the same day only the first one is kept). Each visit
+    directory contains a `meta.json` with associated metadata for the origin
+    node, and potentially a `snapshot` symlink pointing to the visit's snapshot
+    node. """
+
+    DATE_FMT = "{year:04d}-{month:02d}-{day:02d}"
+
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
+        # The origin's name is always its URL (encoded to create a valid UNIX filename)
+        visits = await self.fuse.get_visits(self.name)
+
+        seen_date = set()
+        for visit in visits:
+            date = visit["date"]
+            name = self.DATE_FMT.format(year=date.year, month=date.month, day=date.day)
+
+            if name in seen_date:
+                logging.debug(
+                    "Conflict date on origin: %s, %s", visit["origin"], str(name)
+                )
+            else:
+                seen_date.add(name)
+                yield self.create_child(
+                    OriginVisit, name=name, mode=int(EntryMode.RDONLY_DIR), meta=visit,
+                )
+
+
+@dataclass
+class OriginVisit(FuseDirEntry):
+    """ Origin visit virtual directory """
+
+    meta: Dict[str, Any]
+
+    @dataclass
+    class MetaFile(FuseFileEntry):
+        content: str
+
+        async def get_content(self) -> bytes:
+            return str.encode(self.content + "\n")
+
+    async def compute_entries(self) -> AsyncIterator[FuseEntry]:
+        snapshot_swhid = self.meta["snapshot"]
+        if snapshot_swhid:
+            root_path = self.get_relative_root_path()
+            yield self.create_child(
+                FuseSymlinkEntry,
+                name="snapshot",
+                target=Path(root_path, f"archive/{snapshot_swhid}"),
+            )
+
+        yield self.create_child(
+            OriginVisit.MetaFile,
+            name="meta.json",
+            mode=int(EntryMode.RDONLY_FILE),
+            content=json.dumps(self.meta, default=lambda x: str(x)),
+        )
 
 
 OBJTYPE_GETTERS = {

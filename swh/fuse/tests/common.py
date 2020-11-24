@@ -25,6 +25,10 @@ def get_data_from_web_archive(swhid: str, raw: bool = False) -> Any:
         return MOCK_ARCHIVE[url]
 
 
+def get_origin_data_from_web_archive(url: str) -> Any:
+    return MOCK_ARCHIVE[f"origin/{url}/visits/"]
+
+
 def get_data_from_graph_archive(swhid: str, request_type: GRAPH_API_REQUEST) -> Any:
     url = swhid_to_graph_url(swhid, request_type)
     return MOCK_ARCHIVE[url]
