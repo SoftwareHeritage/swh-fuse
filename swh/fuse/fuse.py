@@ -247,11 +247,10 @@ class Fuse(pyfuse3.Operations):
             lookup_entry = await parent_entry.lookup(name)
             if lookup_entry:
                 return await self.get_attrs(lookup_entry)
-            else:
-                raise ValueError(f"unknown name: {name}")
         except Exception as err:
             logging.exception("Cannot lookup: %s", err)
-            raise pyfuse3.FUSEError(errno.ENOENT)
+
+        raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
         entry = self.inode2entry(inode)
