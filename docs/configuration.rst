@@ -57,3 +57,15 @@ default Web API service:
         web-api:
           url: "https://archive.softwareheritage.org/api/1/"
           auth-token: null
+
+
+Logging
+-------
+
+The default logging level is set to ``INFO`` and can be configured through the
+:ref:`shared command line interface <swh-core-cli>` via the ``-l/--log-level``
+flag.
+
+.. code:: bash
+
+    $ swh --log-level DEBUG fs mount swhfs/
