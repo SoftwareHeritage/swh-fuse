@@ -28,9 +28,9 @@ CACHE_HOME_DIR: Path = (
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "cache": {
-        "metadata": {"path": CACHE_HOME_DIR / "swh/fuse/metadata.sqlite"},
-        "blob": {"path": CACHE_HOME_DIR / "swh/fuse/blob.sqlite"},
-        "history": {"path": CACHE_HOME_DIR / "swh/fuse/history.sqlite"},
+        "metadata": {"path": str(CACHE_HOME_DIR / "swh/fuse/metadata.sqlite")},
+        "blob": {"path": str(CACHE_HOME_DIR / "swh/fuse/blob.sqlite")},
+        "history": {"path": str(CACHE_HOME_DIR / "swh/fuse/history.sqlite")},
         "direntry": {"maxram": "10%"},
     },
     "web-api": {
@@ -53,7 +53,8 @@ def fuse(ctx, config_file):
     """Software Heritage virtual file system"""
 
     import logging
-    import pprint
+
+    import yaml
 
     from swh.core import config
 
@@ -78,7 +79,7 @@ def fuse(ctx, config_file):
         logging.warning("Using default configuration (cannot load custom one: %s)", err)
         conf = DEFAULT_CONFIG
 
-    logging.info("Read configuration: \n%s", pprint.pformat(conf))
+    logging.debug("Read configuration: \n%s", yaml.dump(conf))
     ctx.ensure_object(dict)
     ctx.obj["config"] = conf
 
