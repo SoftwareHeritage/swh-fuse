@@ -62,7 +62,6 @@ def fuse(ctx, config_file):
         config_file = DEFAULT_CONFIG_PATH
 
     try:
-        logging.info("Loading configuration from: %s", config_file)
         conf = config.read_raw_config(config.config_basepath(config_file))
         if not conf:
             raise ValueError(f"Cannot parse configuration file: {config_file}")
