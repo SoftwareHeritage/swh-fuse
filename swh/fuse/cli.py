@@ -74,8 +74,10 @@ def fuse(ctx, config_file):
 
         # recursive merge not done by config.read
         conf = config.merge_configs(DEFAULT_CONFIG, conf)
-    except Exception as err:
-        logging.warning("Using default configuration (cannot load custom one: %s)", err)
+    except Exception:
+        logging.warning(
+            "Using default configuration (cannot load custom one)", exc_info=True
+        )
         conf = DEFAULT_CONFIG
 
     logging.debug("Read configuration: \n%s", yaml.dump(conf))
