@@ -546,7 +546,11 @@ class OriginVisit(FuseDirEntry):
             OriginVisit.MetaFile,
             name="meta.json",
             mode=int(EntryMode.RDONLY_FILE),
-            content=json.dumps(self.meta, default=lambda x: str(x)),
+            content=json.dumps(
+                self.meta,
+                indent=self.fuse.conf["json-indent"],
+                default=lambda x: str(x),
+            ),
         )
 
 

@@ -41,6 +41,7 @@ def fuse_mntdir(web_api_mock):
             "history": {"in-memory": True},
         },
         "web-api": {"url": API_URL, "auth-token": None},
+        "json-indent": None,
     }
 
     # Run FUSE in foreground mode but in a separate process, so it does not

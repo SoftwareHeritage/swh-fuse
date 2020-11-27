@@ -37,6 +37,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "url": "https://archive.softwareheritage.org/api/1",
         "auth-token": None,
     },
+    "json-indent": 2,
 }
 
 

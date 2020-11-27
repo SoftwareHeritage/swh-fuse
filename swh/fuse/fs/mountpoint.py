@@ -98,7 +98,8 @@ class MetaEntry(FuseFileEntry):
     async def get_content(self) -> bytes:
         # Get raw JSON metadata from API (un-typified)
         metadata = await self.fuse.cache.metadata.get(self.swhid, typify=False)
-        return json.dumps(metadata).encode()
+        json_str = json.dumps(metadata, indent=self.fuse.conf["json-indent"])
+        return (json_str + "\n").encode()
 
     async def size(self) -> int:
         return len(await self.get_content())

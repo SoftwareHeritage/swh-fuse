@@ -15,7 +15,7 @@ from swh.fuse.tests.data.config import (
 def test_access_meta(fuse_mntdir):
     file_path = fuse_mntdir / "archive" / ROOT_REL / "meta.json"
     expected = json.dumps(get_data_from_web_archive(ROOT_REL))
-    assert file_path.read_text() == expected
+    assert file_path.read_text().strip() == expected.strip()
 
 
 def test_access_rev_target(fuse_mntdir):

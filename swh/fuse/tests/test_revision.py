@@ -18,7 +18,7 @@ from swh.model.identifiers import parse_swhid
 def test_access_meta(fuse_mntdir):
     file_path = fuse_mntdir / "archive" / ROOT_REV / "meta.json"
     expected = json.dumps(get_data_from_web_archive(ROOT_REV))
-    assert file_path.read_text() == expected
+    assert file_path.read_text().strip() == expected.strip()
 
 
 def test_list_root(fuse_mntdir):
