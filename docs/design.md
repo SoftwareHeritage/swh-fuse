@@ -132,15 +132,11 @@ following entries:
 
 ### `snp` nodes (snapshots)
 
-Snapshot nodes are represented on the file-system as directories with one entry
-for each branch in the snapshot.
-
-Branch names are subject to URL encoding, in order to avoid problematic
-characters (e.g., `/` are replaced by `%2F`).
-
-Each entry is a symlink named as the branch name, URL encoded (to avoid
-problematic characters such as `/`, which becomes `%2F`). The symlink target
-points into `archive/` to the SWHID corresponding to the branch target.
+Snapshot nodes are represented on the file-system as recursive directories
+following the branch names structure. For example, a branch named
+``refs/tags/v1.0`` will be represented as a ``refs`` directory containing a
+``tags`` directory containing a ``v1.0`` symlink pointing to the branch
+target SWHID.
 
 
 ### `ori` nodes (origins)

@@ -9,7 +9,6 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List
-import urllib.parse
 
 from swh.fuse.fs.entry import (
     EntryMode,
@@ -461,24 +460,43 @@ class Snapshot(FuseDirEntry):
     Attributes:
         swhid: Software Heritage persistent identifier
 
-    Snapshot nodes are represented on the file-system as directories with one
-    entry for each branch in the snapshot. Each entry is a symlink pointing into
-    `archive/` to the branch target SWHID. Branch names are URL encoded (hence
-    '/' are replaced with '%2F'). """
+    Snapshot nodes are represented on the file-system as recursive directories
+    following the branch names structure. For example, a branch named
+    ``refs/tags/v1.0`` will be represented as a ``refs`` directory containing a
+    ``tags`` directory containing a ``v1.0`` symlink pointing to the branch
+    target SWHID. """
 
     swhid: SWHID
+    prefix: str = field(default="")
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
         root_path = self.get_relative_root_path()
 
+        subdirs = set()
         for branch_name, branch_meta in metadata.items():
-            # Mangle branch name to create a valid UNIX filename
-            name = urllib.parse.quote_plus(branch_name)
+            if not branch_name.startswith(self.prefix):
+                continue
+
+            next_subdirs = branch_name[len(self.prefix) :].split("/")
+            next_prefix = next_subdirs[0]
+
+            if len(next_subdirs) == 1:
+                yield self.create_child(
+                    FuseSymlinkEntry,
+                    name=next_prefix,
+                    target=Path(root_path, f"archive/{branch_meta['target']}"),
+                )
+            else:
+                subdirs.add(next_prefix)
+
+        for subdir in subdirs:
             yield self.create_child(
-                FuseSymlinkEntry,
-                name=name,
-                target=Path(root_path, f"archive/{branch_meta['target']}"),
+                Snapshot,
+                name=subdir,
+                mode=int(EntryMode.RDONLY_DIR),
+                swhid=self.swhid,
+                prefix=f"{self.prefix}{subdir}/",
             )
 
 
