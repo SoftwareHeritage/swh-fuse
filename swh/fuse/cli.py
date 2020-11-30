@@ -194,7 +194,7 @@ def clean(ctx):
 
     def rm_cache(conf, cache_name):
         try:
-            conf["cache"][cache_name]["path"].unlink(missing_ok=True)
+            Path(conf["cache"][cache_name]["path"]).unlink(missing_ok=True)
         except KeyError:
             pass
 
