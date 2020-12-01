@@ -143,8 +143,8 @@ class Revision(FuseDirEntry):
       has at least one parent commit (which is the most common case). When
       present it is a symlink pointing into `parents/1/`
     - `history`: a virtual directory listing all its revision ancestors, sorted
-      in reverse topological order. Each entry is a symlink pointing into
-      `archive/SWHID`.
+      in reverse topological order. The history can be listed through
+      `by-date/`, `by-hash/` or `by-page/` with each its own sharding policy.
     - `meta.json`: metadata for the current node, as a symlink pointing to the
       relevant `meta/<SWHID>.json` file """
 

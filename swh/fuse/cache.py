@@ -110,7 +110,7 @@ class MetadataCache(AbstractCache):
     referenced object. This is analogous to what is available in
     `meta/<SWHID>.json` file (and generally used as data source for returning
     the content of those files). Artifacts are identified using their SWHIDs, or
-    in the case of origins visits using their URLs. """
+    in the case of origin visits, using their URLs. """
 
     DB_SCHEMA = """
         create table if not exists metadata_cache (

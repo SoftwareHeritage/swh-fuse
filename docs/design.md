@@ -49,20 +49,21 @@ For more details see the {ref}`CLI documentation <swh-fuse-cli>`.
 
 The SwhFS mount point contain:
 
-- `archive/`: initially empty, this directory is lazily populated with one
-entry per accessed SWHID, having actual SWHIDs as names (possibly sharded into
-`xy/../SWHID` paths to avoid overcrowding `archive/`).
+- `archive/`: initially empty, this directory is lazily populated with one entry
+  per accessed SWHID, having actual SWHIDs as names (possibly sharded into
+  `xy/../SWHID` paths to avoid overcrowding `archive/`).
 
 - `meta/`: initially empty, this directory contains one `<SWHID>.json` file for
-each `<SWHID>` entry under `archive/`. The JSON file contain all available meta
-information about the given SWHID, as returned by the Software Heritage Web API
-for that object. Note that, in case of pagination (e.g., snapshot objects with
-many branches) the JSON file will contain a complete version with all pages
-merged together.
+  each `<SWHID>` entry under `archive/`. The JSON file contain all available
+  meta information about the given SWHID, as returned by the Software Heritage
+  Web API for that object. Note that, in case of pagination (e.g., snapshot
+  objects with many branches) the JSON file will contain a complete version with
+  all pages merged together.
 
-- `origin/`: initially empty, this directory is lazily populated with one
-entry per accessed origin URL, having encoded URL as names. The URL encoding is
-done using the percent-encoding mechanism described in RFC 3986.
+- `origin/`: initially empty, this directory is lazily populated with one entry
+  per accessed origin URL, having encoded URL as names. The URL encoding is done
+  using the percent-encoding mechanism described in
+  [RFC 3986](https://tools.ietf.org/html/rfc3986.html).
 
 
 ## File system representation
@@ -100,19 +101,19 @@ Revision (AKA commit) nodes are represented on the file-system as directories
 with the following entries:
 
 - `root`: source tree at the time of the commit, as a symlink pointing into
-`archive/`, to a SWHID of type `dir`
+  `archive/`, to a SWHID of type `dir`
 - `parents/` (note the plural): a virtual directory containing entries named
-`1`, `2`, `3`, etc., one for each parent commit. Each of these entry is a
-symlink pointing into `archive/`, to the SWHID file for the given parent commit
-- `parent` (note the singular): present if and only if the current commit has a
-single parent commit (which is the most common case). When present it is a
-symlink pointing into `archive/` to the SWHID for the sole parent commit
-- `history`: a virtual directory containing all the parents commit until the
-root commit. Entries are listed as symlinks with the SWHID as directory name,
-pointing into `archive/SWHID`, and are returned in a topological ordering
-similar to `git log` ordering.
+  `1`, `2`, `3`, etc., one for each parent commit. Each of these entry is a
+  symlink pointing into `archive/`, to the SWHID file for the given parent
+  commit
+- `parent` (note the singular): present if and only if the current commit has at
+  least one parent commit (which is the most common case). When present it is a
+  symlink pointing into `parents/1/`
+- `history`: a virtual directory listing all its revision ancestors, sorted in
+  reverse topological order. The history can be listed through `by-date/`,
+  `by-hash/` or `by-page/` with each its own sharding policy.
 - `meta.json`: metadata for the current node, as a symlink pointing to the
-relevant `meta/<SWHID>.json` file
+  relevant `meta/<SWHID>.json` file
 
 
 ### `rel` nodes (releases)
@@ -121,12 +122,12 @@ Release nodes are represented on the file-system as directories with the
 following entries:
 
 - `target`: target node, as a symlink to `archive/<SWHID>`
-- `target_type`: type of the target SWHID, as a 3-letter code
+- `target_type`: regular file containing the type of the target SWHID
 - `root`: present if and only if the release points to something that
-(transitively) resolves to a directory. When present it is a symlink pointing
-into `archive/` to the SWHID of the given directory
+  (transitively) resolves to a directory. When present it is a symlink pointing
+  into `archive/` to the SWHID of the given directory
 - `meta.json`: metadata for the current node, as a symlink pointing to the
-relevant `meta/<SWHID>.json` file
+  relevant `meta/<SWHID>.json` file
 
 
 ### `snp` nodes (snapshots)
@@ -180,11 +181,13 @@ from disk.
 
 ### Metadata cache
 
-    SWHID → JSON metadata
+    Artifact id → JSON metadata
 
-The metadata cache map each SWHID to the complete metadata of the referenced
+The metadata cache map each artifact to the complete metadata of the referenced
 object. This is analogous to what is available in `meta/<SWHID>.json` file (and
 generally used as data source for returning the content of those files).
+Artifacts are identified using their SWHIDs, or in the case of origin visits,
+using their URLs.
 
 Cache location on-disk: `$XDG_CACHE_HOME/swh/fuse/metadata.sqlite`
 
@@ -207,37 +210,6 @@ the first time.
 Cache location on-disk: `$XDG_CACHE_HOME/swh/fuse/blob.sqlite`
 
 
-### Dentry cache
-
-    dir SWHID → directory entries
-
-The dentry (directory entry) cache map SWHIDs of type `dir` to the directory
-entries they contain. Each entry comes with its name as well as file attributes
-(i.e., all its needed to perform a detailed directory listing).
-
-Additional attributes of each directory entry should be looked up on a entry by
-entry basis, possibly hitting the metadata cache.
-
-The dentry cache for a given dir is populated, at the latest, when the content
-of the directory is listed. More aggressive prefetching might happen. For
-instance, when first opening a dir a recursive listing of it can be retrieved
-from the remote backend and used to recursively populate the dentry cache for
-all (transitive) sub-directories.
-
-
-### Parents cache
-
-    rev SWHID → parent SWHIDs
-
-The parents cache map SWHIDs of type `rev` to the list of their parent commits.
-
-The parents cache for a given rev is populated, at the latest, when the content
-of the revision virtual directory is listed. More aggressive prefetching might
-happen. For instance, when first opening a rev virtual directory a recursive
-listing of all its ancestor can be retrieved from the remote backend and used to
-recursively populate the parents cache for all ancestors.
-
-
 ### History cache
 
     rev SWHID → ancestor SWHIDs
@@ -248,3 +220,25 @@ order. As the parents cache, the history cache is lazily populated and can be
 prefetched. To efficiently store the ancestor lists, the history cache
 represents ancestors as graph edges (a pair of two SWHID nodes), meaning the
 history cache is shared amongst all revisions parents.
+
+Cache location on-disk: `$XDG_CACHE_HOME/swh/fuse/metadata.sqlite`
+
+
+### Direntry cache
+
+    dir inode → directory entries
+
+The direntry cache map inode representing directories to the entries they
+contain. Each entry comes with its name as well as file attributes (i.e., all
+its needed to perform a detailed directory listing).
+
+Additional attributes of each directory entry should be looked up on a entry by
+entry basis, possibly hitting the metadata cache.
+
+The direntry cache for a given dir is populated, at the latest, when the content
+of the directory is listed. More aggressive prefetching might happen. For
+instance, when first opening a dir a recursive listing of it can be retrieved
+from the remote backend and used to recursively populate the direntry cache for
+all (transitive) sub-directories.
+
+Cache location: in-memory.
