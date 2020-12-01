@@ -19,7 +19,7 @@ from psutil import virtual_memory
 
 from swh.fuse.fs.artifact import RevisionHistoryShardByDate
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
-from swh.fuse.fs.mountpoint import ArchiveDir, MetaDir
+from swh.fuse.fs.mountpoint import ArchiveDir, MetaDir, OriginDir
 from swh.model.exceptions import ValidationError
 from swh.model.identifiers import REVISION, SWHID, parse_swhid
 from swh.web.client.client import ORIGIN_VISIT, typify_json
@@ -47,10 +47,10 @@ class FuseCache:
         self.cache_conf = cache_conf
 
     async def __aenter__(self):
-        # TODO: unified name for metadata/history?
+        # History and raw metadata share the same SQLite db
         self.metadata = MetadataCache(self.cache_conf["metadata"])
-        self.blob = BlobCache(self.cache_conf["blob"])
         self.history = HistoryCache(self.cache_conf["metadata"])
+        self.blob = BlobCache(self.cache_conf["blob"])
         self.direntry = DirEntryCache(self.cache_conf["direntry"])
         await self.metadata.__aenter__()
         await self.blob.__aenter__()
@@ -106,25 +106,30 @@ class AbstractCache(ABC):
 
 
 class MetadataCache(AbstractCache):
-    """ The metadata cache map each SWHID to the complete metadata of the
+    """ The metadata cache map each artifact to the complete metadata of the
     referenced object. This is analogous to what is available in
     `meta/<SWHID>.json` file (and generally used as data source for returning
-    the content of those files). """
+    the content of those files). Artifacts are identified using their SWHIDs, or
+    in the case of origins visits using their URLs. """
+
+    DB_SCHEMA = """
+        create table if not exists metadata_cache (
+            swhid text,
+            metadata blob,
+            date text
+        );
+        create index if not exists idx_metadata on metadata_cache(swhid);
+
+        create table if not exists visits_cache (
+            url text,
+            metadata blob
+        );
+        create index if not exists idx_visits on visits_cache(url);
+    """
 
     async def __aenter__(self):
         await super().__aenter__()
-        await self.conn.execute(
-            "create table if not exists metadata_cache (swhid, metadata, date)"
-        )
-        await self.conn.execute(
-            "create index if not exists idx_metadata on metadata_cache(swhid)"
-        )
-        await self.conn.execute(
-            "create table if not exists visits_cache (url, metadata)"
-        )
-        await self.conn.execute(
-            "create index if not exists idx_visits on visits_cache(url)"
-        )
+        await self.conn.executescript(self.DB_SCHEMA)
         await self.conn.commit()
         return self
 
@@ -139,22 +144,20 @@ class MetadataCache(AbstractCache):
         else:
             return None
 
-    async def get_visits(
-        self, url_encoded: str, typify: bool = True
-    ) -> Optional[List[Dict[str, Any]]]:
+    async def get_visits(self, url_encoded: str) -> Optional[List[Dict[str, Any]]]:
         cursor = await self.conn.execute(
             "select metadata from visits_cache where url=?", (url_encoded,)
         )
         cache = await cursor.fetchone()
         if cache:
             visits = json.loads(cache[0])
-            if typify:
-                visits = [typify_json(v, ORIGIN_VISIT) for v in visits]
-            return visits
+            visits_typed = [typify_json(v, ORIGIN_VISIT) for v in visits]
+            return visits_typed
         else:
             return None
 
     async def set(self, swhid: SWHID, metadata: Any) -> None:
+        # Fill in the date column for revisions (used as cache for history/by-date/)
         swhid_date = ""
         if swhid.object_type == REVISION:
             date = dateutil.parser.parse(metadata["date"])
@@ -166,7 +169,6 @@ class MetadataCache(AbstractCache):
             "insert into metadata_cache values (?, ?, ?)",
             (str(swhid), json.dumps(metadata), swhid_date),
         )
-
         await self.conn.commit()
 
     async def set_visits(self, url_encoded: str, visits: List[Dict[str, Any]]) -> None:
@@ -185,12 +187,17 @@ class BlobCache(AbstractCache):
     due to prefetching, e.g., when a directory pointing to the given content is
     listed for the first time. """
 
+    DB_SCHEMA = """
+        create table if not exists blob_cache (
+            swhid text,
+            blob blob
+        );
+        create index if not exists idx_blob on blob_cache(swhid);
+    """
+
     async def __aenter__(self):
         await super().__aenter__()
-        await self.conn.execute("create table if not exists blob_cache (swhid, blob)")
-        await self.conn.execute(
-            "create index if not exists idx_blob on blob_cache(swhid)"
-        )
+        await self.conn.executescript(self.DB_SCHEMA)
         await self.conn.commit()
         return self
 
@@ -220,20 +227,18 @@ class HistoryCache(AbstractCache):
     represents ancestors as graph edges (a pair of two SWHID nodes), meaning the
     history cache is shared amongst all revisions parents. """
 
+    DB_SCHEMA = """
+        create table if not exists history_graph (
+            src text not null,
+            dst text not null,
+            unique(src, dst)
+        );
+        create index if not exists idx_history on history_graph(src);
+    """
+
     async def __aenter__(self):
         await super().__aenter__()
-        await self.conn.execute(
-            """
-            create table if not exists history_graph (
-                src text not null,
-                dst text not null,
-                unique(src, dst)
-            )
-            """
-        )
-        await self.conn.execute(
-            "create index if not exists idx_history on history_graph(src)"
-        )
+        await self.conn.executescript(self.DB_SCHEMA)
         await self.conn.commit()
         return self
 
@@ -265,7 +270,7 @@ class HistoryCache(AbstractCache):
         return history
 
     async def get_with_date_prefix(
-        self, swhid: SWHID, date_prefix
+        self, swhid: SWHID, date_prefix: str
     ) -> List[Tuple[SWHID, str]]:
         cursor = await self.conn.execute(
             f"""
@@ -360,9 +365,9 @@ class DirEntryCache:
         return self.lru_cache.get(direntry.inode, None)
 
     def set(self, direntry: FuseDirEntry, entries: List[FuseEntry]) -> None:
-        if isinstance(direntry, ArchiveDir) or isinstance(direntry, MetaDir):
-            # The `archive/` and `meta/` are populated on the fly so we should
-            # never cache them
+        if isinstance(direntry, (ArchiveDir, MetaDir, OriginDir)):
+            # The `archive/`, `meta/`, and `origin/` are populated on the fly so
+            # we should never cache them
             pass
         elif (
             isinstance(direntry, RevisionHistoryShardByDate)
