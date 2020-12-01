@@ -5,14 +5,18 @@
 
 import os
 
-from swh.fuse.tests.data.config import REGULAR_FILE
+from swh.fuse.tests.data.config import ORIGIN_URL_ENCODED, REGULAR_FILE
 
 
 def test_mountpoint(fuse_mntdir):
-    archive_dir = fuse_mntdir / "archive"
-    meta_dir = fuse_mntdir / "meta"
-    assert os.listdir(archive_dir) == []
-    assert os.listdir(meta_dir) == []
-    # On the fly mounting
-    file_path = archive_dir / REGULAR_FILE
-    assert file_path.is_file()
+    assert os.listdir(fuse_mntdir) == ["archive", "meta", "origin"]
+
+
+def test_on_the_fly_mounting(fuse_mntdir):
+    assert os.listdir(fuse_mntdir / "archive") == []
+    assert os.listdir(fuse_mntdir / "meta") == []
+    assert (fuse_mntdir / "archive" / REGULAR_FILE).is_file()
+    assert (fuse_mntdir / "meta" / (REGULAR_FILE + ".json")).is_file()
+
+    assert os.listdir(fuse_mntdir / "origin") == []
+    assert (fuse_mntdir / "origin" / ORIGIN_URL_ENCODED).is_dir()
