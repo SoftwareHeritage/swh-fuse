@@ -7,7 +7,6 @@ import json
 from multiprocessing import Process
 import os
 from pathlib import Path
-import subprocess
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import time
 
@@ -72,5 +71,5 @@ def fuse_mntdir(web_api_mock):
 
     yield Path(tmpdir.name)
 
-    subprocess.run(["fusermount", "-u", tmpdir.name], check=True)
+    CliRunner().invoke(cli.umount, [tmpdir.name])
     fuse.join()
