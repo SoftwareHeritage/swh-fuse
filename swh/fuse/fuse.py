@@ -115,6 +115,8 @@ class Fuse(pyfuse3.Operations):
             raise
 
     async def get_history(self, swhid: SWHID) -> List[SWHID]:
+        """ Retrieve a revision's history using Software Heritage Graph API """
+
         if swhid.object_type != REVISION:
             raise pyfuse3.FUSEError(errno.EINVAL)
 
