@@ -17,6 +17,7 @@ import pyfuse3
 import pyfuse3_asyncio
 import requests
 
+from swh.fuse import LOGGER_NAME
 from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
@@ -38,6 +39,7 @@ class Fuse(pyfuse3.Operations):
 
         self.root = Root(fuse=self)
         self.conf = conf
+        self.logger = logging.getLogger(LOGGER_NAME)
 
         self.time_ns: int = time.time_ns()  # start time, used as timestamp
         self.gid = os.getgid()
@@ -87,7 +89,7 @@ class Fuse(pyfuse3.Operations):
             # Retrieve it from cache so it is correctly typed
             return await self.cache.metadata.get(swhid)
         except requests.HTTPError as err:
-            logging.error("Cannot fetch metadata for object %s: %s", swhid, err)
+            self.logger.error("Cannot fetch metadata for object %s: %s", swhid, err)
             raise
 
     async def get_blob(self, swhid: SWHID) -> bytes:
@@ -102,16 +104,18 @@ class Fuse(pyfuse3.Operations):
 
         cache = await self.cache.blob.get(swhid)
         if cache:
+            self.logger.debug("Found blob %s in cache", swhid)
             return cache
 
         try:
+            self.logger.debug("Retrieving blob %s via web API...", swhid)
             loop = asyncio.get_event_loop()
             resp = await loop.run_in_executor(None, self.web_api.content_raw, swhid)
             blob = b"".join(list(resp))
             await self.cache.blob.set(swhid, blob)
             return blob
         except requests.HTTPError as err:
-            logging.error("Cannot fetch blob for object %s: %s", swhid, err)
+            self.logger.error("Cannot fetch blob for object %s: %s", swhid, err)
             raise
 
     async def get_history(self, swhid: SWHID) -> List[SWHID]:
@@ -122,18 +126,23 @@ class Fuse(pyfuse3.Operations):
 
         cache = await self.cache.history.get(swhid)
         if cache:
+            self.logger.debug(
+                "Found history of %s in cache (%d ancestors)", swhid, len(cache)
+            )
             return cache
 
         try:
             # Use the swh-graph API to retrieve the full history very fast
+            self.logger.debug("Retrieving history of %s via graph API...", swhid)
             call = f"graph/visit/edges/{swhid}?edges=rev:rev"
             loop = asyncio.get_event_loop()
             history = await loop.run_in_executor(None, self.web_api._call, call)
             await self.cache.history.set(history.text)
             # Retrieve it from cache so it is correctly typed
-            return await self.cache.history.get(swhid)
+            res = await self.cache.history.get(swhid)
+            return res
         except requests.HTTPError as err:
-            logging.error("Cannot fetch history for object %s: %s", swhid, err)
+            self.logger.error("Cannot fetch history for object %s: %s", swhid, err)
             # Ignore exception since swh-graph does not necessarily contain the
             # most recent artifacts from the archive. Computing the full history
             # from the Web API is too computationally intensive so simply return
@@ -145,9 +154,15 @@ class Fuse(pyfuse3.Operations):
 
         cache = await self.cache.metadata.get_visits(url_encoded)
         if cache:
+            self.logger.debug(
+                "Found %d visits for origin '%s' in cache", len(cache), url_encoded,
+            )
             return cache
 
         try:
+            self.logger.debug(
+                "Retrieving visits for origin '%s' via web API...", url_encoded
+            )
             typify = False  # Get the raw JSON from the API
             loop = asyncio.get_event_loop()
             # Web API only takes non-encoded URL
@@ -165,9 +180,12 @@ class Fuse(pyfuse3.Operations):
             visits = list(visits_it)
             await self.cache.metadata.set_visits(url_encoded, visits)
             # Retrieve it from cache so it is correctly typed
-            return await self.cache.metadata.get_visits(url_encoded)
+            res = await self.cache.metadata.get_visits(url_encoded)
+            return res
         except (ValueError, requests.HTTPError) as err:
-            logging.error("Cannot fetch visits for origin '%s': %s", url_encoded, err)
+            self.logger.error(
+                "Cannot fetch visits for origin '%s': %s", url_encoded, err
+            )
             raise
 
     async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
@@ -197,6 +215,7 @@ class Fuse(pyfuse3.Operations):
         """ Open a directory referred by a given inode """
 
         # Re-use inode as directory handle
+        self.logger.debug("opendir(inode=%d)", inode)
         return inode
 
     async def readdir(self, fh: int, offset: int, token: pyfuse3.ReaddirToken) -> None:
@@ -205,6 +224,9 @@ class Fuse(pyfuse3.Operations):
         # opendir() uses inode as directory handle
         inode = fh
         direntry = self.inode2entry(inode)
+        self.logger.debug(
+            "readdir(dirname=%s, fh=%d, offset=%d)", direntry.name, fh, offset
+        )
         assert isinstance(direntry, FuseDirEntry)
 
         next_id = offset + 1
@@ -218,7 +240,7 @@ class Fuse(pyfuse3.Operations):
                 next_id += 1
                 self._inode2entry[attrs.st_ino] = entry
         except Exception as err:
-            logging.exception("Cannot readdir: %s", err)
+            self.logger.exception("Cannot readdir: %s", err)
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def open(
@@ -227,6 +249,7 @@ class Fuse(pyfuse3.Operations):
         """ Open an inode and return a unique file handle """
 
         # Re-use inode as file handle
+        self.logger.debug("open(inode=%d)", inode)
         return pyfuse3.FileInfo(fh=inode, keep_cache=True)
 
     async def read(self, fh: int, offset: int, length: int) -> bytes:
@@ -236,12 +259,16 @@ class Fuse(pyfuse3.Operations):
         inode = fh
 
         entry = self.inode2entry(inode)
+        self.logger.debug(
+            "read(name=%s, fh=%d, offset=%d, length=%d)", entry.name, fh, offset, length
+        )
         assert isinstance(entry, FuseFileEntry)
+
         try:
             data = await entry.get_content()
             return data[offset : offset + length]
         except Exception as err:
-            logging.exception("Cannot read: %s", err)
+            self.logger.exception("Cannot read: %s", err)
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def lookup(
@@ -251,18 +278,26 @@ class Fuse(pyfuse3.Operations):
 
         name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
+        self.logger.debug(
+            "lookup(parent_name=%s, parent_inode=%d, name=%s)",
+            parent_entry.name,
+            parent_inode,
+            name,
+        )
         assert isinstance(parent_entry, FuseDirEntry)
+
         try:
             lookup_entry = await parent_entry.lookup(name)
             if lookup_entry:
                 return await self.get_attrs(lookup_entry)
         except Exception as err:
-            logging.exception("Cannot lookup: %s", err)
+            self.logger.exception("Cannot lookup: %s", err)
 
         raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
         entry = self.inode2entry(inode)
+        self.logger.debug("readlink(name=%s, inode=%d)", entry.name, inode)
         assert isinstance(entry, FuseSymlinkEntry)
         return os.fsencode(entry.get_target())
 
@@ -281,18 +316,16 @@ async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> No
             try:
                 await fs.get_metadata(swhid)
             except Exception as err:
-                logging.exception("Cannot prefetch object %s: %s", swhid, err)
+                fs.logger.exception("Cannot prefetch object %s: %s", swhid, err)
 
         fuse_options = set(pyfuse3.default_options)
         fuse_options.add("fsname=swhfs")
-        if logging.root.level <= logging.DEBUG:
-            fuse_options.add("debug")
 
         try:
             pyfuse3.init(fs, root_path, fuse_options)
             await pyfuse3.main()
         except Exception as err:
-            logging.error("Error running FUSE: %s", err)
+            fs.logger.error("Error running FUSE: %s", err)
         finally:
             fs.shutdown()
             pyfuse3.close(unmount=True)

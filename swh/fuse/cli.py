@@ -126,7 +126,7 @@ def mount(ctx, swhids, path, foreground):
 
     from daemon import DaemonContext
 
-    from swh.fuse import fuse
+    from swh.fuse import LOGGER_NAME, fuse
 
     # TODO: set default logging settings when --log-config is not passed
     # DEFAULT_LOG_PATH = Path(".local/swh/fuse/mount.log")
@@ -135,6 +135,7 @@ def mount(ctx, swhids, path, foreground):
             # TODO: temporary fix until swh.core has the proper logging utilities
             # Disable logging config before daemonizing, and reset it once
             # daemonized to be sure to not close file handlers
+            log_level = logging.getLogger(LOGGER_NAME).getEffectiveLevel()
             logging.shutdown()
             # Stay in the current working directory when spawning daemon
             cwd = os.getcwd()
@@ -148,7 +149,9 @@ def mount(ctx, swhids, path, foreground):
                             "address": "/dev/log",
                         },
                     },
-                    "root": {"level": ctx.obj["log_level"], "handlers": ["syslog"],},
+                    "loggers": {
+                        LOGGER_NAME: {"level": log_level, "handlers": ["syslog"],},
+                    },
                 }
             )
 

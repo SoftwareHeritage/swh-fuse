@@ -68,4 +68,4 @@ flag.
 
 .. code:: bash
 
-    $ swh --log-level DEBUG fs mount swhfs/
+    $ swh --log-level swh.fuse:DEBUG fs mount swhfs/
