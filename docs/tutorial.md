@@ -201,23 +201,22 @@ which uses historical Unix releases as branch names:
 
     $ cd archive/swh:1:snp:2ca5d6eff8f04a671c0d5b13646cede522c64b7d
 
-    $ ls -f | wc -l
-    210
+    $ ls -f refs/heads/ | wc -l
+    40
 
-    $ ls -f | grep Bell
-    refs%2Fheads%2FBell-32V-Snapshot-Development
-    refs%2Fheads%2FBell-Release
-    refs%2Ftags%2FBell-32V
+    $ ls -f refs/heads/ | grep Bell
+    Bell-32V-Snapshot-Development
+    Bell-Release
 
-    $ cd refs%2Fheads%2FBell-Release
+    $ cd refs/heads/Bell-Release
     $ jq .message,.date meta.json
-    "Bell 32V release ..."
+    "Bell 32V release\nSnapshot of the completed development branch\n\nSynthesized-from: 32v\n"
     "1979-05-02T23:26:55-05:00"
 
     $ grep core root/usr/src/games/fortune.c
             printf("Memory fault -- core dumped\n");
 
-We can check that 3 of the 210 branches correspond to historical Bell Labs UNIX
-releases. And We can dig into the `fortune` implementation
-of [UNIX/32V](https://en.wikipedia.org/wiki/UNIX/32V) instantly, without having
-to clone a 1.6  GiB repository first.
+We can check that two of the available branches correspond to historical Bell
+Labs UNIX releases. And We can dig into the `fortune` implementation of
+[UNIX/32V](https://en.wikipedia.org/wiki/UNIX/32V) instantly, without having to
+clone a 1.6  GiB repository first.
