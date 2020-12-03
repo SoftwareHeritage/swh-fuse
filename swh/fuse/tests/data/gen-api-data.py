@@ -139,10 +139,13 @@ swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04 swh:1:rev:c01efc669f09508b55e
 
 
 def generate_origin_archive_web_api(url: str):
-    url = f"origin/{url}/visits/"
-    data = requests.get(f"{API_URL_real}/{url}").text
+    url_visits = f"origin/{url}/visits/"
+    data = requests.get(f"{API_URL_real}/{url_visits}").text
     data = json.loads(data)
-    MOCK_ARCHIVE[url] = data
+    MOCK_ARCHIVE[url_visits] = data
+    # Necessary since swh-fuse will check the origin URL using the get/ endpoint
+    url_get = f"origin/{url}/get/"
+    MOCK_ARCHIVE[url_get] = ""
 
 
 for entry in ALL_ENTRIES:

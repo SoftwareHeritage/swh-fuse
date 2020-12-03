@@ -24,7 +24,13 @@ def web_api_mock(requests_mock):
         # Convert Python dict JSON into a string (only for non-raw API call)
         if not api_call.endswith("raw/") and not api_call.startswith("graph/"):
             data = json.dumps(data)
-        requests_mock.get(f"{API_URL}/{api_call}", text=data)
+
+        http_method = requests_mock.get
+        if api_call.startswith("origin/") and api_call.endswith("get/"):
+            http_method = requests_mock.head
+
+        http_method(f"{API_URL}/{api_call}", text=data)
+
     return requests_mock
 
 

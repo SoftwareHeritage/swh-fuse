@@ -152,6 +152,13 @@ class Fuse(pyfuse3.Operations):
             loop = asyncio.get_event_loop()
             # Web API only takes non-encoded URL
             url = urllib.parse.unquote_plus(url_encoded)
+
+            origin_exists = await loop.run_in_executor(
+                None, self.web_api.origin_exists, url
+            )
+            if not origin_exists:
+                raise ValueError("origin does not exist")
+
             visits_it = await loop.run_in_executor(
                 None, functools.partial(self.web_api.visits, url, typify=typify)
             )
@@ -159,8 +166,8 @@ class Fuse(pyfuse3.Operations):
             await self.cache.metadata.set_visits(url_encoded, visits)
             # Retrieve it from cache so it is correctly typed
             return await self.cache.metadata.get_visits(url_encoded)
-        except requests.HTTPError as err:
-            logging.error("Cannot fetch visits for object %s: %s", url_encoded, err)
+        except (ValueError, requests.HTTPError) as err:
+            logging.error("Cannot fetch visits for origin '%s': %s", url_encoded, err)
             raise
 
     async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:

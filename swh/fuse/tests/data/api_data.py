@@ -2929,4 +2929,5 @@ MOCK_ARCHIVE: Dict[str, Any] = {
             "snapshot_url": None,
         },
     ],
+    "origin/https://github.com/rust-lang/rust/get/": "",
 }

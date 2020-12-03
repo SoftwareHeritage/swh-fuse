@@ -133,5 +133,5 @@ class OriginDir(FuseDirEntry):
             url_encoded = name
             await self.fuse.get_visits(url_encoded)
             return self.create_child(url_encoded)
-        except ValidationError:
+        except ValueError:
             return None
