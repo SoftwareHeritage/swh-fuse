@@ -16,7 +16,13 @@ from swh.fuse.tests.api_url import (
     swhid_to_graph_url,
     swhid_to_web_url,
 )
-from swh.fuse.tests.data.config import ALL_ENTRIES, ORIGIN_URL, REV_SMALL_HISTORY
+from swh.fuse.tests.data.config import (
+    ALL_ENTRIES,
+    FAKE_SNP_SPECIAL_CASES,
+    FAKE_SNP_SPECIAL_CASES_SWHID,
+    ORIGIN_URL,
+    REV_SMALL_HISTORY,
+)
 from swh.model.identifiers import (
     CONTENT,
     DIRECTORY,
@@ -152,6 +158,11 @@ for entry in ALL_ENTRIES:
     swhid = parse_swhid(entry)
     generate_archive_web_api(swhid, recursive=True)
     generate_archive_graph_api(swhid)
+
+# Custom fake snapshot to handle most special cases
+MOCK_ARCHIVE[swhid_to_web_url(FAKE_SNP_SPECIAL_CASES_SWHID)] = {
+    "branches": FAKE_SNP_SPECIAL_CASES
+}
 
 # Origin artifacts are not identified by SWHID but using an URL
 generate_origin_archive_web_api(ORIGIN_URL)

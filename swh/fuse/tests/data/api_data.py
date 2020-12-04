@@ -2817,6 +2817,45 @@ MOCK_ARCHIVE: Dict[str, Any] = {
         "directory_url": "https://archive.softwareheritage.org/api/1/directory/1ac29db0e7280af41064676569a96d1f88ccfa96/",
     },
     "graph/visit/edges/swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91": "",
+    "snapshot/0000000000000000000000000000000000000000/": {
+        "branches": {
+            "mycnt": {
+                "target_type": "content",
+                "target": "61d3c9e1157203f0c4ed5165608d92294eaca808",
+            },
+            "mydir": {
+                "target_type": "directory",
+                "target": "c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578",
+            },
+            "myrev": {
+                "target_type": "revision",
+                "target": "b8cedc00407a4c56a3bda1ed605c6fc166655447",
+            },
+            "myrel": {
+                "target_type": "release",
+                "target": "874f7cbe352033cac5a8bc889847da2fe1d13e9f",
+            },
+            "refs/heads/master": {
+                "target_type": "revision",
+                "target": "430a9fd4c797c50cea26157141b2408073b2ed91",
+            },
+            "alias-rootdir": {
+                "target_type": "alias",
+                "target": "refs/heads/master",
+                "expected_symlink": "refs/heads/master",
+            },
+            "refs/heads/alias-subdir": {
+                "target_type": "alias",
+                "target": "refs/heads/master",
+                "expected_symlink": "master",
+            },
+            "refs/tags/alias-different-subdir": {
+                "target_type": "alias",
+                "target": "refs/heads/master",
+                "expected_symlink": "../heads/master",
+            },
+        }
+    },
     "origin/https://github.com/rust-lang/rust/visits/": [
         {
             "origin": "https://github.com/rust-lang/rust",

@@ -5,6 +5,12 @@
 
 """ Use the Rust compiler (v1.42.0) as a testing repository """
 
+
+def remove_swhid_prefix(swhid_str: str) -> str:
+    prefix = "swh:1:XXX:"
+    return swhid_str[len(prefix) :]
+
+
 # Content
 REGULAR_FILE = "swh:1:cnt:61d3c9e1157203f0c4ed5165608d92294eaca808"
 # Directory
@@ -32,6 +38,34 @@ ROOT_REL = "swh:1:rel:874f7cbe352033cac5a8bc889847da2fe1d13e9f"
 # problem, only the mock offline one.
 ROOT_SNP = "swh:1:snp:02db117fef22434f1658b833a756775ca6effed0"
 ROOT_SNP_MASTER_BRANCH = "swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91"
+FAKE_SNP_SPECIAL_CASES_SWHID = "swh:1:snp:0000000000000000000000000000000000000000"
+FAKE_SNP_SPECIAL_CASES = {
+    # All possible target types
+    "mycnt": {"target_type": "content", "target": remove_swhid_prefix(REGULAR_FILE),},
+    "mydir": {"target_type": "directory", "target": remove_swhid_prefix(ROOT_DIR),},
+    "myrev": {"target_type": "revision", "target": remove_swhid_prefix(ROOT_REV),},
+    "myrel": {"target_type": "release", "target": remove_swhid_prefix(ROOT_REL),},
+    "refs/heads/master": {
+        "target_type": "revision",
+        "target": remove_swhid_prefix(ROOT_SNP_MASTER_BRANCH),
+    },
+    # Alias with different target paths
+    "alias-rootdir": {
+        "target_type": "alias",
+        "target": "refs/heads/master",
+        "expected_symlink": "refs/heads/master",
+    },
+    "refs/heads/alias-subdir": {
+        "target_type": "alias",
+        "target": "refs/heads/master",
+        "expected_symlink": "master",
+    },
+    "refs/tags/alias-different-subdir": {
+        "target_type": "alias",
+        "target": "refs/heads/master",
+        "expected_symlink": "../heads/master",
+    },
+}
 # Origin
 ORIGIN_URL = "https://github.com/rust-lang/rust"
 ORIGIN_URL_ENCODED = "https%3A%2F%2Fgithub.com%2Frust-lang%2Frust"

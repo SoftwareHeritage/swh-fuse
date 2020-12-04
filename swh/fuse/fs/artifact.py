@@ -7,6 +7,7 @@ import asyncio
 from dataclasses import dataclass, field
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List
 
@@ -482,10 +483,19 @@ class Snapshot(FuseDirEntry):
             next_prefix = next_subdirs[0]
 
             if len(next_subdirs) == 1:
+                # Non-alias targets are symlinks to their corresponding archived
+                # artifact, whereas alias targets are relative symlinks to the
+                # corresponding snapshot directory entry.
+                target_type = branch_meta["target_type"]
+                target_raw = branch_meta["target"]
+                if target_type == "alias":
+                    prefix = Path(branch_name).parent
+                    target = os.path.relpath(target_raw, prefix)
+                else:
+                    target = f"{root_path}/archive/{target_raw}"
+
                 yield self.create_child(
-                    FuseSymlinkEntry,
-                    name=next_prefix,
-                    target=Path(root_path, f"archive/{branch_meta['target']}"),
+                    FuseSymlinkEntry, name=next_prefix, target=Path(target),
                 )
             else:
                 subdirs.add(next_prefix)
