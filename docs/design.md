@@ -49,16 +49,12 @@ For more details see the {ref}`CLI documentation <swh-fuse-cli>`.
 
 The SwhFS mount point contain:
 
-- `archive/`: initially empty, this directory is lazily populated with one entry
-  per accessed SWHID, having actual SWHIDs as names (possibly sharded into
-  `xy/../SWHID` paths to avoid overcrowding `archive/`).
-
-- `meta/`: initially empty, this directory contains one `<SWHID>.json` file for
-  each `<SWHID>` entry under `archive/`. The JSON file contain all available
-  meta information about the given SWHID, as returned by the Software Heritage
-  Web API for that object. Note that, in case of pagination (e.g., snapshot
-  objects with many branches) the JSON file will contain a complete version with
-  all pages merged together.
+- `archive/`: virtual directory allowing to mount any artifact on the fly using
+  its SWHID as name. The associated metadata of the artifact from the Software
+  Heritage Web API can also be accessed through the `SWHID.json` file (in case
+  of pagination, the JSON file will contain a complete version with all pages
+  merged together). Note: the archive directory cannot be listed with ls, but
+  entries in it can be accessed (e.g., using cat or cd).
 
 - `origin/`: initially empty, this directory is lazily populated with one entry
   per accessed origin URL, having encoded URL as names. The URL encoding is done
@@ -113,7 +109,7 @@ with the following entries:
   reverse topological order. The history can be listed through `by-date/`,
   `by-hash/` or `by-page/` with each its own sharding policy.
 - `meta.json`: metadata for the current node, as a symlink pointing to the
-  relevant `meta/<SWHID>.json` file
+  relevant `archive/<SWHID>.json` file
 
 
 ### `rel` nodes (releases)
@@ -127,7 +123,7 @@ following entries:
   (transitively) resolves to a directory. When present it is a symlink pointing
   into `archive/` to the SWHID of the given directory
 - `meta.json`: metadata for the current node, as a symlink pointing to the
-  relevant `meta/<SWHID>.json` file
+  relevant `archive/<SWHID>.json` file
 
 
 ### `snp` nodes (snapshots)
@@ -180,7 +176,7 @@ from disk.
     Artifact id → JSON metadata
 
 The metadata cache map each artifact to the complete metadata of the referenced
-object. This is analogous to what is available in `meta/<SWHID>.json` file (and
+object. This is analogous to what is available in `archive/<SWHID>.json` file (and
 generally used as data source for returning the content of those files).
 Artifacts are identified using their SWHIDs, or in the case of origin visits,
 using their URLs.

@@ -19,7 +19,7 @@ from psutil import virtual_memory
 
 from swh.fuse.fs.artifact import RevisionHistoryShardByDate
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
-from swh.fuse.fs.mountpoint import ArchiveDir, MetaDir, OriginDir
+from swh.fuse.fs.mountpoint import ArchiveDir, OriginDir
 from swh.model.exceptions import ValidationError
 from swh.model.identifiers import REVISION, SWHID, parse_swhid
 from swh.web.client.client import ORIGIN_VISIT, typify_json
@@ -108,7 +108,7 @@ class AbstractCache(ABC):
 class MetadataCache(AbstractCache):
     """ The metadata cache map each artifact to the complete metadata of the
     referenced object. This is analogous to what is available in
-    `meta/<SWHID>.json` file (and generally used as data source for returning
+    `archive/<SWHID>.json` file (and generally used as data source for returning
     the content of those files). Artifacts are identified using their SWHIDs, or
     in the case of origin visits, using their URLs. """
 
@@ -365,9 +365,9 @@ class DirEntryCache:
         return self.lru_cache.get(direntry.inode, None)
 
     def set(self, direntry: FuseDirEntry, entries: List[FuseEntry]) -> None:
-        if isinstance(direntry, (ArchiveDir, MetaDir, OriginDir)):
-            # The `archive/`, `meta/`, and `origin/` are populated on the fly so
-            # we should never cache them
+        if isinstance(direntry, (ArchiveDir, OriginDir)):
+            # The `archive/`, and `origin/` are populated on the fly so we
+            # should never cache them
             pass
         elif (
             isinstance(direntry, RevisionHistoryShardByDate)

@@ -146,7 +146,7 @@ class Revision(FuseDirEntry):
       in reverse topological order. The history can be listed through
       `by-date/`, `by-hash/` or `by-page/` with each its own sharding policy.
     - `meta.json`: metadata for the current node, as a symlink pointing to the
-      relevant `meta/<SWHID>.json` file """
+      relevant `archive/<SWHID>.json` file """
 
     swhid: SWHID
 
@@ -165,7 +165,7 @@ class Revision(FuseDirEntry):
         yield self.create_child(
             FuseSymlinkEntry,
             name="meta.json",
-            target=Path(root_path, f"meta/{self.swhid}.json"),
+            target=Path(root_path, f"archive/{self.swhid}.json"),
         )
         yield self.create_child(
             RevisionParents,
@@ -398,7 +398,7 @@ class Release(FuseDirEntry):
       (transitively) resolves to a directory. When present it is a symlink
       pointing into `archive/` to the SWHID of the given directory
     - `meta.json`: metadata for the current node, as a symlink pointing to the
-      relevant `meta/<SWHID>.json` file """
+      relevant `archive/<SWHID>.json` file """
 
     swhid: SWHID
 
@@ -421,7 +421,7 @@ class Release(FuseDirEntry):
         yield self.create_child(
             FuseSymlinkEntry,
             name="meta.json",
-            target=Path(root_path, f"meta/{self.swhid}.json"),
+            target=Path(root_path, f"archive/{self.swhid}.json"),
         )
 
         target = metadata["target"]
