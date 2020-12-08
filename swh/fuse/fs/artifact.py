@@ -111,9 +111,13 @@ class Directory(FuseDirEntry):
                 )
             # 4. Submodule
             elif swhid.object_type == REVISION:
-                # Make sure the revision metadata is fetched and create a
-                # symlink to distinguish it with regular directories
-                await self.fuse.get_metadata(swhid)
+                try:
+                    # Make sure the revision metadata is fetched and create a
+                    # symlink to distinguish it with regular directories
+                    await self.fuse.get_metadata(swhid)
+                except Exception:
+                    pass  # Ignore error and create a (broken) symlink anyway
+
                 yield self.create_child(
                     FuseSymlinkEntry,
                     name=name,
