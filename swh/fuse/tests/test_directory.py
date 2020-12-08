@@ -1,7 +1,12 @@
 import os
 
 from swh.fuse.tests.common import check_dir_name_entries
-from swh.fuse.tests.data.config import DIR_WITH_SUBMODULES, ROOT_DIR
+from swh.fuse.tests.data.config import (
+    DIR_WITH_CNT_SYMLINK,
+    DIR_WITH_DIR_SYMLINK,
+    DIR_WITH_REV_SYMLINK,
+    ROOT_DIR,
+)
 
 
 def test_list_dir(fuse_mntdir):
@@ -19,8 +24,14 @@ def test_access_subdir(fuse_mntdir):
     assert dir_path.is_dir()
 
 
-def test_access_submodule_entries(fuse_mntdir):
-    dir_path = fuse_mntdir / "archive" / DIR_WITH_SUBMODULES
+def test_access_symlinks(fuse_mntdir):
+    cnt_sym_path = fuse_mntdir / "archive" / DIR_WITH_CNT_SYMLINK / "LICENSE-MIT"
+    assert os.readlink(cnt_sym_path) == "../LICENSE-MIT"
+
+    dir_sym_path = fuse_mntdir / "archive" / DIR_WITH_DIR_SYMLINK / "supybot"
+    assert os.readlink(dir_sym_path) == "src"
+
+    rev_sym_dir_path = fuse_mntdir / "archive" / DIR_WITH_REV_SYMLINK
     submodules = {
         "book": "swh:1:rev:87dd6843678575f8dda962f239d14ef4be14b352",
         "edition-guide": "swh:1:rev:1a2390247ad6d08160e0dd74f40a01a9578659c2",
@@ -32,4 +43,4 @@ def test_access_submodule_entries(fuse_mntdir):
     }
     for filename, swhid in submodules.items():
         target = f"../../archive/{swhid}"
-        assert os.readlink(dir_path / filename) == target
+        assert os.readlink(rev_sym_dir_path / filename) == target

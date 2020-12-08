@@ -36,9 +36,19 @@ from swh.model.identifiers import (
 API_URL_real = "https://archive.softwareheritage.org/api/1"
 API_URL_test = "https://invalid-test-only.archive.softwareheritage.org/api/1"
 
+# Use your own API token to lift rate limiting. Note: this is not necessary to generate
+# the API data only once but can be useful when re-generating it multiple times.
+API_TOKEN = ""
+
+
 MOCK_ARCHIVE: Dict[str, Any] = {}
 # Temporary map (swhid -> metadata) to ease data generation
 METADATA: Dict[SWHID, Any] = {}
+
+
+def get_from_api(endpoint: str) -> str:
+    headers = {"Authorization": f"Bearer {API_TOKEN}"} if API_TOKEN else {}
+    return requests.get(f"{API_URL_real}/{endpoint}", headers=headers).text
 
 
 def get_short_type(object_type: str) -> str:
@@ -61,10 +71,8 @@ def generate_archive_web_api(
 
     url = swhid_to_web_url(swhid, raw)
 
-    if raw:
-        data = requests.get(f"{API_URL_real}/{url}").text
-    else:
-        data = requests.get(f"{API_URL_real}/{url}").text
+    data = get_from_api(url)
+    if not raw:
         data = json.loads(data)
 
     MOCK_ARCHIVE[url] = data
@@ -146,7 +154,7 @@ swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04 swh:1:rev:c01efc669f09508b55e
 
 def generate_origin_archive_web_api(url: str):
     url_visits = f"origin/{url}/visits/"
-    data = requests.get(f"{API_URL_real}/{url_visits}").text
+    data = get_from_api(url_visits)
     data = json.loads(data)
     MOCK_ARCHIVE[url_visits] = data
     # Necessary since swh-fuse will check the origin URL using the get/ endpoint

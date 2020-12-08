@@ -85,8 +85,20 @@ class Directory(FuseDirEntry):
                 else entry["perms"]
             )
 
-            # 1. Regular file
-            if swhid.object_type == CONTENT:
+            # 1. Symlink (check symlink first because condition is less restrictive)
+            if mode == DentryPerms.symlink:
+                target = ""
+                try:
+                    # Symlink target is stored in the blob content
+                    target = await self.fuse.get_blob(swhid)
+                except Exception:
+                    pass  # Ignore error and create a (broken) symlink anyway
+
+                yield self.create_child(
+                    FuseSymlinkEntry, name=name, target=target,
+                )
+            # 2. Regular file
+            elif swhid.object_type == CONTENT:
                 yield self.create_child(
                     Content,
                     name=name,
@@ -96,18 +108,10 @@ class Directory(FuseDirEntry):
                     # attributes without additional Software Heritage API call
                     prefetch=entry,
                 )
-            # 2. Regular directory
+            # 3. Regular directory
             elif swhid.object_type == DIRECTORY:
                 yield self.create_child(
                     Directory, name=name, mode=mode, swhid=swhid,
-                )
-            # 3. Symlink
-            elif mode == DentryPerms.symlink:
-                yield self.create_child(
-                    FuseSymlinkEntry,
-                    name=name,
-                    # Symlink target is stored in the blob content
-                    target=await self.fuse.get_blob(swhid),
                 )
             # 4. Submodule
             elif swhid.object_type == REVISION:

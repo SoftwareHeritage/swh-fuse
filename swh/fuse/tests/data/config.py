@@ -15,10 +15,12 @@ def remove_swhid_prefix(swhid_str: str) -> str:
 REGULAR_FILE = "swh:1:cnt:61d3c9e1157203f0c4ed5165608d92294eaca808"
 # Directory
 ROOT_DIR = "swh:1:dir:c6dcbe9711ea6d5a31429a833a3d0c59cbbb2578"
-DIR_WITH_SUBMODULES = "swh:1:dir:80ae84abc6122c47aae597fde99645f8663d1aba"
-# Revision
-ROOT_REV = "swh:1:rev:b8cedc00407a4c56a3bda1ed605c6fc166655447"
-SUBMODULES = [
+# Directory (symlinks entries)
+CNT_SYMLINK = "swh:1:cnt:76219eb72e8524f15c21ec93b9b2592da49b5460"  # from rust-clippy
+DIR_WITH_CNT_SYMLINK = "swh:1:dir:8f04a97403e13995c8790aef9158c8981b026223"
+DIR_SYMLINK = "swh:1:cnt:e8310385c56dc4bbe379f43400f3181f6a59f260"  # from Limnoria
+DIR_WITH_DIR_SYMLINK = "swh:1:dir:0653a2af52ebb771ef8ce0388c942d77f9d7aee8"
+REV_SYMLINKS = [  # from rust compiler
     "swh:1:rev:87dd6843678575f8dda962f239d14ef4be14b352",
     "swh:1:rev:1a2390247ad6d08160e0dd74f40a01a9578659c2",
     "swh:1:rev:4d78994915af1bde9a95c04a8c27d8dca066232a",
@@ -27,6 +29,9 @@ SUBMODULES = [
     "swh:1:rev:1c2bd024d13f8011307e13386cf1fea2180352b5",
     "swh:1:rev:92baf7293dd2d418d2ac4b141b0faa822075d9f7",
 ]
+DIR_WITH_REV_SYMLINK = "swh:1:dir:80ae84abc6122c47aae597fde99645f8663d1aba"
+# Revision
+ROOT_REV = "swh:1:rev:b8cedc00407a4c56a3bda1ed605c6fc166655447"
 REV_SMALL_HISTORY = "swh:1:rev:37426e42cf78a43779312d780eecb21a64006d99"
 # Release
 ROOT_REL = "swh:1:rel:874f7cbe352033cac5a8bc889847da2fe1d13e9f"
@@ -79,9 +84,13 @@ TARGET_DIR = "swh:1:dir:b24d39c928b9c3f440f8e2ec06c78f43d28d87d6"
 ALL_ENTRIES = [
     REGULAR_FILE,
     ROOT_DIR,
-    DIR_WITH_SUBMODULES,
+    CNT_SYMLINK,
+    DIR_SYMLINK,
+    *REV_SYMLINKS,
+    DIR_WITH_CNT_SYMLINK,
+    DIR_WITH_DIR_SYMLINK,
+    DIR_WITH_REV_SYMLINK,
     ROOT_REV,
-    *SUBMODULES,
     REV_SMALL_HISTORY,
     ROOT_REL,
     REL_TARGET_CNT,
