@@ -287,9 +287,10 @@ class Fuse(pyfuse3.Operations):
         assert isinstance(parent_entry, FuseDirEntry)
 
         try:
-            lookup_entry = await parent_entry.lookup(name)
-            if lookup_entry:
-                return await self.get_attrs(lookup_entry)
+            if parent_entry.validate_entry(name):
+                lookup_entry = await parent_entry.lookup(name)
+                if lookup_entry:
+                    return await self.get_attrs(lookup_entry)
         except Exception as err:
             self.logger.exception("Cannot lookup: %s", err)
 

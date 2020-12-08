@@ -8,8 +8,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
+import re
 from stat import S_IFDIR, S_IFLNK, S_IFREG
-from typing import Any, AsyncIterator, Sequence, Union
+from typing import Any, AsyncIterator, Optional, Pattern, Sequence, Union
 
 # Avoid cycling import
 Fuse = "Fuse"
@@ -60,6 +61,7 @@ class FuseEntry:
         return constructor(depth=self.depth + 1, fuse=self.fuse, **kwargs)
 
 
+@dataclass
 class FuseFileEntry(FuseEntry):
     """ FUSE virtual file entry """
 
@@ -72,11 +74,23 @@ class FuseFileEntry(FuseEntry):
         return len(await self.get_content())
 
 
+@dataclass
 class FuseDirEntry(FuseEntry):
     """ FUSE virtual directory entry """
 
+    ENTRIES_REGEXP: Optional[Pattern] = field(init=False, default=None)
+
     async def size(self) -> int:
         return 0
+
+    def validate_entry(self, name: str) -> bool:
+        """ Return true if the name matches the directory entries regular
+        expression, and false otherwise """
+
+        if self.ENTRIES_REGEXP:
+            return re.match(self.ENTRIES_REGEXP, name)
+        else:
+            return True
 
     async def compute_entries(self) -> Sequence[FuseEntry]:
         """ Return the child entries of a directory entry """

@@ -5,9 +5,10 @@
 
 from dataclasses import dataclass, field
 import json
+import re
 from typing import AsyncIterator
 
-from swh.fuse.fs.artifact import OBJTYPE_GETTERS, Origin
+from swh.fuse.fs.artifact import OBJTYPE_GETTERS, SWHID_REGEXP, Origin
 from swh.fuse.fs.entry import EntryMode, FuseDirEntry, FuseEntry, FuseFileEntry
 from swh.model.exceptions import ValidationError
 from swh.model.identifiers import CONTENT, SWHID, parse_swhid
@@ -38,6 +39,7 @@ class ArchiveDir(FuseDirEntry):
     name: str = field(init=False, default="archive")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
 
+    ENTRIES_REGEXP = re.compile(r"^(" + SWHID_REGEXP + ")(.json)?$")
     JSON_SUFFIX = ".json"
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
@@ -99,6 +101,8 @@ class OriginDir(FuseDirEntry):
 
     name: str = field(init=False, default="origin")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
+
+    ENTRIES_REGEXP = re.compile(r"^.*%3A.*$")  # %3A is the encoded version of ':'
 
     def create_child(self, url_encoded: str) -> FuseEntry:
         return super().create_child(

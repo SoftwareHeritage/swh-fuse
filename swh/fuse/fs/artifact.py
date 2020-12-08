@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import re
 from typing import Any, AsyncIterator, Dict, List
 
 from swh.fuse.fs.entry import (
@@ -20,6 +21,8 @@ from swh.fuse.fs.entry import (
 )
 from swh.model.from_disk import DentryPerms
 from swh.model.identifiers import CONTENT, DIRECTORY, RELEASE, REVISION, SNAPSHOT, SWHID
+
+SWHID_REGEXP = r"swh:1:(cnt|dir|rel|rev|snp):[0-9a-f]{40}"
 
 
 @dataclass
@@ -257,6 +260,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
     is_status_done: bool = field(default=False)
 
     DATE_FMT = "{year:04d}/{month:02d}/{day:02d}/"
+    ENTRIES_REGEXP = re.compile(r"^([0-9]{2,4})|(" + SWHID_REGEXP + ")$")
 
     @dataclass
     class StatusFile(FuseFileEntry):
@@ -324,6 +328,7 @@ class RevisionHistoryShardByHash(FuseDirEntry):
     prefix: str = field(default="")
 
     SHARDING_LENGTH = 2
+    ENTRIES_REGEXP = re.compile(r"^([a-f0-9]+)|(" + SWHID_REGEXP + ")$")
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.history_swhid)
@@ -362,6 +367,7 @@ class RevisionHistoryShardByPage(FuseDirEntry):
 
     PAGE_SIZE = 10_000
     PAGE_FMT = "{page_number:03d}"
+    ENTRIES_REGEXP = re.compile(r"^([0-9]+)|(" + SWHID_REGEXP + ")$")
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history = await self.fuse.get_history(self.history_swhid)
@@ -532,6 +538,7 @@ class Origin(FuseDirEntry):
     node. """
 
     DATE_FMT = "{year:04d}-{month:02d}-{day:02d}"
+    ENTRIES_REGEXP = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         # The origin's name is always its URL (encoded to create a valid UNIX filename)
