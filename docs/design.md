@@ -61,6 +61,14 @@ The SwhFS mount point contain:
   using the percent-encoding mechanism described in
   [RFC 3986](https://tools.ietf.org/html/rfc3986.html).
 
+- `cache/`: on-disk representation of locally cached objects and metadata. Via
+  this directory you can browse cached data and selectively remove them from the
+  cache, freeing disk space. (See `swh fs clean` in the {ref}`CLI
+  <swh-fuse-cli>` to completely empty the cache). The directory is populated
+  with symlinks to: all artifacts, identified by their SWHIDs and sharded by the
+  first two character of their object id, the metadata identified by a
+  `SWHID.json` entry, and the `origin/` directory.
+
 
 ## File system representation
 
