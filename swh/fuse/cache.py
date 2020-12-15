@@ -114,17 +114,15 @@ class MetadataCache(AbstractCache):
 
     DB_SCHEMA = """
         create table if not exists metadata_cache (
-            swhid text,
+            swhid text not null primary key,
             metadata blob,
             date text
         );
-        create index if not exists idx_metadata on metadata_cache(swhid);
 
         create table if not exists visits_cache (
-            url text,
+            url text not null primary key,
             metadata blob
         );
-        create index if not exists idx_visits on visits_cache(url);
     """
 
     async def __aenter__(self):
@@ -189,10 +187,9 @@ class BlobCache(AbstractCache):
 
     DB_SCHEMA = """
         create table if not exists blob_cache (
-            swhid text,
+            swhid text not null primary key,
             blob blob
         );
-        create index if not exists idx_blob on blob_cache(swhid);
     """
 
     async def __aenter__(self):
