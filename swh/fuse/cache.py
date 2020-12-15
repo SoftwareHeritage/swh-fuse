@@ -6,10 +6,12 @@
 from abc import ABC
 from collections import OrderedDict
 from dataclasses import dataclass, field
+from datetime import datetime
 import json
 import logging
 from pathlib import Path
 import re
+import sqlite3
 import sys
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
@@ -98,7 +100,9 @@ class AbstractCache(ABC):
             path = Path(self.conf["path"])
             path.parent.mkdir(parents=True, exist_ok=True)
             uri = False
-        self.conn = await aiosqlite.connect(path, uri=uri)
+        self.conn = await aiosqlite.connect(
+            path, uri=uri, detect_types=sqlite3.PARSE_DECLTYPES
+        )
         return self
 
     async def __aexit__(self, type=None, val=None, tb=None) -> None:
@@ -121,7 +125,8 @@ class MetadataCache(AbstractCache):
 
         create table if not exists visits_cache (
             url text not null primary key,
-            metadata blob
+            metadata blob,
+            itime timestamp  -- insertion time
         );
     """
 
@@ -144,11 +149,17 @@ class MetadataCache(AbstractCache):
 
     async def get_visits(self, url_encoded: str) -> Optional[List[Dict[str, Any]]]:
         cursor = await self.conn.execute(
-            "select metadata from visits_cache where url=?", (url_encoded,)
+            "select metadata, itime from visits_cache where url=?", (url_encoded,),
         )
         cache = await cursor.fetchone()
         if cache:
-            visits = json.loads(cache[0])
+            metadata, itime = cache[0], cache[1]
+            # Force-update cache with (potentially) new origin visits
+            diff = datetime.now() - itime
+            if diff.days >= 1:
+                return None
+
+            visits = json.loads(metadata)
             visits_typed = [typify_json(v, ORIGIN_VISIT) for v in visits]
             return visits_typed
         else:
@@ -171,7 +182,8 @@ class MetadataCache(AbstractCache):
 
     async def set_visits(self, url_encoded: str, visits: List[Dict[str, Any]]) -> None:
         await self.conn.execute(
-            "insert into visits_cache values (?, ?)", (url_encoded, json.dumps(visits)),
+            "insert or replace into visits_cache values (?, ?, ?)",
+            (url_encoded, json.dumps(visits), datetime.now()),
         )
         await self.conn.commit()
 
