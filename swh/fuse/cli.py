@@ -53,10 +53,15 @@ def fuse(ctx, config_file):
     """Software Heritage virtual file system"""
 
     import logging
+    from shutil import which
 
     import yaml
 
     from swh.core import config
+
+    if which("fusermount3") is None:
+        logging.error("Missing dependency: 'fusermount3'")
+        ctx.exit(1)
 
     if not config_file:
         config_file = DEFAULT_CONFIG_PATH
