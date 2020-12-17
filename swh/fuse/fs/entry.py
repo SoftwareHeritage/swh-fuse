@@ -26,7 +26,11 @@ class EntryMode(IntEnum):
 
     RDONLY_FILE = S_IFREG | 0o444
     RDONLY_DIR = S_IFDIR | 0o555
-    SYMLINK = S_IFLNK | 0o444
+    RDONLY_LNK = S_IFLNK | 0o444
+
+    # `cache/` sub-directories need the write permission in order to invalidate
+    # cached artifacts using `rm {SWHID}`
+    RDWR_DIR = S_IFDIR | 0o755
 
 
 @dataclass
@@ -55,6 +59,9 @@ class FuseEntry:
     async def size(self) -> int:
         """ Return the size (in bytes) of an entry """
 
+        raise NotImplementedError
+
+    async def unlink(self, name: str) -> None:
         raise NotImplementedError
 
     def get_relative_root_path(self) -> str:
@@ -132,7 +139,7 @@ class FuseSymlinkEntry(FuseEntry):
         target: path to symlink target
     """
 
-    mode: int = field(init=False, default=int(EntryMode.SYMLINK))
+    mode: int = field(init=False, default=int(EntryMode.RDONLY_LNK))
     target: Union[str, bytes, Path]
 
     async def size(self) -> int:

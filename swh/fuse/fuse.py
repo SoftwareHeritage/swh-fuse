@@ -309,6 +309,26 @@ class Fuse(pyfuse3.Operations):
         assert isinstance(entry, FuseSymlinkEntry)
         return os.fsencode(entry.get_target())
 
+    async def unlink(
+        self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
+    ) -> None:
+        """ Remove a file """
+
+        name = os.fsdecode(name)
+        parent_entry = self.inode2entry(parent_inode)
+        self.logger.debug(
+            "unlink(parent_name=%s, parent_inode=%d, name=%s)",
+            parent_entry.name,
+            parent_inode,
+            name,
+        )
+
+        try:
+            await parent_entry.unlink(name)
+        except Exception as err:
+            self.logger.exception("Cannot unlink: %s", err)
+            raise pyfuse3.FUSEError(errno.ENOENT)
+
 
 async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
     """ swh-fuse CLI entry-point """

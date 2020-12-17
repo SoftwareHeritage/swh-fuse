@@ -187,6 +187,12 @@ class MetadataCache(AbstractCache):
         )
         await self.conn.commit()
 
+    async def remove(self, swhid: SWHID) -> None:
+        await self.conn.execute(
+            "delete from metadata_cache where swhid=?", (str(swhid),),
+        )
+        await self.conn.commit()
+
 
 class BlobCache(AbstractCache):
     """ The blob cache map SWHIDs of type `cnt` to the bytes of their archived
@@ -224,6 +230,12 @@ class BlobCache(AbstractCache):
     async def set(self, swhid: SWHID, blob: bytes) -> None:
         await self.conn.execute(
             "insert into blob_cache values (?, ?)", (str(swhid), blob)
+        )
+        await self.conn.commit()
+
+    async def remove(self, swhid: SWHID) -> None:
+        await self.conn.execute(
+            "delete from blob_cache where swhid=?", (str(swhid),),
         )
         await self.conn.commit()
 
@@ -374,7 +386,7 @@ class DirEntryCache:
         return self.lru_cache.get(direntry.inode, None)
 
     def set(self, direntry: FuseDirEntry, entries: List[FuseEntry]) -> None:
-        if isinstance(direntry, (CacheDir, OriginDir)):
+        if isinstance(direntry, (CacheDir, CacheDir.ArtifactShardBySwhid, OriginDir)):
             # The `cache/` and `origin/` directories are populated on the fly
             pass
         elif (

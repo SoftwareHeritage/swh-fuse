@@ -176,6 +176,16 @@ class CacheDir(FuseDirEntry):
                     target=Path(root_path, f"archive/{swhid}{JSON_SUFFIX}"),
                 )
 
+        async def unlink(self, name: str) -> None:
+            try:
+                if name.endswith(JSON_SUFFIX):
+                    name = name[: -len(JSON_SUFFIX)]
+                swhid = parse_swhid(name)
+                await self.fuse.cache.metadata.remove(swhid)
+                await self.fuse.cache.blob.remove(swhid)
+            except ValidationError:
+                raise
+
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         prefixes = set()
         async for swhid in self.fuse.cache.get_cached_swhids():
@@ -185,7 +195,7 @@ class CacheDir(FuseDirEntry):
             yield self.create_child(
                 CacheDir.ArtifactShardBySwhid,
                 name=prefix,
-                mode=int(EntryMode.RDONLY_DIR),
+                mode=int(EntryMode.RDWR_DIR),
                 prefix=prefix,
             )
 
