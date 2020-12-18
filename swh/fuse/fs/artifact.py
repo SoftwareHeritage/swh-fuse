@@ -268,18 +268,27 @@ class RevisionHistoryShardByDate(FuseDirEntry):
 
         name: str = field(init=False, default=".status")
         mode: int = field(init=False, default=int(EntryMode.RDONLY_FILE))
-        done: int
-        todo: int
+        history_swhid: SWHID
+
+        def __post_init__(self):
+            super().__post_init__()
+            # This is the only case where we do not want the kernel to cache the file
+            self.file_info_attrs["keep_cache"] = False
+            self.file_info_attrs["direct_io"] = True
 
         async def get_content(self) -> bytes:
-            fmt = f"Done: {self.done}/{self.todo}\n"
+            history_full = await self.fuse.get_history(self.history_swhid)
+            history_cached = await self.fuse.cache.history.get_with_date_prefix(
+                self.history_swhid, date_prefix=""
+            )
+            fmt = f"Done: {len(history_cached)}/{len(history_full)}\n"
             return fmt.encode()
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
-        history = await self.fuse.get_history(self.history_swhid)
+        history_full = await self.fuse.get_history(self.history_swhid)
         # Only check for cached revisions with the appropriate prefix, since
         # fetching all of them with the Web API would take too long
-        swhids = await self.fuse.cache.history.get_with_date_prefix(
+        history_cached = await self.fuse.cache.history.get_with_date_prefix(
             self.history_swhid, date_prefix=self.prefix
         )
 
@@ -287,7 +296,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
         root_path = self.get_relative_root_path()
         sharded_dirs = set()
 
-        for (swhid, sharded_name) in swhids:
+        for (swhid, sharded_name) in history_cached:
             if not sharded_name.startswith(self.prefix):
                 continue
 
@@ -310,13 +319,10 @@ class RevisionHistoryShardByDate(FuseDirEntry):
                         history_swhid=self.history_swhid,
                     )
 
-        # TODO: store len(history) somewhere to avoid recompute?
-        self.is_status_done = len(swhids) == len(history)
+        self.is_status_done = len(history_cached) == len(history_full)
         if not self.is_status_done and depth == 0:
             yield self.create_child(
-                RevisionHistoryShardByDate.StatusFile,
-                done=len(swhids),
-                todo=len(history),
+                RevisionHistoryShardByDate.StatusFile, history_swhid=self.history_swhid
             )
 
 

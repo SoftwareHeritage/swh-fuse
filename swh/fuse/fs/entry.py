@@ -10,7 +10,7 @@ from enum import IntEnum
 from pathlib import Path
 import re
 from stat import S_IFDIR, S_IFLNK, S_IFREG
-from typing import Any, AsyncIterator, Optional, Pattern, Sequence, Union
+from typing import Any, AsyncIterator, Dict, Optional, Pattern, Sequence, Union
 
 # Avoid cycling import
 Fuse = "Fuse"
@@ -45,9 +45,12 @@ class FuseEntry:
     depth: int
     fuse: Fuse
     inode: int = field(init=False)
+    file_info_attrs: Dict[str, Any] = field(init=False, default_factory=dict)
 
     def __post_init__(self):
         self.inode = self.fuse._alloc_inode(self)
+        # By default, let the kernel cache previously accessed data
+        self.file_info_attrs["keep_cache"] = True
 
     async def size(self) -> int:
         """ Return the size (in bytes) of an entry """

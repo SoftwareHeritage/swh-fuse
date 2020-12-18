@@ -250,7 +250,8 @@ class Fuse(pyfuse3.Operations):
 
         # Re-use inode as file handle
         self.logger.debug("open(inode=%d)", inode)
-        return pyfuse3.FileInfo(fh=inode, keep_cache=True)
+        entry = self.inode2entry(inode)
+        return pyfuse3.FileInfo(fh=inode, **entry.file_info_attrs)
 
     async def read(self, fh: int, offset: int, length: int) -> bytes:
         """ Read `length` bytes from file handle `fh` at position `offset` """
