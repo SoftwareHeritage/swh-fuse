@@ -84,3 +84,4 @@ def test_list_history(fuse_mntdir):
         depth2 = str(swhid)
         assert (dir_by_date / depth1).exists()
         assert depth2 in (os.listdir(dir_by_date / depth1))
+    assert not (dir_by_date / ".status").exists()

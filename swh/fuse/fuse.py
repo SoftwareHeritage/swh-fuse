@@ -65,6 +65,12 @@ class Fuse(pyfuse3.Operations):
 
         return inode
 
+    def _remove_inode(self, inode: int) -> None:
+        try:
+            del self._inode2entry[inode]
+        except KeyError:
+            pass
+
     def inode2entry(self, inode: int) -> FuseEntry:
         """ Return the entry matching a given inode """
 

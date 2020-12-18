@@ -284,6 +284,14 @@ class RevisionHistoryShardByDate(FuseDirEntry):
             fmt = f"Done: {len(history_cached)}/{len(history_full)}\n"
             return fmt.encode()
 
+    def __post_init__(self):
+        super().__post_init__()
+        # Create the status file only once so we can easily remove it when the
+        # entire history is fetched
+        self.status_file = self.create_child(
+            RevisionHistoryShardByDate.StatusFile, history_swhid=self.history_swhid
+        )
+
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         history_full = await self.fuse.get_history(self.history_swhid)
         # Only check for cached revisions with the appropriate prefix, since
@@ -320,10 +328,10 @@ class RevisionHistoryShardByDate(FuseDirEntry):
                     )
 
         self.is_status_done = len(history_cached) == len(history_full)
-        if not self.is_status_done and depth == 0:
-            yield self.create_child(
-                RevisionHistoryShardByDate.StatusFile, history_swhid=self.history_swhid
-            )
+        if self.is_status_done:
+            self.fuse._remove_inode(self.status_file.inode)
+        elif not self.is_status_done and depth == 0:
+            yield self.status_file
 
 
 @dataclass
