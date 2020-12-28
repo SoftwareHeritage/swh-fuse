@@ -1,4 +1,4 @@
 # Add here internal Software Heritage dependencies, one per line.
 swh.core>=0.10.0
 swh.model>=0.7.0
-swh.web.client>=0.2.3
+swh.web.client>=0.2.4
