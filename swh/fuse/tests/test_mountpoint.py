@@ -10,7 +10,7 @@ from swh.model.identifiers import parse_swhid
 
 
 def test_mountpoint(fuse_mntdir):
-    assert {"archive", "cache", "origin"} <= set(os.listdir(fuse_mntdir))
+    assert {"archive", "cache", "origin", "README"} <= set(os.listdir(fuse_mntdir))
 
 
 def test_on_the_fly_mounting(fuse_mntdir):

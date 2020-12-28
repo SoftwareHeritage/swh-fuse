@@ -35,6 +35,7 @@ class Root(FuseDirEntry):
         yield self.create_child(ArchiveDir)
         yield self.create_child(OriginDir)
         yield self.create_child(CacheDir)
+        yield self.create_child(Readme)
 
 
 @dataclass
@@ -193,3 +194,38 @@ class CacheDir(FuseDirEntry):
             name=OriginDir.name,
             target=Path(self.get_relative_root_path(), OriginDir.name),
         )
+
+
+@dataclass
+class Readme(FuseFileEntry):
+    """ Top-level README to explain briefly what is SwhFS. """
+
+    name: str = field(init=False, default="README")
+    mode: int = field(init=False, default=int(EntryMode.RDONLY_FILE))
+
+    CONTENT = """Welcome to the Software Heritage Filesystem (SwhFS)!
+
+This is a user-space POSIX filesystem to browse the Software Heritage archive,
+as if it were locally available. The SwhFS mount point contains 3 directories,
+all initially empty and lazily populated:
+
+- "archive": virtual directory to mount any Software Heritage artifact on the
+  fly using its SWHID as name. Note: this directory cannot be listed with ls,
+  but entries in it can be accessed (e.g., using cat or cd).
+- "origin": virtual directory to mount any origin using its encoded URL as name.
+- "cache": on-disk representation of locally cached objects and metadata.
+
+Try it yourself:
+
+    $ cat archive/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2
+    #include <stdio.h>
+
+    int main(void) {
+        printf("Hello, World!\\n");
+    }
+
+You can find more details and examples in the SwhFS online documentation:
+https://docs.softwareheritage.org/devel/swh-fuse/ """
+
+    async def get_content(self) -> bytes:
+        return self.CONTENT.encode()
