@@ -220,3 +220,36 @@ We can check that two of the available branches correspond to historical Bell
 Labs UNIX releases. And We can dig into the `fortune` implementation of
 [UNIX/32V](https://en.wikipedia.org/wiki/UNIX/32V) instantly, without having to
 clone a 1.6  GiB repository first.
+
+
+## Origin search
+
+Origins can be accessed via the `origin/` top-level directory using their
+**encoded** URL (the percent-encoding mechanism described in [RFC
+3986](https://tools.ietf.org/html/rfc3986.html).
+
+    $ cd origin/https%3A%2F%2Fgithub.com%2Ftorvalds%2Flinux
+    $ ls
+    2015-07-09/  2016-09-14/  2017-09-12/  2018-03-08/  2018-09-06/  ...
+
+Each directory corresponds to a visit, containing metadata and a symlink to the
+visit's snapshot:
+
+    $ ls -l origin/https%3A%2F%2Fgithub.com%2Ftorvalds%2Flinux/2020-09-21/
+    total 0
+    -r--r--r-- 1 haltode haltode 470 Dec 28 12:12 meta.json
+    lr--r--r-- 1 haltode haltode  67 Dec 28 12:12 snapshot -> ../../../archive/swh:1:snp:c7beb2432b7e93c4cf6ab09cd194c7c1998df2f9/
+
+In order to find origin URLs, we can use the `web search` CLI:
+
+    $ swh web search python --limit 5
+    https://github.com/neon670/python.dev	https://archive.softwareheritage.org/api/1/origin/https://github.com/neon670/python.dev/visits/
+    https://github.com/aur-archive/python-werkzeug	https://archive.softwareheritage.org/api/1/origin/https://github.com/aur-archive/python-werkzeug/visits/
+    https://github.com/jsagon/jtradutor-web-python	https://archive.softwareheritage.org/api/1/origin/https://github.com/jsagon/jtradutor-web-python/visits/
+    https://github.com/zjmwqx/ipythonCode	https://archive.softwareheritage.org/api/1/origin/https://github.com/zjmwqx/ipythonCode/visits/
+    https://github.com/knutab/Python-BSM	https://archive.softwareheritage.org/api/1/origin/https://github.com/knutab/Python-BSM/visits/
+
+The `search` tool is also useful to escape URL:
+
+    $ swh web search "torvalds linux" --limit 1 --url-encode | cut -f1
+    https%3A%2F%2Fgithub.com%2Ftorvalds%2Flinux
