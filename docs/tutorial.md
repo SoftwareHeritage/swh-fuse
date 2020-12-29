@@ -126,7 +126,7 @@ its JavaScript lines of code (SLOC):
 
     $ cd archive/swh:1:rev:9d76c0b163675505d1a901e5fe5249a2c55609bc
 
-    $ ls -F
+    $ ls -1F
     history/
     meta.json@
     parent@
@@ -171,7 +171,7 @@ commits sharded by commit identifier and timestamp:
     swh:1:rev:00575d4d8c7421c5119f181009374ff2e7736127
     swh:1:rev:0019a463bdcb81dc6ba3434505a45774ca27f363
 
-    $ ls -F history/by-date/
+    $ ls -1F history/by-date/
     2006/
     2007/
     2008/
@@ -186,7 +186,7 @@ commits sharded by commit identifier and timestamp:
     $ jq .date history/by-date/2020/03/16/*/meta.json
     "2020-03-16T21:49:29+01:00"
 
-Note that to populate the `by-date` view metadata about all commits in the
+Note that to populate the `by-date` view, metadata about all commits in the
 history are needed. To avoid blocking on that, metadata are retrieved
 asynchronously, populating the view incrementally. The hidden `by-date/.status`
 file provides a progress report and is removed upon completion.
@@ -217,7 +217,7 @@ which uses historical Unix releases as branch names:
             printf("Memory fault -- core dumped\n");
 
 We can check that two of the available branches correspond to historical Bell
-Labs UNIX releases. And We can dig into the `fortune` implementation of
+Labs UNIX releases. And we can dig into the `fortune` implementation of
 [UNIX/32V](https://en.wikipedia.org/wiki/UNIX/32V) instantly, without having to
 clone a 1.6  GiB repository first.
 
