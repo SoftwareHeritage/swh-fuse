@@ -24,7 +24,9 @@ mount the Software Heritage archive, use the `swh fs mount` command:
 
     $ ls -1F swhfs/  # list entry points
     archive/  # <- start browsing from here
-    meta/
+    cache/
+    origin/
+    README
 
 By default SwhFS daemonizes into background and logs to syslog; it can be kept
 in foreground, logging to the console, by passing `-f/--foreground` to `mount`.
@@ -81,12 +83,12 @@ Given the SWHID of a source code file, we can directly access it via the
 filesystem.
 
 Metadata about archived source code artifacts is also locally available. For
-each entry under `archive/` there is a matching JSON file under `meta/`,
-corresponding to what the [Software Heritage Web API][webapi] will return. For
-example, here is what the Software Heritage archive knows about the above Hello
-World implementation:
+each entry `archive/<SWHID>` there is a matching JSON file
+`archive/<SWHID>.json`, corresponding to what the [Software Heritage Web
+API][webapi] will return. For example, here is what the Software Heritage
+archive knows about the above Hello World implementation:
 
-    $ jq meta/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2.json
+    $ cat archive/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2.json
     {
       "length": 67,
       "status": "visible",
@@ -101,6 +103,9 @@ World implementation:
       "language_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:c839dea9e8e6f0528b468214348fee8669b305b2/language/",
       "license_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:c839dea9e8e6f0528b468214348fee8669b305b2/license/"
     }
+
+Note: JSON metadata files are indented by default when read, this can be changed
+in the configuration file (see {ref}`documentation <swh-fuse-config>`).
 
 
 [webapi]: https://archive.softwareheritage.org/api/
