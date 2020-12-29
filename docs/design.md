@@ -69,6 +69,8 @@ The SwhFS mount point contain:
   character of their object id, the metadata identified by a `SWHID.json` entry,
   and the `origin/` directory.
 
+- `README`: file explaining briefly what is SwhFS.
+
 
 ## File system representation
 
@@ -176,7 +178,8 @@ and global (i.e., they are shared by concurrent SwhFS processes).
 We assume that no cache *invalidation* is necessary, due to intrinsic properties
 of the Software Heritage archive, such as integrity verification and append-only
 archive changes. To clean the caches one can just remove the corresponding files
-from disk.
+from disk, or using a more fine-grained strategy, navigate the `cache/`
+top-level directory and `rm <SWHID>` to purge specific artifacts.
 
 
 ### Metadata cache
