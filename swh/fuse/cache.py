@@ -27,6 +27,19 @@ from swh.model.identifiers import REVISION, SWHID, parse_swhid
 from swh.web.client.client import ORIGIN_VISIT, typify_json
 
 
+async def db_connect(conf: Dict[str, Any]) -> aiosqlite.Connection:
+    # In-memory (thus temporary) caching is useful for testing purposes
+    if conf.get("in-memory", False):
+        path = "file::memory:?cache=shared"
+        uri = True
+    else:
+        path = conf["path"]
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        uri = False
+
+    return await aiosqlite.connect(path, uri=uri, detect_types=sqlite3.PARSE_DECLTYPES)
+
+
 class FuseCache:
     """SwhFS retrieves both metadata and file contents from the Software Heritage archive
     via the network. In order to obtain reasonable performances several caches are used
@@ -49,14 +62,16 @@ class FuseCache:
         self.cache_conf = cache_conf
 
     async def __aenter__(self):
-        # History and raw metadata share the same SQLite db
-        self.metadata = MetadataCache(self.cache_conf["metadata"])
-        self.history = HistoryCache(self.cache_conf["metadata"])
-        self.blob = BlobCache(self.cache_conf["blob"])
+        self.metadata = await MetadataCache(
+            conf=self.cache_conf["metadata"]
+        ).__aenter__()
+        self.blob = await BlobCache(conf=self.cache_conf["blob"]).__aenter__()
+        # History and raw metadata share the same SQLite db (hence the same connection)
+        self.history = await HistoryCache(
+            conf=self.cache_conf["metadata"], conn=self.metadata.conn
+        ).__aenter__()
         self.direntry = DirEntryCache(self.cache_conf["direntry"])
-        await self.metadata.__aenter__()
-        await self.blob.__aenter__()
-        await self.history.__aenter__()
+
         return self
 
     async def __aexit__(self, type=None, val=None, tb=None) -> None:
@@ -85,28 +100,32 @@ class FuseCache:
 
 
 class AbstractCache(ABC):
-    """ Abstract cache implementation to share common behavior between cache
-    types (such as: YAML config parsing, SQLite context manager) """
+    """ Abstract cache implementation to share common behavior between cache types """
 
-    def __init__(self, conf: Dict[str, Any]):
+    DB_SCHEMA: str = ""
+    conf: Dict[str, Any]
+    conn: aiosqlite.Connection
+
+    def __init__(
+        self, conf: Dict[str, Any], conn: Optional[aiosqlite.Connection] = None
+    ):
         self.conf = conf
+        self.init_conn = conn
 
     async def __aenter__(self):
-        # In-memory (thus temporary) caching is useful for testing purposes
-        if self.conf.get("in-memory", False):
-            path = "file::memory:?cache=shared"
-            uri = True
+        if self.init_conn is None:
+            self.conn = await db_connect(self.conf)
         else:
-            path = Path(self.conf["path"])
-            path.parent.mkdir(parents=True, exist_ok=True)
-            uri = False
-        self.conn = await aiosqlite.connect(
-            path, uri=uri, detect_types=sqlite3.PARSE_DECLTYPES
-        )
+            self.conn = self.init_conn
+
+        await self.conn.executescript(self.DB_SCHEMA)
+        await self.conn.commit()
         return self
 
     async def __aexit__(self, type=None, val=None, tb=None) -> None:
-        await self.conn.close()
+        # In case we were given an existing connection, do not close it here
+        if self.init_conn is None:
+            await self.conn.close()
 
 
 class MetadataCache(AbstractCache):
@@ -129,12 +148,6 @@ class MetadataCache(AbstractCache):
             itime timestamp  -- insertion time
         );
     """
-
-    async def __aenter__(self):
-        await super().__aenter__()
-        await self.conn.executescript(self.DB_SCHEMA)
-        await self.conn.commit()
-        return self
 
     async def get(self, swhid: SWHID, typify: bool = True) -> Any:
         cursor = await self.conn.execute(
@@ -210,12 +223,6 @@ class BlobCache(AbstractCache):
         );
     """
 
-    async def __aenter__(self):
-        await super().__aenter__()
-        await self.conn.executescript(self.DB_SCHEMA)
-        await self.conn.commit()
-        return self
-
     async def get(self, swhid: SWHID) -> Optional[bytes]:
         cursor = await self.conn.execute(
             "select blob from blob_cache where swhid=?", (str(swhid),)
@@ -256,12 +263,6 @@ class HistoryCache(AbstractCache):
         );
         create index if not exists idx_history on history_graph(src);
     """
-
-    async def __aenter__(self):
-        await super().__aenter__()
-        await self.conn.executescript(self.DB_SCHEMA)
-        await self.conn.commit()
-        return self
 
     HISTORY_REC_QUERY = """
         with recursive
