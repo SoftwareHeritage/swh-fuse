@@ -353,6 +353,10 @@ class DirEntryCache:
             self.move_to_end(key)
             return value
 
+        def __delitem__(self, key: Any) -> None:
+            self.used_ram -= self.sizeof(self[key])
+            super().__delitem__(key)
+
         def __setitem__(self, key: Any, value: Any) -> None:
             if key in self:
                 self.move_to_end(key)
@@ -363,7 +367,6 @@ class DirEntryCache:
 
             while self.used_ram > self.max_ram and self:
                 oldest = next(iter(self))
-                self.used_ram -= self.sizeof(oldest)
                 del self[oldest]
 
     def __init__(self, conf: Dict[str, Any]):
@@ -390,12 +393,11 @@ class DirEntryCache:
         if isinstance(direntry, (CacheDir, CacheDir.ArtifactShardBySwhid, OriginDir)):
             # The `cache/` and `origin/` directories are populated on the fly
             pass
-        elif (
-            isinstance(direntry, RevisionHistoryShardByDate)
-            and not direntry.is_status_done
-        ):
-            # The `by-date/' directory is populated in parallel so only cache it
-            # once it has finished fetching all data from the API
-            pass
         else:
             self.lru_cache[direntry.inode] = entries
+
+    def invalidate(self, direntry: FuseDirEntry) -> None:
+        try:
+            del self.lru_cache[direntry.inode]
+        except KeyError:
+            pass

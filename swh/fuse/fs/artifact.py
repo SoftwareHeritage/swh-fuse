@@ -220,21 +220,35 @@ class RevisionHistory(FuseDirEntry):
 
     swhid: SWHID
 
-    async def prefill_caches(self) -> None:
+    async def prefill_by_date_cache(self, by_date_dir: FuseDirEntry) -> None:
         history = await self.fuse.get_history(self.swhid)
+        nb_api_calls = 0
         for swhid in history:
+            cache = await self.fuse.cache.metadata.get(swhid)
+            if cache:
+                continue
+
             await self.fuse.get_metadata(swhid)
+            # The by-date/ directory is cached temporarily in direntry, and
+            # invalidated + updated every 100 API calls
+            nb_api_calls += 1
+            if nb_api_calls % 100 == 0:
+                self.fuse.cache.direntry.invalidate(by_date_dir)
+        # Make sure to have the latest entries once the prefilling is done
+        self.fuse.cache.direntry.invalidate(by_date_dir)
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
-        # Run it concurrently because of the many API calls necessary
-        asyncio.create_task(self.prefill_caches())
-
-        yield self.create_child(
+        by_date_dir = self.create_child(
             RevisionHistoryShardByDate,
             name="by-date",
             mode=int(EntryMode.RDONLY_DIR),
             history_swhid=self.swhid,
         )
+
+        # Run it concurrently because of the many API calls necessary
+        asyncio.create_task(self.prefill_by_date_cache(by_date_dir))
+
+        yield by_date_dir
 
         yield self.create_child(
             RevisionHistoryShardByHash,
