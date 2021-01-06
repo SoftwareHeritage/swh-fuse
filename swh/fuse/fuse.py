@@ -60,15 +60,17 @@ class Fuse(pyfuse3.Operations):
         self._next_inode += 1
         self._inode2entry[inode] = entry
 
-        # TODO add inode recycling with invocation to invalidate_inode when
-        # the dicts get too big
-
         return inode
 
     def _remove_inode(self, inode: int) -> None:
         try:
             del self._inode2entry[inode]
         except KeyError:
+            pass
+
+        try:
+            pyfuse3.invalidate_inode(inode)
+        except FileNotFoundError:
             pass
 
     def inode2entry(self, inode: int) -> FuseEntry:
