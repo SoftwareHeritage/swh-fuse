@@ -188,7 +188,7 @@ class MetadataCache(AbstractCache):
             )
 
         await self.conn.execute(
-            "insert into metadata_cache values (?, ?, ?)",
+            "insert or ignore into metadata_cache values (?, ?, ?)",
             (str(swhid), json.dumps(metadata), swhid_date),
         )
         await self.conn.commit()
@@ -281,7 +281,7 @@ class HistoryCache(AbstractCache):
         cursor = await self.conn.execute(self.HISTORY_REC_QUERY, (str(swhid),),)
         cache = await cursor.fetchall()
         if not cache:
-            return None
+            return []
         history = []
         for row in cache:
             parent = row[0]
@@ -315,10 +315,8 @@ class HistoryCache(AbstractCache):
                 logging.warning("Cannot parse object from history cache: %s", parent)
         return history
 
-    async def set(self, history: str) -> None:
-        history = history.strip()
-        if history:
-            edges = [edge.split(" ") for edge in history.split("\n")]
+    async def set(self, edges: List[str]) -> None:
+        if edges:
             await self.conn.executemany(
                 "insert or ignore into history_graph values (?, ?)", edges
             )

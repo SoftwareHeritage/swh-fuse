@@ -126,36 +126,36 @@ class Fuse(pyfuse3.Operations):
             self.logger.error("Cannot fetch blob for object %s: %s", swhid, err)
             raise
 
-    async def get_history(self, swhid: SWHID) -> List[SWHID]:
-        """ Retrieve a revision's history using Software Heritage Graph API """
+    # async def get_history(self, swhid: SWHID) -> List[SWHID]:
+    #     """ Retrieve a revision's history using Software Heritage Graph API """
 
-        if swhid.object_type != REVISION:
-            raise pyfuse3.FUSEError(errno.EINVAL)
+    #     if swhid.object_type != REVISION:
+    #         raise pyfuse3.FUSEError(errno.EINVAL)
 
-        cache = await self.cache.history.get(swhid)
-        if cache:
-            self.logger.debug(
-                "Found history of %s in cache (%d ancestors)", swhid, len(cache)
-            )
-            return cache
+    #     cache = await self.cache.history.get(swhid)
+    #     if cache:
+    #         self.logger.debug(
+    #             "Found history of %s in cache (%d ancestors)", swhid, len(cache)
+    #         )
+    #         return cache
 
-        try:
-            # Use the swh-graph API to retrieve the full history very fast
-            self.logger.debug("Retrieving history of %s via graph API...", swhid)
-            call = f"graph/visit/edges/{swhid}?edges=rev:rev"
-            loop = asyncio.get_event_loop()
-            history = await loop.run_in_executor(None, self.web_api._call, call)
-            await self.cache.history.set(history.text)
-            # Retrieve it from cache so it is correctly typed
-            res = await self.cache.history.get(swhid)
-            return res
-        except requests.HTTPError as err:
-            self.logger.error("Cannot fetch history for object %s: %s", swhid, err)
-            # Ignore exception since swh-graph does not necessarily contain the
-            # most recent artifacts from the archive. Computing the full history
-            # from the Web API is too computationally intensive so simply return
-            # an empty list.
-            return []
+    #     try:
+    #         # Use the swh-graph API to retrieve the full history very fast
+    #         self.logger.debug("Retrieving history of %s via graph API...", swhid)
+    #         call = f"graph/visit/edges/{swhid}?edges=rev:rev"
+    #         loop = asyncio.get_event_loop()
+    #         history = await loop.run_in_executor(None, self.web_api._call, call)
+    #         await self.cache.history.set(history.text)
+    #         # Retrieve it from cache so it is correctly typed
+    #         res = await self.cache.history.get(swhid)
+    #         return res
+    #     except requests.HTTPError as err:
+    #         self.logger.error("Cannot fetch history for object %s: %s", swhid, err)
+    #         # Ignore exception since swh-graph does not necessarily contain the
+    #         # most recent artifacts from the archive. Computing the full history
+    #         # from the Web API is too computationally intensive so simply return
+    #         # an empty list.
+    #         return []
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
         """ Retrieve origin visits given an encoded-URL using Software Heritage API """

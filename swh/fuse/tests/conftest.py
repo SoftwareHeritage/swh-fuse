@@ -25,6 +25,8 @@ def web_api_mock(requests_mock):
         if not api_call.endswith("raw/") and not api_call.startswith("graph/"):
             data = json.dumps(data)
 
+        # TODO: change headers to mock streaming graph/ API
+
         http_method = requests_mock.get
         if api_call.startswith("origin/") and api_call.endswith("get/"):
             http_method = requests_mock.head
