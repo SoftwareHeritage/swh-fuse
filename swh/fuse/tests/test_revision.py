@@ -72,9 +72,14 @@ def test_list_history(fuse_mntdir):
         assert depth2 in (os.listdir(dir_by_page / depth1))
 
     dir_by_date = dir_path / "by-date"
-    # TODO: rely on .status file instead to wait
-    # Wait 2 seconds to populate by-date/ dir
-    time.sleep(2)
+    # Wait max 2 seconds to populate by-date/ dir
+    for i in range(200):
+        entries = os.listdir(dir_by_date)
+        if entries and ".status" not in entries:
+            break
+        time.sleep(0.1)
+    assert not (dir_by_date / ".status").exists()
+
     for swhid in expected:
         meta = get_data_from_web_archive(str(swhid))
         date = dateutil.parser.parse(meta["date"])
@@ -84,4 +89,3 @@ def test_list_history(fuse_mntdir):
         depth2 = str(swhid)
         assert (dir_by_date / depth1).exists()
         assert depth2 in (os.listdir(dir_by_date / depth1))
-    assert not (dir_by_date / ".status").exists()
