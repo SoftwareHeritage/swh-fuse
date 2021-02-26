@@ -1,4 +1,4 @@
-# Copyright (C) 2020  The Software Heritage developers
+# Copyright (C) 2020-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -10,10 +10,10 @@ from enum import IntEnum
 from pathlib import Path
 import re
 from stat import S_IFDIR, S_IFLNK, S_IFREG
-from typing import Any, AsyncIterator, Dict, Optional, Pattern, Sequence, Union
+from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Optional, Pattern, Union
 
-# Avoid cycling import
-Fuse = "Fuse"
+if TYPE_CHECKING:  # avoid cyclic import
+    from swh.fuse.fuse import Fuse
 
 
 class EntryMode(IntEnum):
@@ -98,11 +98,11 @@ class FuseDirEntry(FuseEntry):
         expression, and false otherwise """
 
         if self.ENTRIES_REGEXP:
-            return re.match(self.ENTRIES_REGEXP, name)
+            return bool(re.match(self.ENTRIES_REGEXP, name))
         else:
             return True
 
-    async def compute_entries(self) -> Sequence[FuseEntry]:
+    async def compute_entries(self):
         """ Return the child entries of a directory entry """
 
         raise NotImplementedError
@@ -122,7 +122,7 @@ class FuseDirEntry(FuseEntry):
         for i in range(offset, len(entries)):
             yield entries[i]
 
-    async def lookup(self, name: str) -> FuseEntry:
+    async def lookup(self, name: str) -> Optional[FuseEntry]:
         """ Look up a FUSE entry by name """
 
         async for entry in self.get_entries():

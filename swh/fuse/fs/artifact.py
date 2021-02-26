@@ -1,4 +1,4 @@
-# Copyright (C) 2020  The Software Heritage developers
+# Copyright (C) 2020-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -10,7 +10,7 @@ import logging
 import os
 from pathlib import Path
 import re
-from typing import Any, AsyncIterator, Dict, List
+from typing import Any, AsyncIterator, Dict, List, Optional, cast
 
 from swh.fuse.fs.entry import (
     EntryMode,
@@ -90,7 +90,7 @@ class Directory(FuseDirEntry):
 
             # 1. Symlink (check symlink first because condition is less restrictive)
             if mode == DentryPerms.symlink:
-                target = ""
+                target = b""
                 try:
                     # Symlink target is stored in the blob content
                     target = await self.fuse.get_blob(swhid)
@@ -238,11 +238,14 @@ class RevisionHistory(FuseDirEntry):
         self.fuse.cache.direntry.invalidate(by_date_dir)
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
-        by_date_dir = self.create_child(
+        by_date_dir = cast(
             RevisionHistoryShardByDate,
-            name="by-date",
-            mode=int(EntryMode.RDONLY_DIR),
-            history_swhid=self.swhid,
+            self.create_child(
+                RevisionHistoryShardByDate,
+                name="by-date",
+                mode=int(EntryMode.RDONLY_DIR),
+                history_swhid=self.swhid,
+            ),
         )
 
         # Run it concurrently because of the many API calls necessary
@@ -391,7 +394,7 @@ class RevisionHistoryShardByPage(FuseDirEntry):
     """ Revision virtual `history/by-page` sharded directory """
 
     history_swhid: SWHID
-    prefix: int = field(default=None)
+    prefix: Optional[int] = field(default=None)
 
     PAGE_SIZE = 10_000
     PAGE_FMT = "{page_number:03d}"
@@ -444,7 +447,7 @@ class Release(FuseDirEntry):
 
     swhid: SWHID
 
-    async def find_root_directory(self, swhid: SWHID) -> SWHID:
+    async def find_root_directory(self, swhid: SWHID) -> Optional[SWHID]:
         if swhid.object_type == RELEASE:
             metadata = await self.fuse.get_metadata(swhid)
             return await self.find_root_directory(metadata["target"])

@@ -1,4 +1,4 @@
-# Copyright (C) 2020  The Software Heritage developers
+# Copyright (C) 2020-2021  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -29,15 +29,15 @@ class Fuse(pyfuse3.Operations):
     """ Software Heritage Filesystem in Userspace (FUSE). Locally mount parts of
     the archive and navigate it as a virtual file system. """
 
-    def __init__(
-        self, root_path: Path, cache: FuseCache, conf: Dict[str, Any],
-    ):
+    def __init__(self, root_path: Path, cache: FuseCache, conf: Dict[str, Any]):
         super(Fuse, self).__init__()
 
         self._next_inode: int = pyfuse3.ROOT_INODE
         self._inode2entry: Dict[int, FuseEntry] = {}
 
-        self.root = Root(fuse=self)
+        # The fuse constructor keyword is propagated up to FuseEntry dataclass, but mypy
+        # 0.812 considers it an unexpected kwarg. Skip typing it.
+        self.root = Root(fuse=self)  # type: ignore
         self.conf = conf
         self.logger = logging.getLogger(LOGGER_NAME)
 
