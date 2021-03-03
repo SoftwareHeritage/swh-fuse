@@ -23,15 +23,8 @@ from swh.fuse.tests.data.config import (
     ORIGIN_URL,
     REV_SMALL_HISTORY,
 )
-from swh.model.identifiers import (
-    CONTENT,
-    DIRECTORY,
-    RELEASE,
-    REVISION,
-    SNAPSHOT,
-    SWHID,
-    parse_swhid,
-)
+from swh.model.hashutil import hash_to_bytes
+from swh.model.identifiers import CoreSWHID, ObjectType
 
 API_URL_real = "https://archive.softwareheritage.org/api/1"
 API_URL_test = "https://invalid-test-only.archive.softwareheritage.org/api/1"
@@ -43,7 +36,7 @@ API_TOKEN = ""
 
 MOCK_ARCHIVE: Dict[str, Any] = {}
 # Temporary map (swhid -> metadata) to ease data generation
-METADATA: Dict[SWHID, Any] = {}
+METADATA: Dict[CoreSWHID, Any] = {}
 
 
 def get_from_api(endpoint: str) -> str:
@@ -51,19 +44,8 @@ def get_from_api(endpoint: str) -> str:
     return requests.get(f"{API_URL_real}/{endpoint}", headers=headers).text
 
 
-def get_short_type(object_type: str) -> str:
-    short_type = {
-        CONTENT: "cnt",
-        DIRECTORY: "dir",
-        REVISION: "rev",
-        RELEASE: "rel",
-        SNAPSHOT: "snp",
-    }
-    return short_type[object_type]
-
-
 def generate_archive_web_api(
-    swhid: SWHID, raw: bool = False, recursive: bool = False
+    swhid: CoreSWHID, raw: bool = False, recursive: bool = False
 ) -> None:
     # Already in mock archive
     if swhid in METADATA and not raw:
@@ -81,17 +63,20 @@ def generate_archive_web_api(
     # Retrieve additional needed data for different artifacts (eg: content's
     # blob data, release target, etc.)
     if recursive:
-        if swhid.object_type == CONTENT:
+        if swhid.object_type == ObjectType.CONTENT:
             generate_archive_web_api(swhid, raw=True)
-        elif swhid.object_type == RELEASE:
+        elif swhid.object_type == ObjectType.RELEASE:
             target_type = METADATA[swhid]["target_type"]
             target_id = METADATA[swhid]["target"]
-            target = parse_swhid(f"swh:1:{get_short_type(target_type)}:{target_id}")
+            target = CoreSWHID(
+                object_type=ObjectType[target_type.upper()],
+                object_id=hash_to_bytes(target_id),
+            )
             generate_archive_web_api(target, recursive=True)
 
 
-def generate_archive_graph_api(swhid: SWHID) -> None:
-    if swhid.object_type == REVISION:
+def generate_archive_graph_api(swhid: CoreSWHID) -> None:
+    if swhid.object_type == ObjectType.REVISION:
         # Empty history for all revisions (except REV_SMALL_HISTORY used in tests)
         url = swhid_to_graph_url(swhid, GRAPH_API_REQUEST.HISTORY)
         MOCK_ARCHIVE[url] = ""
@@ -144,7 +129,7 @@ swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04 swh:1:rev:c01efc669f09508b55e
 
             hist_nodes = set(
                 map(
-                    parse_swhid,
+                    CoreSWHID.from_string,
                     [edge.split(" ")[1] for edge in history.strip().split("\n")],
                 )
             )
@@ -163,7 +148,7 @@ def generate_origin_archive_web_api(url: str):
 
 
 for entry in ALL_ENTRIES:
-    swhid = parse_swhid(entry)
+    swhid = CoreSWHID.from_string(entry)
     generate_archive_web_api(swhid, recursive=True)
     generate_archive_graph_api(swhid)
 

@@ -20,7 +20,8 @@ from swh.fuse.fs.entry import (
     FuseSymlinkEntry,
 )
 from swh.model.from_disk import DentryPerms
-from swh.model.identifiers import CONTENT, DIRECTORY, RELEASE, REVISION, SNAPSHOT, SWHID
+from swh.model.hashutil import hash_to_bytes, hash_to_hex
+from swh.model.identifiers import CoreSWHID, ObjectType
 
 SWHID_REGEXP = r"swh:1:(cnt|dir|rel|rev|snp):[0-9a-f]{40}"
 
@@ -41,7 +42,7 @@ class Content(FuseFileEntry):
     directory, the permissions of the `archive/SWHID` file will be arbitrary and
     not meaningful (e.g., `0x644`). """
 
-    swhid: SWHID
+    swhid: CoreSWHID
     prefetch: Any = None
 
     async def get_content(self) -> bytes:
@@ -73,7 +74,7 @@ class Directory(FuseDirEntry):
     So it is possible that, in the context of a directory, a file is presented
     as writable, whereas actually writing to it will fail with `EPERM`. """
 
-    swhid: SWHID
+    swhid: CoreSWHID
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
@@ -84,7 +85,7 @@ class Directory(FuseDirEntry):
                 # Archived permissions for directories are always set to
                 # 0o040000 so use a read-only permission instead
                 int(EntryMode.RDONLY_DIR)
-                if swhid.object_type == DIRECTORY
+                if swhid.object_type == ObjectType.DIRECTORY
                 else entry["perms"]
             )
 
@@ -101,7 +102,7 @@ class Directory(FuseDirEntry):
                     FuseSymlinkEntry, name=name, target=target,
                 )
             # 2. Regular file
-            elif swhid.object_type == CONTENT:
+            elif swhid.object_type == ObjectType.CONTENT:
                 yield self.create_child(
                     Content,
                     name=name,
@@ -112,12 +113,12 @@ class Directory(FuseDirEntry):
                     prefetch=entry,
                 )
             # 3. Regular directory
-            elif swhid.object_type == DIRECTORY:
+            elif swhid.object_type == ObjectType.DIRECTORY:
                 yield self.create_child(
                     Directory, name=name, mode=mode, swhid=swhid,
                 )
             # 4. Submodule
-            elif swhid.object_type == REVISION:
+            elif swhid.object_type == ObjectType.REVISION:
                 try:
                     # Make sure the revision metadata is fetched and create a
                     # symlink to distinguish it with regular directories
@@ -159,7 +160,7 @@ class Revision(FuseDirEntry):
     - `meta.json`: metadata for the current node, as a symlink pointing to the
       relevant `archive/<SWHID>.json` file """
 
-    swhid: SWHID
+    swhid: CoreSWHID
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
@@ -202,7 +203,7 @@ class Revision(FuseDirEntry):
 class RevisionParents(FuseDirEntry):
     """ Revision virtual `parents/` directory """
 
-    parents: List[SWHID]
+    parents: List[CoreSWHID]
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         root_path = self.get_relative_root_path()
@@ -218,7 +219,7 @@ class RevisionParents(FuseDirEntry):
 class RevisionHistory(FuseDirEntry):
     """ Revision virtual `history/` directory """
 
-    swhid: SWHID
+    swhid: CoreSWHID
 
     async def prefill_by_date_cache(self, by_date_dir: FuseDirEntry) -> None:
         history = await self.fuse.get_history(self.swhid)
@@ -272,7 +273,7 @@ class RevisionHistory(FuseDirEntry):
 class RevisionHistoryShardByDate(FuseDirEntry):
     """ Revision virtual `history/by-date` sharded directory """
 
-    history_swhid: SWHID
+    history_swhid: CoreSWHID
     prefix: str = field(default="")
     is_status_done: bool = field(default=False)
 
@@ -285,7 +286,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
 
         name: str = field(init=False, default=".status")
         mode: int = field(init=False, default=int(EntryMode.RDONLY_FILE))
-        history_swhid: SWHID
+        history_swhid: CoreSWHID
 
         def __post_init__(self):
             super().__post_init__()
@@ -355,7 +356,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
 class RevisionHistoryShardByHash(FuseDirEntry):
     """ Revision virtual `history/by-hash` sharded directory """
 
-    history_swhid: SWHID
+    history_swhid: CoreSWHID
     prefix: str = field(default="")
 
     SHARDING_LENGTH = 2
@@ -367,7 +368,7 @@ class RevisionHistoryShardByHash(FuseDirEntry):
         if self.prefix:
             root_path = self.get_relative_root_path()
             for swhid in history:
-                if swhid.object_id.startswith(self.prefix):
+                if swhid.object_id.startswith(hash_to_bytes(self.prefix)):
                     yield self.create_child(
                         FuseSymlinkEntry,
                         name=str(swhid),
@@ -377,7 +378,7 @@ class RevisionHistoryShardByHash(FuseDirEntry):
         else:
             sharded_dirs = set()
             for swhid in history:
-                next_prefix = swhid.object_id[: self.SHARDING_LENGTH]
+                next_prefix = hash_to_hex(swhid.object_id)[: self.SHARDING_LENGTH]
                 if next_prefix not in sharded_dirs:
                     sharded_dirs.add(next_prefix)
                     yield self.create_child(
@@ -393,7 +394,7 @@ class RevisionHistoryShardByHash(FuseDirEntry):
 class RevisionHistoryShardByPage(FuseDirEntry):
     """ Revision virtual `history/by-page` sharded directory """
 
-    history_swhid: SWHID
+    history_swhid: CoreSWHID
     prefix: Optional[int] = field(default=None)
 
     PAGE_SIZE = 10_000
@@ -445,16 +446,16 @@ class Release(FuseDirEntry):
     - `meta.json`: metadata for the current node, as a symlink pointing to the
       relevant `archive/<SWHID>.json` file """
 
-    swhid: SWHID
+    swhid: CoreSWHID
 
-    async def find_root_directory(self, swhid: SWHID) -> Optional[SWHID]:
-        if swhid.object_type == RELEASE:
+    async def find_root_directory(self, swhid: CoreSWHID) -> Optional[CoreSWHID]:
+        if swhid.object_type == ObjectType.RELEASE:
             metadata = await self.fuse.get_metadata(swhid)
             return await self.find_root_directory(metadata["target"])
-        elif swhid.object_type == REVISION:
+        elif swhid.object_type == ObjectType.REVISION:
             metadata = await self.fuse.get_metadata(swhid)
             return metadata["directory"]
-        elif swhid.object_type == DIRECTORY:
+        elif swhid.object_type == ObjectType.DIRECTORY:
             return swhid
         else:
             return None
@@ -493,10 +494,10 @@ class Release(FuseDirEntry):
 class ReleaseType(FuseFileEntry):
     """ Release type virtual file """
 
-    target_type: str
+    target_type: ObjectType
 
     async def get_content(self) -> bytes:
-        return str.encode(self.target_type + "\n")
+        return str.encode(self.target_type.name.lower() + "\n")
 
 
 @dataclass
@@ -512,7 +513,7 @@ class Snapshot(FuseDirEntry):
     ``tags`` directory containing a ``v1.0`` symlink pointing to the branch
     target SWHID. """
 
-    swhid: SWHID
+    swhid: CoreSWHID
     prefix: str = field(default="")
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
@@ -627,9 +628,9 @@ class OriginVisit(FuseDirEntry):
 
 
 OBJTYPE_GETTERS = {
-    CONTENT: Content,
-    DIRECTORY: Directory,
-    REVISION: Revision,
-    RELEASE: Release,
-    SNAPSHOT: Snapshot,
+    ObjectType.CONTENT: Content,
+    ObjectType.DIRECTORY: Directory,
+    ObjectType.REVISION: Revision,
+    ObjectType.RELEASE: Release,
+    ObjectType.SNAPSHOT: Snapshot,
 }

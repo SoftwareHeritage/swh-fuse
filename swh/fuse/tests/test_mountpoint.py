@@ -6,7 +6,7 @@
 import os
 
 from swh.fuse.tests.data.config import ORIGIN_URL_ENCODED, REGULAR_FILE
-from swh.model.identifiers import parse_swhid
+from swh.model.identifiers import CoreSWHID
 
 
 def test_mountpoint(fuse_mntdir):
@@ -21,7 +21,7 @@ def test_on_the_fly_mounting(fuse_mntdir):
     assert os.listdir(fuse_mntdir / "origin") == []
     assert (fuse_mntdir / "origin" / ORIGIN_URL_ENCODED).is_dir()
 
-    sharded_dir = parse_swhid(REGULAR_FILE).object_id[:2]
+    sharded_dir = CoreSWHID.from_string(REGULAR_FILE).object_id.hex()[:2]
     assert os.listdir(fuse_mntdir / "cache") == [sharded_dir, "origin"]
     assert os.listdir(fuse_mntdir / "cache" / sharded_dir) == [
         REGULAR_FILE,

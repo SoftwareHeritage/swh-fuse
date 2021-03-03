@@ -12,7 +12,8 @@ from swh.fuse.tests.common import (
     get_data_from_web_archive,
 )
 from swh.fuse.tests.data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
-from swh.model.identifiers import parse_swhid
+from swh.model.hashutil import hash_to_hex
+from swh.model.identifiers import CoreSWHID
 
 
 def test_access_meta(fuse_mntdir):
@@ -53,12 +54,12 @@ def test_list_history(fuse_mntdir):
     # Only keep second node in the edge because first node is redundant
     # information or the root node (hence not an ancestor)
     expected = set(
-        map(parse_swhid, [edge.split(" ")[1] for edge in history.split("\n")])
+        map(CoreSWHID.from_string, [edge.split(" ")[1] for edge in history.split("\n")])
     )
 
     dir_by_hash = dir_path / "by-hash"
     for swhid in expected:
-        depth1 = swhid.object_id[:2]
+        depth1 = hash_to_hex(swhid.object_id)[:2]
         depth2 = str(swhid)
         assert (dir_by_hash / depth1).exists()
         assert depth2 in (os.listdir(dir_by_hash / depth1))

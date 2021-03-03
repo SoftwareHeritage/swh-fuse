@@ -6,7 +6,8 @@
 import os
 
 from swh.fuse.tests.data.config import REGULAR_FILE
-from swh.model.identifiers import parse_swhid
+from swh.model.hashutil import hash_to_hex
+from swh.model.identifiers import CoreSWHID
 
 
 def test_cache_artifact(fuse_mntdir):
@@ -14,8 +15,11 @@ def test_cache_artifact(fuse_mntdir):
 
     (fuse_mntdir / "archive" / REGULAR_FILE).is_file()
 
-    swhid = parse_swhid(REGULAR_FILE)
-    assert os.listdir(fuse_mntdir / "cache") == [swhid.object_id[:2], "origin"]
+    swhid = CoreSWHID.from_string(REGULAR_FILE)
+    assert os.listdir(fuse_mntdir / "cache") == [
+        hash_to_hex(swhid.object_id)[:2],
+        "origin",
+    ]
 
 
 def test_purge_artifact(fuse_mntdir):
@@ -27,7 +31,7 @@ def test_purge_artifact(fuse_mntdir):
     (fuse_mntdir / "archive" / REGULAR_FILE).is_file()
     assert os.listdir(fuse_mntdir / "cache") != DEFAULT_CACHE_CONTENT
     # ... and remove it from cache
-    swhid = parse_swhid(REGULAR_FILE)
-    os.unlink(fuse_mntdir / "cache" / swhid.object_id[:2] / str(swhid))
+    swhid = CoreSWHID.from_string(REGULAR_FILE)
+    os.unlink(fuse_mntdir / "cache" / hash_to_hex(swhid.object_id)[:2] / str(swhid))
 
     assert os.listdir(fuse_mntdir / "cache") == DEFAULT_CACHE_CONTENT

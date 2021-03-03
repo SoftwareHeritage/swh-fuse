@@ -13,7 +13,7 @@ import click
 
 from swh.core.cli import CONTEXT_SETTINGS
 from swh.core.cli import swh as swh_cli_group
-from swh.model.cli import SWHIDParamType
+from swh.model.cli import CoreSWHIDParamType
 
 # All generic config code should reside in swh.core.config
 DEFAULT_CONFIG_PATH = os.environ.get(
@@ -97,7 +97,7 @@ def fuse(ctx, config_file):
     metavar="PATH",
     type=click.Path(exists=True, dir_okay=True, file_okay=False),
 )
-@click.argument("swhids", nargs=-1, metavar="[SWHID]...", type=SWHIDParamType())
+@click.argument("swhids", nargs=-1, metavar="[SWHID]...", type=CoreSWHIDParamType())
 @click.option(
     "-f/-d",
     "--foreground/--daemon",

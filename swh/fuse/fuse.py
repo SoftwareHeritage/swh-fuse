@@ -21,7 +21,7 @@ from swh.fuse import LOGGER_NAME
 from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
-from swh.model.identifiers import CONTENT, REVISION, SWHID
+from swh.model.identifiers import CoreSWHID, ObjectType
 from swh.web.client.client import WebAPIClient
 
 
@@ -81,7 +81,7 @@ class Fuse(pyfuse3.Operations):
         except KeyError:
             raise pyfuse3.FUSEError(errno.ENOENT)
 
-    async def get_metadata(self, swhid: SWHID) -> Any:
+    async def get_metadata(self, swhid: CoreSWHID) -> Any:
         """ Retrieve metadata for a given SWHID using Software Heritage API """
 
         cache = await self.cache.metadata.get(swhid)
@@ -100,11 +100,11 @@ class Fuse(pyfuse3.Operations):
             self.logger.error("Cannot fetch metadata for object %s: %s", swhid, err)
             raise
 
-    async def get_blob(self, swhid: SWHID) -> bytes:
+    async def get_blob(self, swhid: CoreSWHID) -> bytes:
         """ Retrieve the blob bytes for a given content SWHID using Software
         Heritage API """
 
-        if swhid.object_type != CONTENT:
+        if swhid.object_type != ObjectType.CONTENT:
             raise pyfuse3.FUSEError(errno.EINVAL)
 
         # Make sure the metadata cache is also populated with the given SWHID
@@ -126,10 +126,10 @@ class Fuse(pyfuse3.Operations):
             self.logger.error("Cannot fetch blob for object %s: %s", swhid, err)
             raise
 
-    async def get_history(self, swhid: SWHID) -> List[SWHID]:
+    async def get_history(self, swhid: CoreSWHID) -> List[CoreSWHID]:
         """ Retrieve a revision's history using Software Heritage Graph API """
 
-        if swhid.object_type != REVISION:
+        if swhid.object_type != ObjectType.REVISION:
             raise pyfuse3.FUSEError(errno.EINVAL)
 
         cache = await self.cache.history.get(swhid)
@@ -332,7 +332,7 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
 
-async def main(swhids: List[SWHID], root_path: Path, conf: Dict[str, Any]) -> None:
+async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -> None:
     """ swh-fuse CLI entry-point """
 
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase

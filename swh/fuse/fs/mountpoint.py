@@ -18,7 +18,8 @@ from swh.fuse.fs.entry import (
     FuseSymlinkEntry,
 )
 from swh.model.exceptions import ValidationError
-from swh.model.identifiers import CONTENT, SWHID, parse_swhid
+from swh.model.hashutil import hash_to_hex
+from swh.model.identifiers import CoreSWHID, ObjectType
 
 JSON_SUFFIX = ".json"
 
@@ -60,7 +61,7 @@ class ArchiveDir(FuseDirEntry):
         # On the fly mounting of a new artifact
         try:
             if name.endswith(JSON_SUFFIX):
-                swhid = parse_swhid(name[: -len(JSON_SUFFIX)])
+                swhid = CoreSWHID.from_string(name[: -len(JSON_SUFFIX)])
                 return self.create_child(
                     MetaEntry,
                     name=f"{swhid}{JSON_SUFFIX}",
@@ -68,14 +69,14 @@ class ArchiveDir(FuseDirEntry):
                     swhid=swhid,
                 )
             else:
-                swhid = parse_swhid(name)
+                swhid = CoreSWHID.from_string(name)
                 await self.fuse.get_metadata(swhid)
                 return self.create_child(
                     OBJTYPE_GETTERS[swhid.object_type],
                     name=str(swhid),
                     mode=int(
                         EntryMode.RDONLY_FILE
-                        if swhid.object_type == CONTENT
+                        if swhid.object_type == ObjectType.CONTENT
                         else EntryMode.RDONLY_DIR
                     ),
                     swhid=swhid,
@@ -89,7 +90,7 @@ class MetaEntry(FuseFileEntry):
     """ An entry for a `archive/<SWHID>.json` file, containing all the SWHID's
     metadata from the Software Heritage archive. """
 
-    swhid: SWHID
+    swhid: CoreSWHID
 
     async def get_content(self) -> bytes:
         # Make sure the metadata is in cache
@@ -162,7 +163,7 @@ class CacheDir(FuseDirEntry):
         async def compute_entries(self) -> AsyncIterator[FuseEntry]:
             root_path = self.get_relative_root_path()
             async for swhid in self.fuse.cache.get_cached_swhids():
-                if not swhid.object_id.startswith(self.prefix):
+                if not hash_to_hex(swhid.object_id).startswith(self.prefix):
                     continue
 
                 yield self.create_child(
@@ -180,7 +181,7 @@ class CacheDir(FuseDirEntry):
             try:
                 if name.endswith(JSON_SUFFIX):
                     name = name[: -len(JSON_SUFFIX)]
-                swhid = parse_swhid(name)
+                swhid = CoreSWHID.from_string(name)
                 await self.fuse.cache.metadata.remove(swhid)
                 await self.fuse.cache.blob.remove(swhid)
             except ValidationError:
@@ -189,7 +190,7 @@ class CacheDir(FuseDirEntry):
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         prefixes = set()
         async for swhid in self.fuse.cache.get_cached_swhids():
-            prefixes.add(swhid.object_id[:2])
+            prefixes.add(hash_to_hex(swhid.object_id)[:2])
 
         for prefix in prefixes:
             yield self.create_child(

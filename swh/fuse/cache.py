@@ -23,7 +23,7 @@ from swh.fuse.fs.artifact import RevisionHistoryShardByDate
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
 from swh.fuse.fs.mountpoint import CacheDir, OriginDir
 from swh.model.exceptions import ValidationError
-from swh.model.identifiers import REVISION, SWHID, parse_swhid
+from swh.model.identifiers import CoreSWHID, ObjectType
 from swh.web.client.client import ORIGIN_VISIT, typify_json
 
 
@@ -79,7 +79,7 @@ class FuseCache:
         await self.blob.__aexit__()
         await self.history.__aexit__()
 
-    async def get_cached_swhids(self) -> AsyncGenerator[SWHID, None]:
+    async def get_cached_swhids(self) -> AsyncGenerator[CoreSWHID, None]:
         """ Return a list of all previously cached SWHID """
 
         # Use the metadata db since it should always contain all accessed SWHIDs
@@ -88,7 +88,7 @@ class FuseCache:
         )
         swhids = await metadata_cursor.fetchall()
         for raw_swhid in swhids:
-            yield parse_swhid(raw_swhid[0])
+            yield CoreSWHID.from_string(raw_swhid[0])
 
     async def get_cached_visits(self) -> AsyncGenerator[str, None]:
         """ Return a list of all previously cached visit URL """
@@ -149,14 +149,18 @@ class MetadataCache(AbstractCache):
         );
     """
 
-    async def get(self, swhid: SWHID, typify: bool = True) -> Any:
+    async def get(self, swhid: CoreSWHID, typify: bool = True) -> Any:
         cursor = await self.conn.execute(
             "select metadata from metadata_cache where swhid=?", (str(swhid),)
         )
         cache = await cursor.fetchone()
         if cache:
             metadata = json.loads(cache[0])
-            return typify_json(metadata, swhid.object_type) if typify else metadata
+            return (
+                typify_json(metadata, swhid.object_type.name.lower())
+                if typify
+                else metadata
+            )
         else:
             return None
 
@@ -178,10 +182,10 @@ class MetadataCache(AbstractCache):
         else:
             return None
 
-    async def set(self, swhid: SWHID, metadata: Any) -> None:
+    async def set(self, swhid: CoreSWHID, metadata: Any) -> None:
         # Fill in the date column for revisions (used as cache for history/by-date/)
         swhid_date = ""
-        if swhid.object_type == REVISION:
+        if swhid.object_type == ObjectType.REVISION:
             date = dateutil.parser.parse(metadata["date"])
             swhid_date = RevisionHistoryShardByDate.DATE_FMT.format(
                 year=date.year, month=date.month, day=date.day
@@ -200,7 +204,7 @@ class MetadataCache(AbstractCache):
         )
         await self.conn.commit()
 
-    async def remove(self, swhid: SWHID) -> None:
+    async def remove(self, swhid: CoreSWHID) -> None:
         await self.conn.execute(
             "delete from metadata_cache where swhid=?", (str(swhid),),
         )
@@ -223,7 +227,7 @@ class BlobCache(AbstractCache):
         );
     """
 
-    async def get(self, swhid: SWHID) -> Optional[bytes]:
+    async def get(self, swhid: CoreSWHID) -> Optional[bytes]:
         cursor = await self.conn.execute(
             "select blob from blob_cache where swhid=?", (str(swhid),)
         )
@@ -234,13 +238,13 @@ class BlobCache(AbstractCache):
         else:
             return None
 
-    async def set(self, swhid: SWHID, blob: bytes) -> None:
+    async def set(self, swhid: CoreSWHID, blob: bytes) -> None:
         await self.conn.execute(
             "insert into blob_cache values (?, ?)", (str(swhid), blob)
         )
         await self.conn.commit()
 
-    async def remove(self, swhid: SWHID) -> None:
+    async def remove(self, swhid: CoreSWHID) -> None:
         await self.conn.execute(
             "delete from blob_cache where swhid=?", (str(swhid),),
         )
@@ -277,7 +281,7 @@ class HistoryCache(AbstractCache):
         select * from dfs limit -1 offset 1
     """
 
-    async def get(self, swhid: SWHID) -> Optional[List[SWHID]]:
+    async def get(self, swhid: CoreSWHID) -> Optional[List[CoreSWHID]]:
         cursor = await self.conn.execute(self.HISTORY_REC_QUERY, (str(swhid),),)
         cache = await cursor.fetchall()
         if not cache:
@@ -286,14 +290,14 @@ class HistoryCache(AbstractCache):
         for row in cache:
             parent = row[0]
             try:
-                history.append(parse_swhid(parent))
+                history.append(CoreSWHID.from_string(parent))
             except ValidationError:
                 logging.warning("Cannot parse object from history cache: %s", parent)
         return history
 
     async def get_with_date_prefix(
-        self, swhid: SWHID, date_prefix: str
-    ) -> List[Tuple[SWHID, str]]:
+        self, swhid: CoreSWHID, date_prefix: str
+    ) -> List[Tuple[CoreSWHID, str]]:
         cursor = await self.conn.execute(
             f"""
             select swhid, date from ( {self.HISTORY_REC_QUERY} ) as history
@@ -310,7 +314,7 @@ class HistoryCache(AbstractCache):
         for row in cache:
             parent, date = row[0], row[1]
             try:
-                history.append((parse_swhid(parent), date))
+                history.append((CoreSWHID.from_string(parent), date))
             except ValidationError:
                 logging.warning("Cannot parse object from history cache: %s", parent)
         return history
