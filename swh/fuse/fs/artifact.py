@@ -30,10 +30,6 @@ SWHID_REGEXP = r"swh:1:(cnt|dir|rel|rev|snp):[0-9a-f]{40}"
 class Content(FuseFileEntry):
     """ Software Heritage content artifact.
 
-    Attributes:
-        swhid: Software Heritage persistent identifier
-        prefetch: optional prefetched metadata used to set entry attributes
-
     Content leaves (AKA blobs) are represented on disks as regular files,
     containing the corresponding bytes, as archived.
 
@@ -44,6 +40,7 @@ class Content(FuseFileEntry):
 
     swhid: CoreSWHID
     prefetch: Any = None
+    """optional prefetched metadata used to set entry attributes"""
 
     async def get_content(self) -> bytes:
         data = await self.fuse.get_blob(self.swhid)
@@ -61,9 +58,6 @@ class Content(FuseFileEntry):
 @dataclass
 class Directory(FuseDirEntry):
     """ Software Heritage directory artifact.
-
-    Attributes:
-        swhid: Software Heritage persistent identifier
 
     Directory nodes are represented as directories on the file-system,
     containing one entry for each entry of the archived directory. Entry names
@@ -138,9 +132,6 @@ class Directory(FuseDirEntry):
 @dataclass
 class Revision(FuseDirEntry):
     """ Software Heritage revision artifact.
-
-    Attributes:
-        swhid: Software Heritage persistent identifier
 
     Revision (AKA commit) nodes are represented on the file-system as
     directories with the following entries:
@@ -432,9 +423,6 @@ class RevisionHistoryShardByPage(FuseDirEntry):
 class Release(FuseDirEntry):
     """ Software Heritage release artifact.
 
-    Attributes:
-        swhid: Software Heritage persistent identifier
-
     Release nodes are represented on the file-system as directories with the
     following entries:
 
@@ -503,9 +491,6 @@ class ReleaseType(FuseFileEntry):
 @dataclass
 class Snapshot(FuseDirEntry):
     """ Software Heritage snapshot artifact.
-
-    Attributes:
-        swhid: Software Heritage persistent identifier
 
     Snapshot nodes are represented on the file-system as recursive directories
     following the branch names structure. For example, a branch named

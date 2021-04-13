@@ -36,19 +36,17 @@ class EntryMode(IntEnum):
 @dataclass
 class FuseEntry:
     """ Main wrapper class to manipulate virtual FUSE entries
-
-    Attributes:
-        name: entry filename
-        mode: entry permission mode
-        fuse: internal reference to the main FUSE class
-        inode: unique integer identifying the entry
     """
 
     name: str
+    """entry filename"""
     mode: int
+    """entry permission mode"""
     depth: int
     fuse: Fuse
+    """internal reference to the main FUSE class"""
     inode: int = field(init=False)
+    """unique integer identifying the entry"""
     file_info_attrs: Dict[str, Any] = field(init=False, default_factory=dict)
 
     def __post_init__(self):
@@ -134,13 +132,11 @@ class FuseDirEntry(FuseEntry):
 @dataclass
 class FuseSymlinkEntry(FuseEntry):
     """ FUSE virtual symlink entry
-
-    Attributes:
-        target: path to symlink target
     """
 
     mode: int = field(init=False, default=int(EntryMode.RDONLY_LNK))
     target: Union[str, bytes, Path]
+    """path to symlink target"""
 
     async def size(self) -> int:
         return len(str(self.target))
