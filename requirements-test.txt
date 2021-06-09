@@ -1,3 +1,7 @@
 pytest
 requests  # workaround for https://forge.softwareheritage.org/T2634
 requests-mock
+
+types-python-dateutil
+types-pyyaml
+types-requests

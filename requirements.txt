@@ -1,4 +1,4 @@
-PyYAML
+pyyaml
 aiosqlite
 psutil
 pyfuse3
