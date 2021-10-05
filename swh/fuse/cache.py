@@ -23,7 +23,7 @@ from swh.fuse.fs.artifact import RevisionHistoryShardByDate
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry
 from swh.fuse.fs.mountpoint import CacheDir, OriginDir
 from swh.model.exceptions import ValidationError
-from swh.model.identifiers import CoreSWHID, ObjectType
+from swh.model.swhids import CoreSWHID, ObjectType
 from swh.web.client.client import ORIGIN_VISIT, typify_json
 
 

@@ -21,7 +21,7 @@ from swh.fuse import LOGGER_NAME
 from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
-from swh.model.identifiers import CoreSWHID, ObjectType
+from swh.model.swhids import CoreSWHID, ObjectType
 from swh.web.client.client import WebAPIClient
 
 

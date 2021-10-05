@@ -13,7 +13,7 @@ from swh.fuse.tests.common import (
 )
 from swh.fuse.tests.data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
 from swh.model.hashutil import hash_to_hex
-from swh.model.identifiers import CoreSWHID
+from swh.model.swhids import CoreSWHID
 
 
 def test_access_meta(fuse_mntdir):

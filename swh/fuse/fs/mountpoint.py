@@ -19,7 +19,7 @@ from swh.fuse.fs.entry import (
 )
 from swh.model.exceptions import ValidationError
 from swh.model.hashutil import hash_to_hex
-from swh.model.identifiers import CoreSWHID, ObjectType
+from swh.model.swhids import CoreSWHID, ObjectType
 
 JSON_SUFFIX = ".json"
 

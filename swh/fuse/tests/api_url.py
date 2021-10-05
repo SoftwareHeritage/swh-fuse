@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Union
 
 from swh.model.hashutil import hash_to_hex
-from swh.model.identifiers import CoreSWHID, ObjectType
+from swh.model.swhids import CoreSWHID, ObjectType
 
 GRAPH_API_REQUEST = Enum("GRAPH_API_REQUEST", "HISTORY")
 

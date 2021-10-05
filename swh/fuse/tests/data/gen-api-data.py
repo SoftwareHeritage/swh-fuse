@@ -24,7 +24,7 @@ from swh.fuse.tests.data.config import (
     REV_SMALL_HISTORY,
 )
 from swh.model.hashutil import hash_to_bytes
-from swh.model.identifiers import CoreSWHID, ObjectType
+from swh.model.swhids import CoreSWHID, ObjectType
 
 API_URL_real = "https://archive.softwareheritage.org/api/1"
 API_URL_test = "https://invalid-test-only.archive.softwareheritage.org/api/1"
