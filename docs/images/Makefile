@@ -3,7 +3,7 @@ PDFs = $(patsubst %.puml,%.pdf,$(PUMLs))
 PNGs = $(patsubst %.puml,%.png,$(PUMLs))
 SVGs = $(patsubst %.puml,%.svg,$(PUMLs))
 
-all: $(PNGs) $(PDFs) $(SVGs)
+all: $(PNGs) $(SVGs)
 
 %.pdf: %.puml
 	plantuml -Tpdf $<
@@ -13,7 +13,6 @@ all: $(PNGs) $(PDFs) $(SVGs)
 
 %.svg: %.puml
 	plantuml -Tsvg $<
-
 
 .PHONY: clean
 
