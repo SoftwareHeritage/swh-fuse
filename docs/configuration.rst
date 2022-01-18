@@ -41,8 +41,7 @@ If no configuration is given, default values are:
 - ``cache``: all cache files are stored in ``$XDG_CACHE_HOME/swh/fuse/`` (or
   ``~/.cache/swh/fuse`` if ``XDG_CACHE_HOME`` is not set). The direntry cache
   will use at most 10% of available RAM.
-- ``web-api``: URL is https://archive.softwareheritage.org/api/1/, with no
-  authentication token
+- ``web-api``: URL is :swh_web:`api/1/`, with no authentication token
 - ``json-indent``: 2 spaces.
 
 
