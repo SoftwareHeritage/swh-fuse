@@ -106,8 +106,10 @@ def fuse(ctx, config_file):
     "-f/-d",
     "--foreground/--daemon",
     default=False,
-    help="whether to run FUSE attached to the console (foreground) "
-    "or daemonized in the background (default: daemon)",
+    help=(
+        "whether to run FUSE attached to the console (foreground) "
+        "or daemonized in the background (default: daemon)"
+    ),
 )
 @click.pass_context
 def mount(ctx, swhids, path, foreground):
@@ -117,10 +119,10 @@ def mount(ctx, swhids, path, foreground):
     populate the virtual file system (VFS). Otherwise the VFS will be populated
     on-demand, when accessing its content.
 
-    \b
     Example:
 
-    \b
+    .. code-block:: bash
+
       $ mkdir swhfs
       $ swh fs mount swhfs/
       $ grep printf swhfs/archive/swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2
