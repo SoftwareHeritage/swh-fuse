@@ -28,7 +28,7 @@ SWHID_REGEXP = r"swh:1:(cnt|dir|rel|rev|snp):[0-9a-f]{40}"
 
 @dataclass
 class Content(FuseFileEntry):
-    """ Software Heritage content artifact.
+    """Software Heritage content artifact.
 
     Content leaves (AKA blobs) are represented on disks as regular files,
     containing the corresponding bytes, as archived.
@@ -36,7 +36,7 @@ class Content(FuseFileEntry):
     Note that permissions are associated to blobs only in the context of
     directories. Hence, when accessing blobs from the top-level `archive/`
     directory, the permissions of the `archive/SWHID` file will be arbitrary and
-    not meaningful (e.g., `0x644`). """
+    not meaningful (e.g., `0x644`)."""
 
     swhid: CoreSWHID
     prefetch: Any = None
@@ -57,7 +57,7 @@ class Content(FuseFileEntry):
 
 @dataclass
 class Directory(FuseDirEntry):
-    """ Software Heritage directory artifact.
+    """Software Heritage directory artifact.
 
     Directory nodes are represented as directories on the file-system,
     containing one entry for each entry of the archived directory. Entry names
@@ -66,7 +66,7 @@ class Directory(FuseDirEntry):
 
     Note that the FUSE mount is read-only, no matter what the permissions say.
     So it is possible that, in the context of a directory, a file is presented
-    as writable, whereas actually writing to it will fail with `EPERM`. """
+    as writable, whereas actually writing to it will fail with `EPERM`."""
 
     swhid: CoreSWHID
 
@@ -93,7 +93,9 @@ class Directory(FuseDirEntry):
                     pass  # Ignore error and create a (broken) symlink anyway
 
                 yield self.create_child(
-                    FuseSymlinkEntry, name=name, target=target,
+                    FuseSymlinkEntry,
+                    name=name,
+                    target=target,
                 )
             # 2. Regular file
             elif swhid.object_type == ObjectType.CONTENT:
@@ -109,7 +111,10 @@ class Directory(FuseDirEntry):
             # 3. Regular directory
             elif swhid.object_type == ObjectType.DIRECTORY:
                 yield self.create_child(
-                    Directory, name=name, mode=mode, swhid=swhid,
+                    Directory,
+                    name=name,
+                    mode=mode,
+                    swhid=swhid,
                 )
             # 4. Submodule
             elif swhid.object_type == ObjectType.REVISION:
@@ -131,7 +136,7 @@ class Directory(FuseDirEntry):
 
 @dataclass
 class Revision(FuseDirEntry):
-    """ Software Heritage revision artifact.
+    """Software Heritage revision artifact.
 
     Revision (AKA commit) nodes are represented on the file-system as
     directories with the following entries:
@@ -149,7 +154,7 @@ class Revision(FuseDirEntry):
       in reverse topological order. The history can be listed through
       `by-date/`, `by-hash/` or `by-page/` with each its own sharding policy.
     - `meta.json`: metadata for the current node, as a symlink pointing to the
-      relevant `archive/<SWHID>.json` file """
+      relevant `archive/<SWHID>.json` file"""
 
     swhid: CoreSWHID
 
@@ -179,7 +184,9 @@ class Revision(FuseDirEntry):
 
         if len(parents) >= 1:
             yield self.create_child(
-                FuseSymlinkEntry, name="parent", target="parents/1/",
+                FuseSymlinkEntry,
+                name="parent",
+                target="parents/1/",
             )
 
         yield self.create_child(
@@ -192,7 +199,7 @@ class Revision(FuseDirEntry):
 
 @dataclass
 class RevisionParents(FuseDirEntry):
-    """ Revision virtual `parents/` directory """
+    """Revision virtual `parents/` directory"""
 
     parents: List[CoreSWHID]
 
@@ -208,7 +215,7 @@ class RevisionParents(FuseDirEntry):
 
 @dataclass
 class RevisionHistory(FuseDirEntry):
-    """ Revision virtual `history/` directory """
+    """Revision virtual `history/` directory"""
 
     swhid: CoreSWHID
 
@@ -262,7 +269,7 @@ class RevisionHistory(FuseDirEntry):
 
 @dataclass
 class RevisionHistoryShardByDate(FuseDirEntry):
-    """ Revision virtual `history/by-date` sharded directory """
+    """Revision virtual `history/by-date` sharded directory"""
 
     history_swhid: CoreSWHID
     prefix: str = field(default="")
@@ -273,7 +280,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
 
     @dataclass
     class StatusFile(FuseFileEntry):
-        """ Temporary file used to indicate loading progress in by-date/ """
+        """Temporary file used to indicate loading progress in by-date/"""
 
         name: str = field(init=False, default=".status")
         mode: int = field(init=False, default=int(EntryMode.RDONLY_FILE))
@@ -345,7 +352,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
 
 @dataclass
 class RevisionHistoryShardByHash(FuseDirEntry):
-    """ Revision virtual `history/by-hash` sharded directory """
+    """Revision virtual `history/by-hash` sharded directory"""
 
     history_swhid: CoreSWHID
     prefix: str = field(default="")
@@ -383,7 +390,7 @@ class RevisionHistoryShardByHash(FuseDirEntry):
 
 @dataclass
 class RevisionHistoryShardByPage(FuseDirEntry):
-    """ Revision virtual `history/by-page` sharded directory """
+    """Revision virtual `history/by-page` sharded directory"""
 
     history_swhid: CoreSWHID
     prefix: Optional[int] = field(default=None)
@@ -421,7 +428,7 @@ class RevisionHistoryShardByPage(FuseDirEntry):
 
 @dataclass
 class Release(FuseDirEntry):
-    """ Software Heritage release artifact.
+    """Software Heritage release artifact.
 
     Release nodes are represented on the file-system as directories with the
     following entries:
@@ -432,7 +439,7 @@ class Release(FuseDirEntry):
       (transitively) resolves to a directory. When present it is a symlink
       pointing into `archive/` to the SWHID of the given directory
     - `meta.json`: metadata for the current node, as a symlink pointing to the
-      relevant `archive/<SWHID>.json` file """
+      relevant `archive/<SWHID>.json` file"""
 
     swhid: CoreSWHID
 
@@ -480,7 +487,7 @@ class Release(FuseDirEntry):
 
 @dataclass
 class ReleaseType(FuseFileEntry):
-    """ Release type virtual file """
+    """Release type virtual file"""
 
     target_type: ObjectType
 
@@ -490,13 +497,13 @@ class ReleaseType(FuseFileEntry):
 
 @dataclass
 class Snapshot(FuseDirEntry):
-    """ Software Heritage snapshot artifact.
+    """Software Heritage snapshot artifact.
 
     Snapshot nodes are represented on the file-system as recursive directories
     following the branch names structure. For example, a branch named
     ``refs/tags/v1.0`` will be represented as a ``refs`` directory containing a
     ``tags`` directory containing a ``v1.0`` symlink pointing to the branch
-    target SWHID. """
+    target SWHID."""
 
     swhid: CoreSWHID
     prefix: str = field(default="")
@@ -526,7 +533,9 @@ class Snapshot(FuseDirEntry):
                     target = f"{root_path}/archive/{target_raw}"
 
                 yield self.create_child(
-                    FuseSymlinkEntry, name=next_prefix, target=Path(target),
+                    FuseSymlinkEntry,
+                    name=next_prefix,
+                    target=Path(target),
                 )
             else:
                 subdirs.add(next_prefix)
@@ -543,7 +552,7 @@ class Snapshot(FuseDirEntry):
 
 @dataclass
 class Origin(FuseDirEntry):
-    """ Software Heritage origin artifact.
+    """Software Heritage origin artifact.
 
     Origin nodes are represented on the file-system as directories with one
     entry for each origin visit.
@@ -552,7 +561,7 @@ class Origin(FuseDirEntry):
     multiple visits occur the same day only the first one is kept). Each visit
     directory contains a `meta.json` with associated metadata for the origin
     node, and potentially a `snapshot` symlink pointing to the visit's snapshot
-    node. """
+    node."""
 
     DATE_FMT = "{year:04d}-{month:02d}-{day:02d}"
     ENTRIES_REGEXP = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
@@ -573,13 +582,16 @@ class Origin(FuseDirEntry):
             else:
                 seen_date.add(name)
                 yield self.create_child(
-                    OriginVisit, name=name, mode=int(EntryMode.RDONLY_DIR), meta=visit,
+                    OriginVisit,
+                    name=name,
+                    mode=int(EntryMode.RDONLY_DIR),
+                    meta=visit,
                 )
 
 
 @dataclass
 class OriginVisit(FuseDirEntry):
-    """ Origin visit virtual directory """
+    """Origin visit virtual directory"""
 
     meta: Dict[str, Any]
 

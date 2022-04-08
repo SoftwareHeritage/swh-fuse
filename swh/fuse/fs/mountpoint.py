@@ -26,7 +26,7 @@ JSON_SUFFIX = ".json"
 
 @dataclass
 class Root(FuseDirEntry):
-    """ The FUSE mountpoint, consisting of the archive/ and origin/ directories """
+    """The FUSE mountpoint, consisting of the archive/ and origin/ directories"""
 
     name: str = field(init=False, default="")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
@@ -41,12 +41,12 @@ class Root(FuseDirEntry):
 
 @dataclass
 class ArchiveDir(FuseDirEntry):
-    """ The `archive/` virtual directory allows to mount any artifact on the fly
+    """The `archive/` virtual directory allows to mount any artifact on the fly
     using its SWHID as name. The associated metadata of the artifact from the
     Software Heritage Web API can also be accessed through the `SWHID.json` file
     (in case of pagination, the JSON file will contain a complete version with
     all pages merged together). Note: the archive directory cannot be listed
-    with ls, but entries in it can be accessed (e.g., using cat or cd). """
+    with ls, but entries in it can be accessed (e.g., using cat or cd)."""
 
     name: str = field(init=False, default="archive")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
@@ -87,8 +87,8 @@ class ArchiveDir(FuseDirEntry):
 
 @dataclass
 class MetaEntry(FuseFileEntry):
-    """ An entry for a `archive/<SWHID>.json` file, containing all the SWHID's
-    metadata from the Software Heritage archive. """
+    """An entry for a `archive/<SWHID>.json` file, containing all the SWHID's
+    metadata from the Software Heritage archive."""
 
     swhid: CoreSWHID
 
@@ -106,9 +106,9 @@ class MetaEntry(FuseFileEntry):
 
 @dataclass
 class OriginDir(FuseDirEntry):
-    """ The origin/ directory is lazily populated with one entry per accessed
+    """The origin/ directory is lazily populated with one entry per accessed
     origin URL (mangled to create a valid UNIX filename). The URL encoding is
-    done using the percent-encoding mechanism described in RFC 3986. """
+    done using the percent-encoding mechanism described in RFC 3986."""
 
     name: str = field(init=False, default="origin")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_DIR))
@@ -117,7 +117,9 @@ class OriginDir(FuseDirEntry):
 
     def create_origin_child(self, url_encoded: str) -> FuseEntry:
         return super().create_child(
-            Origin, name=url_encoded, mode=int(EntryMode.RDONLY_DIR),
+            Origin,
+            name=url_encoded,
+            mode=int(EntryMode.RDONLY_DIR),
         )
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
@@ -140,7 +142,7 @@ class OriginDir(FuseDirEntry):
 
 @dataclass
 class CacheDir(FuseDirEntry):
-    """ The cache/ directory is an on-disk representation of locally cached
+    """The cache/ directory is an on-disk representation of locally cached
     objects and metadata. Via this directory you can browse cached data and
     selectively remove them from the cache, freeing disk space. (See `swh fs
     clean` in the {ref}`CLI <swh-fuse-cli>` to completely empty the cache). The
@@ -209,7 +211,7 @@ class CacheDir(FuseDirEntry):
 
 @dataclass
 class Readme(FuseFileEntry):
-    """ Top-level README to explain briefly what is SwhFS. """
+    """Top-level README to explain briefly what is SwhFS."""
 
     name: str = field(init=False, default="README")
     mode: int = field(init=False, default=int(EntryMode.RDONLY_FILE))

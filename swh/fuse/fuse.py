@@ -26,8 +26,8 @@ from swh.web.client.client import WebAPIClient
 
 
 class Fuse(pyfuse3.Operations):
-    """ Software Heritage Filesystem in Userspace (FUSE). Locally mount parts of
-    the archive and navigate it as a virtual file system. """
+    """Software Heritage Filesystem in Userspace (FUSE). Locally mount parts of
+    the archive and navigate it as a virtual file system."""
 
     def __init__(self, root_path: Path, cache: FuseCache, conf: Dict[str, Any]):
         super(Fuse, self).__init__()
@@ -54,7 +54,7 @@ class Fuse(pyfuse3.Operations):
         pass
 
     def _alloc_inode(self, entry: FuseEntry) -> int:
-        """ Return a unique inode integer for a given entry """
+        """Return a unique inode integer for a given entry"""
 
         inode = self._next_inode
         self._next_inode += 1
@@ -74,7 +74,7 @@ class Fuse(pyfuse3.Operations):
             pass
 
     def inode2entry(self, inode: int) -> FuseEntry:
-        """ Return the entry matching a given inode """
+        """Return the entry matching a given inode"""
 
         try:
             return self._inode2entry[inode]
@@ -82,7 +82,7 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def get_metadata(self, swhid: CoreSWHID) -> Any:
-        """ Retrieve metadata for a given SWHID using Software Heritage API """
+        """Retrieve metadata for a given SWHID using Software Heritage API"""
 
         cache = await self.cache.metadata.get(swhid)
         if cache:
@@ -101,8 +101,8 @@ class Fuse(pyfuse3.Operations):
             raise
 
     async def get_blob(self, swhid: CoreSWHID) -> bytes:
-        """ Retrieve the blob bytes for a given content SWHID using Software
-        Heritage API """
+        """Retrieve the blob bytes for a given content SWHID using Software
+        Heritage API"""
 
         if swhid.object_type != ObjectType.CONTENT:
             raise pyfuse3.FUSEError(errno.EINVAL)
@@ -127,7 +127,7 @@ class Fuse(pyfuse3.Operations):
             raise
 
     async def get_history(self, swhid: CoreSWHID) -> List[CoreSWHID]:
-        """ Retrieve a revision's history using Software Heritage Graph API """
+        """Retrieve a revision's history using Software Heritage Graph API"""
 
         if swhid.object_type != ObjectType.REVISION:
             raise pyfuse3.FUSEError(errno.EINVAL)
@@ -158,12 +158,14 @@ class Fuse(pyfuse3.Operations):
             return []
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
-        """ Retrieve origin visits given an encoded-URL using Software Heritage API """
+        """Retrieve origin visits given an encoded-URL using Software Heritage API"""
 
         cache = await self.cache.metadata.get_visits(url_encoded)
         if cache:
             self.logger.debug(
-                "Found %d visits for origin '%s' in cache", len(cache), url_encoded,
+                "Found %d visits for origin '%s' in cache",
+                len(cache),
+                url_encoded,
             )
             return cache
 
@@ -197,7 +199,7 @@ class Fuse(pyfuse3.Operations):
             raise
 
     async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
-        """ Return entry attributes """
+        """Return entry attributes"""
 
         attrs = pyfuse3.EntryAttributes()
         attrs.st_size = 0
@@ -214,20 +216,20 @@ class Fuse(pyfuse3.Operations):
     async def getattr(
         self, inode: int, _ctx: pyfuse3.RequestContext
     ) -> pyfuse3.EntryAttributes:
-        """ Get attributes for a given inode """
+        """Get attributes for a given inode"""
 
         entry = self.inode2entry(inode)
         return await self.get_attrs(entry)
 
     async def opendir(self, inode: int, _ctx: pyfuse3.RequestContext) -> int:
-        """ Open a directory referred by a given inode """
+        """Open a directory referred by a given inode"""
 
         # Re-use inode as directory handle
         self.logger.debug("opendir(inode=%d)", inode)
         return inode
 
     async def readdir(self, fh: int, offset: int, token: pyfuse3.ReaddirToken) -> None:
-        """ Read entries in an open directory """
+        """Read entries in an open directory"""
 
         # opendir() uses inode as directory handle
         inode = fh
@@ -254,7 +256,7 @@ class Fuse(pyfuse3.Operations):
     async def open(
         self, inode: int, _flags: int, _ctx: pyfuse3.RequestContext
     ) -> pyfuse3.FileInfo:
-        """ Open an inode and return a unique file handle """
+        """Open an inode and return a unique file handle"""
 
         # Re-use inode as file handle
         self.logger.debug("open(inode=%d)", inode)
@@ -262,7 +264,7 @@ class Fuse(pyfuse3.Operations):
         return pyfuse3.FileInfo(fh=inode, **entry.file_info_attrs)
 
     async def read(self, fh: int, offset: int, length: int) -> bytes:
-        """ Read `length` bytes from file handle `fh` at position `offset` """
+        """Read `length` bytes from file handle `fh` at position `offset`"""
 
         # open() uses inode as file handle
         inode = fh
@@ -283,7 +285,7 @@ class Fuse(pyfuse3.Operations):
     async def lookup(
         self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
     ) -> pyfuse3.EntryAttributes:
-        """ Look up a directory entry by name and get its attributes """
+        """Look up a directory entry by name and get its attributes"""
 
         name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
@@ -314,7 +316,7 @@ class Fuse(pyfuse3.Operations):
     async def unlink(
         self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
     ) -> None:
-        """ Remove a file """
+        """Remove a file"""
 
         name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
@@ -333,7 +335,7 @@ class Fuse(pyfuse3.Operations):
 
 
 async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -> None:
-    """ swh-fuse CLI entry-point """
+    """swh-fuse CLI entry-point"""
 
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
     pyfuse3_asyncio.enable()

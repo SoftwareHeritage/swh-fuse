@@ -46,10 +46,22 @@ ROOT_SNP_MASTER_BRANCH = "swh:1:rev:430a9fd4c797c50cea26157141b2408073b2ed91"
 FAKE_SNP_SPECIAL_CASES_SWHID = "swh:1:snp:0000000000000000000000000000000000000000"
 FAKE_SNP_SPECIAL_CASES = {
     # All possible target types
-    "mycnt": {"target_type": "content", "target": remove_swhid_prefix(REGULAR_FILE),},
-    "mydir": {"target_type": "directory", "target": remove_swhid_prefix(ROOT_DIR),},
-    "myrev": {"target_type": "revision", "target": remove_swhid_prefix(ROOT_REV),},
-    "myrel": {"target_type": "release", "target": remove_swhid_prefix(ROOT_REL),},
+    "mycnt": {
+        "target_type": "content",
+        "target": remove_swhid_prefix(REGULAR_FILE),
+    },
+    "mydir": {
+        "target_type": "directory",
+        "target": remove_swhid_prefix(ROOT_DIR),
+    },
+    "myrev": {
+        "target_type": "revision",
+        "target": remove_swhid_prefix(ROOT_REV),
+    },
+    "myrel": {
+        "target_type": "release",
+        "target": remove_swhid_prefix(ROOT_REL),
+    },
     "refs/heads/master": {
         "target_type": "revision",
         "target": remove_swhid_prefix(ROOT_SNP_MASTER_BRANCH),

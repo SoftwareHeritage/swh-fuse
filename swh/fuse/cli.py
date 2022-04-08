@@ -161,7 +161,10 @@ def mount(ctx, swhids, path, foreground):
                         },
                     },
                     "loggers": {
-                        LOGGER_NAME: {"level": log_level, "handlers": ["syslog"],},
+                        LOGGER_NAME: {
+                            "level": log_level,
+                            "handlers": ["syslog"],
+                        },
                     },
                 }
             )
@@ -202,9 +205,7 @@ def umount(ctx, path):
 @fuse.command()
 @click.pass_context
 def clean(ctx):
-    """Clean on-disk cache(s).
-
-    """
+    """Clean on-disk cache(s)."""
 
     def rm_cache(conf, cache_name):
         try:

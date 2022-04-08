@@ -17,7 +17,7 @@ if TYPE_CHECKING:  # avoid cyclic import
 
 
 class EntryMode(IntEnum):
-    """ Default entry mode and permissions for the FUSE.
+    """Default entry mode and permissions for the FUSE.
 
     The FUSE mount is always read-only, even if permissions contradict this
     statement (in a context of a directory, entries are listed with permissions
@@ -35,8 +35,7 @@ class EntryMode(IntEnum):
 
 @dataclass
 class FuseEntry:
-    """ Main wrapper class to manipulate virtual FUSE entries
-    """
+    """Main wrapper class to manipulate virtual FUSE entries"""
 
     name: str
     """entry filename"""
@@ -55,7 +54,7 @@ class FuseEntry:
         self.file_info_attrs["keep_cache"] = True
 
     async def size(self) -> int:
-        """ Return the size (in bytes) of an entry """
+        """Return the size (in bytes) of an entry"""
 
         raise NotImplementedError
 
@@ -71,10 +70,10 @@ class FuseEntry:
 
 @dataclass
 class FuseFileEntry(FuseEntry):
-    """ FUSE virtual file entry """
+    """FUSE virtual file entry"""
 
     async def get_content(self) -> bytes:
-        """ Return the content of a file entry """
+        """Return the content of a file entry"""
 
         raise NotImplementedError
 
@@ -84,7 +83,7 @@ class FuseFileEntry(FuseEntry):
 
 @dataclass
 class FuseDirEntry(FuseEntry):
-    """ FUSE virtual directory entry """
+    """FUSE virtual directory entry"""
 
     ENTRIES_REGEXP: Optional[Pattern] = field(init=False, default=None)
 
@@ -92,8 +91,8 @@ class FuseDirEntry(FuseEntry):
         return 0
 
     def validate_entry(self, name: str) -> bool:
-        """ Return true if the name matches the directory entries regular
-        expression, and false otherwise """
+        """Return true if the name matches the directory entries regular
+        expression, and false otherwise"""
 
         if self.ENTRIES_REGEXP:
             return bool(re.match(self.ENTRIES_REGEXP, name))
@@ -101,12 +100,12 @@ class FuseDirEntry(FuseEntry):
             return True
 
     async def compute_entries(self):
-        """ Return the child entries of a directory entry """
+        """Return the child entries of a directory entry"""
 
         raise NotImplementedError
 
     async def get_entries(self, offset: int = 0) -> AsyncIterator[FuseEntry]:
-        """ Return the child entries of a directory entry using direntry cache """
+        """Return the child entries of a directory entry using direntry cache"""
 
         cache = self.fuse.cache.direntry.get(self)
         if cache:
@@ -121,7 +120,7 @@ class FuseDirEntry(FuseEntry):
             yield entries[i]
 
     async def lookup(self, name: str) -> Optional[FuseEntry]:
-        """ Look up a FUSE entry by name """
+        """Look up a FUSE entry by name"""
 
         async for entry in self.get_entries():
             if entry.name == name:
@@ -131,8 +130,7 @@ class FuseDirEntry(FuseEntry):
 
 @dataclass
 class FuseSymlinkEntry(FuseEntry):
-    """ FUSE virtual symlink entry
-    """
+    """FUSE virtual symlink entry"""
 
     mode: int = field(init=False, default=int(EntryMode.RDONLY_LNK))
     target: Union[str, bytes, Path]
@@ -142,6 +140,6 @@ class FuseSymlinkEntry(FuseEntry):
         return len(str(self.target))
 
     def get_target(self) -> Union[str, bytes, Path]:
-        """ Return the path target of a symlink entry """
+        """Return the path target of a symlink entry"""
 
         return self.target

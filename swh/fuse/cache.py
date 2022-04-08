@@ -80,7 +80,7 @@ class FuseCache:
         await self.history.__aexit__()
 
     async def get_cached_swhids(self) -> AsyncGenerator[CoreSWHID, None]:
-        """ Return a list of all previously cached SWHID """
+        """Return a list of all previously cached SWHID"""
 
         # Use the metadata db since it should always contain all accessed SWHIDs
         metadata_cursor = await self.metadata.conn.execute(
@@ -91,7 +91,7 @@ class FuseCache:
             yield CoreSWHID.from_string(raw_swhid[0])
 
     async def get_cached_visits(self) -> AsyncGenerator[str, None]:
-        """ Return a list of all previously cached visit URL """
+        """Return a list of all previously cached visit URL"""
 
         cursor = await self.metadata.conn.execute("select url from visits_cache")
         urls = await cursor.fetchall()
@@ -100,7 +100,7 @@ class FuseCache:
 
 
 class AbstractCache(ABC):
-    """ Abstract cache implementation to share common behavior between cache types """
+    """Abstract cache implementation to share common behavior between cache types"""
 
     DB_SCHEMA: str = ""
     conf: Dict[str, Any]
@@ -129,11 +129,11 @@ class AbstractCache(ABC):
 
 
 class MetadataCache(AbstractCache):
-    """ The metadata cache map each artifact to the complete metadata of the
+    """The metadata cache map each artifact to the complete metadata of the
     referenced object. This is analogous to what is available in
     `archive/<SWHID>.json` file (and generally used as data source for returning
     the content of those files). Artifacts are identified using their SWHIDs, or
-    in the case of origin visits, using their URLs. """
+    in the case of origin visits, using their URLs."""
 
     DB_SCHEMA = """
         create table if not exists metadata_cache (
@@ -166,7 +166,8 @@ class MetadataCache(AbstractCache):
 
     async def get_visits(self, url_encoded: str) -> Optional[List[Dict[str, Any]]]:
         cursor = await self.conn.execute(
-            "select metadata, itime from visits_cache where url=?", (url_encoded,),
+            "select metadata, itime from visits_cache where url=?",
+            (url_encoded,),
         )
         cache = await cursor.fetchone()
         if cache:
@@ -206,19 +207,20 @@ class MetadataCache(AbstractCache):
 
     async def remove(self, swhid: CoreSWHID) -> None:
         await self.conn.execute(
-            "delete from metadata_cache where swhid=?", (str(swhid),),
+            "delete from metadata_cache where swhid=?",
+            (str(swhid),),
         )
         await self.conn.commit()
 
 
 class BlobCache(AbstractCache):
-    """ The blob cache map SWHIDs of type `cnt` to the bytes of their archived
+    """The blob cache map SWHIDs of type `cnt` to the bytes of their archived
     content.
 
     The blob cache entry for a given content object is populated, at the latest,
     the first time the object is `read()`-d. It might be populated earlier on
     due to prefetching, e.g., when a directory pointing to the given content is
-    listed for the first time. """
+    listed for the first time."""
 
     DB_SCHEMA = """
         create table if not exists blob_cache (
@@ -246,18 +248,19 @@ class BlobCache(AbstractCache):
 
     async def remove(self, swhid: CoreSWHID) -> None:
         await self.conn.execute(
-            "delete from blob_cache where swhid=?", (str(swhid),),
+            "delete from blob_cache where swhid=?",
+            (str(swhid),),
         )
         await self.conn.commit()
 
 
 class HistoryCache(AbstractCache):
-    """ The history cache map SWHIDs of type `rev` to a list of `rev` SWHIDs
+    """The history cache map SWHIDs of type `rev` to a list of `rev` SWHIDs
     corresponding to all its revision ancestors, sorted in reverse topological
     order. As the parents cache, the history cache is lazily populated and can
     be prefetched. To efficiently store the ancestor lists, the history cache
     represents ancestors as graph edges (a pair of two SWHID nodes), meaning the
-    history cache is shared amongst all revisions parents. """
+    history cache is shared amongst all revisions parents."""
 
     DB_SCHEMA = """
         create table if not exists history_graph (
@@ -282,7 +285,10 @@ class HistoryCache(AbstractCache):
     """
 
     async def get(self, swhid: CoreSWHID) -> Optional[List[CoreSWHID]]:
-        cursor = await self.conn.execute(self.HISTORY_REC_QUERY, (str(swhid),),)
+        cursor = await self.conn.execute(
+            self.HISTORY_REC_QUERY,
+            (str(swhid),),
+        )
         cache = await cursor.fetchall()
         if not cache:
             return None
@@ -330,7 +336,7 @@ class HistoryCache(AbstractCache):
 
 
 class DirEntryCache:
-    """ The direntry cache map inode representing directories to the entries
+    """The direntry cache map inode representing directories to the entries
     they contain. Each entry comes with its name as well as file attributes
     (i.e., all its needed to perform a detailed directory listing).
 
@@ -341,7 +347,7 @@ class DirEntryCache:
     content of the directory is listed. More aggressive prefetching might
     happen. For instance, when first opening a dir a recursive listing of it can
     be retrieved from the remote backend and used to recursively populate the
-    direntry cache for all (transitive) sub-directories. """
+    direntry cache for all (transitive) sub-directories."""
 
     @dataclass
     class LRU(OrderedDict):
@@ -385,7 +391,7 @@ class DirEntryCache:
         if unit == "%":
             max_ram = int(num * virtual_memory().available / 100)
         else:
-            units = {"B": 1, "KB": 10 ** 3, "MB": 10 ** 6, "GB": 10 ** 9}
+            units = {"B": 1, "KB": 10**3, "MB": 10**6, "GB": 10**9}
             max_ram = int(float(num) * units[unit])
 
         self.lru_cache = self.LRU(max_ram)

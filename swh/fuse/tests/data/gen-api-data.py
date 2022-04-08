@@ -124,7 +124,7 @@ swh:1:rev:1f3cff91f6762b0f47f41025b5e2c5ac942479ba swh:1:rev:bc286c7f2ceb5c3d2e0
 swh:1:rev:bc286c7f2ceb5c3d2e06ec72f78d28842f94ef65 swh:1:rev:f038f4d533f897a29f9422510d1b3f0caac97388
 swh:1:rev:f038f4d533f897a29f9422510d1b3f0caac97388 swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04
 swh:1:rev:d6b7c96c3eb29b9244ece0c046d3f372ff432d04 swh:1:rev:c01efc669f09508b55eced32d3c88702578a7c3e
-"""  # NoQA: E501
+"""  # NoQA: B950
             MOCK_ARCHIVE[url] = history
 
             hist_nodes = set(

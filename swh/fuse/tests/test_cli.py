@@ -30,7 +30,12 @@ def test_clean_command(tmp_path):
     assert fake_blob_db.exists()
 
     CliRunner().invoke(
-        cli.fuse, args=["--config-file", str(config_path), "clean",],
+        cli.fuse,
+        args=[
+            "--config-file",
+            str(config_path),
+            "clean",
+        ],
     )
 
     assert not fake_metadata_db.exists()
