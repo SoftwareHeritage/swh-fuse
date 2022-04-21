@@ -19,9 +19,6 @@ repos:
         name: Check source code spelling
         args: [-L nin, -L nIn, -L crate, -L grammer]
         stages: [commit]
-      - id: codespell
-        name: Check commit message spelling
-        stages: [commit-msg]
 
   - repo: local
     hooks:
