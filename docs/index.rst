@@ -11,4 +11,12 @@
    configuration
    Design notes <design>
    Tutorial <tutorial>
-   API reference </apidoc/swh.fuse>
+
+.. only:: package_doc
+
+   Indices and tables
+   ------------------
+
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
