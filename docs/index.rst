@@ -12,7 +12,7 @@
    Design notes <design>
    Tutorial <tutorial>
 
-.. only:: package_doc
+.. only:: standalone_package_doc
 
    Indices and tables
    ------------------
