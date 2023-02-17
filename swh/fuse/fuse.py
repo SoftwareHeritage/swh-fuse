@@ -35,9 +35,7 @@ class Fuse(pyfuse3.Operations):
         self._next_inode: int = pyfuse3.ROOT_INODE
         self._inode2entry: Dict[int, FuseEntry] = {}
 
-        # The fuse constructor keyword is propagated up to FuseEntry dataclass, but mypy
-        # 0.812 considers it an unexpected kwarg. Skip typing it.
-        self.root = Root(fuse=self)  # type: ignore
+        self.root = Root(fuse=self)
         self.conf = conf
         self.logger = logging.getLogger(LOGGER_NAME)
 
