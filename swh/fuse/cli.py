@@ -68,7 +68,7 @@ def fuse(ctx, config_file):
 
     if os.path.isfile(config_file):
         try:
-            conf = config.read_raw_config(config.config_basepath(config_file))
+            conf = config.read_raw_config(config_file)
             if not conf:
                 raise ValueError(f"Cannot parse configuration file: {config_file}")
 
