@@ -1,3 +1,47 @@
+[project]
+name = "swh.fuse"
+authors = [
+    {name="Software Heritage developers", email="swh-devel@inria.fr"},
+]
+
+description = "Software Heritage virtual file system"
+readme = {file = "README.rst", content-type = "text/x-rst"}
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+]
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+[tool.setuptools.packages.find]
+include = ["swh.*"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt", "requirements-swh.txt"]}
+
+[tool.setuptools.dynamic.optional-dependencies]
+testing = {file = ["requirements.txt", "requirements-swh.txt", "requirements-test.txt"]}
+
+[project.entry-points."swh.cli.subcommands"]
+"swh.fuse" = "swh.fuse.cli"
+
+[project.urls]
+"Homepage" = "https://gitlab.softwareheritage.org/swh/devel/swh-fuse"
+"Bug Reports" = "https://gitlab.softwareheritage.org/swh/devel/swh-fuse/-/issues"
+"Funding" = "https://www.softwareheritage.org/donate"
+"Documentation" = "https://docs.softwareheritage.org/devel/swh-fuse/"
+"Source" = "https://gitlab.softwareheritage.org/swh/devel/swh-fuse.git"
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+fallback_version = "0.0.1"
+
 [tool.black]
 target-version = ['py37']
 
