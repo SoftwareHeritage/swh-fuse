@@ -320,7 +320,7 @@ class RevisionHistoryShardByDate(FuseDirEntry):
         root_path = self.get_relative_root_path()
         sharded_dirs = set()
 
-        for (swhid, sharded_name) in history_cached:
+        for swhid, sharded_name in history_cached:
             if not sharded_name.startswith(self.prefix):
                 continue
 

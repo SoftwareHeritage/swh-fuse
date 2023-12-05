@@ -28,6 +28,8 @@ repos:
       - id: codespell
         name: Check source code spelling
         stages: [commit]
+        exclude:
+          swh/fuse/tests/data/api_data.py
       - id: codespell
         name: Check commit message spelling
         stages: [commit-msg]
@@ -41,4 +43,3 @@ repos:
         pass_filenames: false
         language: system
         types: [python]
-
