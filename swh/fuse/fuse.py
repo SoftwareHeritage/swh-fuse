@@ -222,7 +222,7 @@ class Fuse(pyfuse3.Operations):
     async def opendir(self, inode: int, _ctx: pyfuse3.RequestContext) -> int:
         """Open a directory referred by a given inode"""
 
-        # Re-use inode as directory handle
+        # Reuse inode as directory handle
         self.logger.debug("opendir(inode=%d)", inode)
         return inode
 
@@ -256,7 +256,7 @@ class Fuse(pyfuse3.Operations):
     ) -> pyfuse3.FileInfo:
         """Open an inode and return a unique file handle"""
 
-        # Re-use inode as file handle
+        # Reuse inode as file handle
         self.logger.debug("open(inode=%d)", inode)
         entry = self.inode2entry(inode)
         return pyfuse3.FileInfo(fh=inode, **entry.file_info_attrs)
