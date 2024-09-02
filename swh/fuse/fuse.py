@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021  The Software Heritage developers
+# Copyright (C) 2020-2024  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -32,8 +32,8 @@ class Fuse(pyfuse3.Operations):
     def __init__(self, root_path: Path, cache: FuseCache, conf: Dict[str, Any]):
         super(Fuse, self).__init__()
 
-        self._next_inode: int = pyfuse3.ROOT_INODE
-        self._inode2entry: Dict[int, FuseEntry] = {}
+        self._next_inode: pyfuse3.InodeT = pyfuse3.ROOT_INODE
+        self._inode2entry: Dict[pyfuse3.InodeT, FuseEntry] = {}
 
         self.root = Root(fuse=self)
         self.conf = conf
@@ -55,12 +55,12 @@ class Fuse(pyfuse3.Operations):
         """Return a unique inode integer for a given entry"""
 
         inode = self._next_inode
-        self._next_inode += 1
+        self._next_inode = pyfuse3.InodeT(inode + 1)
         self._inode2entry[inode] = entry
 
         return inode
 
-    def _remove_inode(self, inode: int) -> None:
+    def _remove_inode(self, inode: pyfuse3.InodeT) -> None:
         try:
             del self._inode2entry[inode]
         except KeyError:
@@ -71,7 +71,7 @@ class Fuse(pyfuse3.Operations):
         except FileNotFoundError:
             pass
 
-    def inode2entry(self, inode: int) -> FuseEntry:
+    def inode2entry(self, inode: pyfuse3.InodeT) -> FuseEntry:
         """Return the entry matching a given inode"""
 
         try:
@@ -206,31 +206,35 @@ class Fuse(pyfuse3.Operations):
         attrs.st_mtime_ns = self.time_ns
         attrs.st_gid = self.gid
         attrs.st_uid = self.uid
-        attrs.st_ino = entry.inode
-        attrs.st_mode = entry.mode
+        attrs.st_ino = pyfuse3.InodeT(entry.inode)
+        attrs.st_mode = pyfuse3.ModeT(entry.mode)
         attrs.st_size = await entry.size()
         return attrs
 
     async def getattr(
-        self, inode: int, _ctx: pyfuse3.RequestContext
+        self, inode: pyfuse3.InodeT, _ctx: pyfuse3.RequestContext
     ) -> pyfuse3.EntryAttributes:
         """Get attributes for a given inode"""
 
         entry = self.inode2entry(inode)
         return await self.get_attrs(entry)
 
-    async def opendir(self, inode: int, _ctx: pyfuse3.RequestContext) -> int:
+    async def opendir(
+        self, inode: pyfuse3.InodeT, _ctx: pyfuse3.RequestContext
+    ) -> pyfuse3.FileHandleT:
         """Open a directory referred by a given inode"""
 
         # Reuse inode as directory handle
         self.logger.debug("opendir(inode=%d)", inode)
-        return inode
+        return pyfuse3.FileHandleT(inode)
 
-    async def readdir(self, fh: int, offset: int, token: pyfuse3.ReaddirToken) -> None:
+    async def readdir(
+        self, fh: pyfuse3.FileHandleT, offset: int, token: pyfuse3.ReaddirToken
+    ) -> None:
         """Read entries in an open directory"""
 
         # opendir() uses inode as directory handle
-        inode = fh
+        inode = pyfuse3.InodeT(fh)
         direntry = self.inode2entry(inode)
         self.logger.debug(
             "readdir(dirname=%s, fh=%d, offset=%d)", direntry.name, fh, offset
@@ -240,7 +244,7 @@ class Fuse(pyfuse3.Operations):
         next_id = offset + 1
         try:
             async for entry in direntry.get_entries(offset):
-                name = os.fsencode(entry.name)
+                name = pyfuse3.FileNameT(os.fsencode(entry.name))
                 attrs = await self.get_attrs(entry)
                 if not pyfuse3.readdir_reply(token, name, attrs, next_id):
                     break
@@ -252,20 +256,20 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def open(
-        self, inode: int, _flags: int, _ctx: pyfuse3.RequestContext
+        self, inode: pyfuse3.InodeT, _flags: int, _ctx: pyfuse3.RequestContext
     ) -> pyfuse3.FileInfo:
         """Open an inode and return a unique file handle"""
 
         # Reuse inode as file handle
         self.logger.debug("open(inode=%d)", inode)
         entry = self.inode2entry(inode)
-        return pyfuse3.FileInfo(fh=inode, **entry.file_info_attrs)
+        return pyfuse3.FileInfo(fh=pyfuse3.FileHandleT(inode), **entry.file_info_attrs)
 
-    async def read(self, fh: int, offset: int, length: int) -> bytes:
+    async def read(self, fh: pyfuse3.FileHandleT, offset: int, length: int) -> bytes:
         """Read `length` bytes from file handle `fh` at position `offset`"""
 
         # open() uses inode as file handle
-        inode = fh
+        inode = pyfuse3.InodeT(fh)
 
         entry = self.inode2entry(inode)
         self.logger.debug(
@@ -281,23 +285,26 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
     async def lookup(
-        self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
+        self,
+        parent_inode: pyfuse3.InodeT,
+        name: pyfuse3.FileNameT,
+        _ctx: pyfuse3.RequestContext,
     ) -> pyfuse3.EntryAttributes:
         """Look up a directory entry by name and get its attributes"""
 
-        name = os.fsdecode(name)
+        decoded_name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
         self.logger.debug(
             "lookup(parent_name=%s, parent_inode=%d, name=%s)",
             parent_entry.name,
             parent_inode,
-            name,
+            decoded_name,
         )
         assert isinstance(parent_entry, FuseDirEntry)
 
         try:
-            if parent_entry.validate_entry(name):
-                lookup_entry = await parent_entry.lookup(name)
+            if parent_entry.validate_entry(decoded_name):
+                lookup_entry = await parent_entry.lookup(decoded_name)
                 if lookup_entry:
                     return await self.get_attrs(lookup_entry)
         except Exception as err:
@@ -305,28 +312,33 @@ class Fuse(pyfuse3.Operations):
 
         raise pyfuse3.FUSEError(errno.ENOENT)
 
-    async def readlink(self, inode: int, _ctx: pyfuse3.RequestContext) -> bytes:
+    async def readlink(
+        self, inode: pyfuse3.InodeT, _ctx: pyfuse3.RequestContext
+    ) -> pyfuse3.FileNameT:
         entry = self.inode2entry(inode)
         self.logger.debug("readlink(name=%s, inode=%d)", entry.name, inode)
         assert isinstance(entry, FuseSymlinkEntry)
-        return os.fsencode(entry.get_target())
+        return pyfuse3.FileNameT(os.fsencode(entry.get_target()))
 
     async def unlink(
-        self, parent_inode: int, name: str, _ctx: pyfuse3.RequestContext
+        self,
+        parent_inode: pyfuse3.InodeT,
+        name: pyfuse3.FileNameT,
+        _ctx: pyfuse3.RequestContext,
     ) -> None:
         """Remove a file"""
 
-        name = os.fsdecode(name)
+        decoded_name = os.fsdecode(name)
         parent_entry = self.inode2entry(parent_inode)
         self.logger.debug(
             "unlink(parent_name=%s, parent_inode=%d, name=%s)",
             parent_entry.name,
             parent_inode,
-            name,
+            decoded_name,
         )
 
         try:
-            await parent_entry.unlink(name)
+            await parent_entry.unlink(decoded_name)
         except Exception as err:
             self.logger.exception("Cannot unlink: %s", err)
             raise pyfuse3.FUSEError(errno.ENOENT)
@@ -352,7 +364,7 @@ async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -
         fuse_options.add("fsname=swhfs")
 
         try:
-            pyfuse3.init(fs, root_path, fuse_options)
+            pyfuse3.init(fs, str(root_path), fuse_options)
             await pyfuse3.main()
         except Exception as err:
             fs.logger.error("Error running FUSE: %s", err)

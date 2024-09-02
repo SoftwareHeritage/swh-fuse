@@ -1,6 +1,6 @@
 pyyaml
 aiosqlite
 psutil
-pyfuse3
+pyfuse3 >= 3.4.0
 python-daemon
 requests
