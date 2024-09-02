@@ -14,7 +14,7 @@ from typing import Any, Dict, List
 import urllib.parse
 
 import pyfuse3
-import pyfuse3_asyncio
+import pyfuse3.asyncio
 import requests
 
 from swh.fuse import LOGGER_NAME
@@ -348,7 +348,7 @@ async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -
     """swh-fuse CLI entry-point"""
 
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
-    pyfuse3_asyncio.enable()
+    pyfuse3.asyncio.enable()
 
     async with FuseCache(conf["cache"]) as cache:
         fs = Fuse(root_path, cache, conf)
