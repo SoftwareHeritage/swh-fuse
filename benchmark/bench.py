@@ -15,7 +15,7 @@ import yaml
 
 
 
-def python_sloc(directory: Path) -> int:
+def python_sloc(directory: Path, output:str) -> int:
     pysloc = 0
     for f in directory.glob("**/*.py"):
         with open(f) as fp:
@@ -24,15 +24,15 @@ def python_sloc(directory: Path) -> int:
     return pysloc
 
 
-def python_files(directory: Path) -> int:
+def python_files(directory: Path, output: str) -> int:
     nbfiles = 0
     for f in directory.glob("**/*.py"):
         nbfiles += 1
     return nbfiles
 
 
-def scancode(directory: Path) -> int:
-    run(["scancode", "-clpieu", "--json-pp", "-", directory.absolute()])
+def scancode(directory: Path, output: str) -> int:
+    run(["scancode", "-clpieu", "--json-pp", output, directory.absolute()])
     return 0
 
 class Runner:
@@ -90,13 +90,14 @@ class Runner:
         We start by downloading from the vault, to let `swh fs mount` finish its mount in
         the background... also because the vault returns an error almost half of the time.
         """
+        outputbasename = swhid.replace(":", "_")
         start_dt = datetime.now().isoformat(timespec="seconds")
 
         start_dl = perf_counter()
         tmpdir, untarred = self.download_vault(swhid)
         try:
             start_count = perf_counter()
-            res_vault = case_function(untarred)
+            res_vault = case_function(untarred, f"{outputbasename}_vault.json")
             end = perf_counter()
             time_vault_total = end - start_dl
             time_baseline = end - start_count
@@ -106,12 +107,12 @@ class Runner:
         fuse_folder = Path(f"/home/martin/mountpoint/archive/{swhid}")
 
         start = perf_counter()
-        res_fuse_cold = case_function(fuse_folder)
+        res_fuse_cold = case_function(fuse_folder, f"{outputbasename}_fusecold.json")
         end = perf_counter()
         time_fuse_cold = end - start
 
         start = perf_counter()
-        res_fuse_hot = case_function(fuse_folder)
+        res_fuse_hot = case_function(fuse_folder, f"{outputbasename}_fusehot.json")
         end = perf_counter()
         time_fuse_hot = end - start
 
