@@ -55,7 +55,7 @@ class Runner:
             response.raise_for_status()
         except:
             logging.warning("POST /vault failed: %s", response.text)
-            raise
+            sleep(3)
 
         while True:
             response = requests.get(vault_url, headers=headers)
