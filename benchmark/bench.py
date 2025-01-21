@@ -50,10 +50,12 @@ class Runner:
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
 
-        tmpdir = TemporaryDirectory()
-        dirpath = tmpdir.name
         response = requests.post(vault_url, headers=headers)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except:
+            logging.warning("POST /vault failed: %s", response.text)
+            raise
 
         while True:
             response = requests.get(vault_url, headers=headers)
@@ -65,6 +67,9 @@ class Runner:
                 sleep(2)
 
         response = requests.get(obj["fetch_url"], headers=headers)
+
+        tmpdir = TemporaryDirectory()
+        dirpath = tmpdir.name
         tarball = f"{dirpath}/{obj['id']}.tag.gz"
         with open(tarball, "wb") as f:
             f.write(response.content)
@@ -79,7 +84,7 @@ class Runner:
         Benchmarks swh-fuse against tarball download for given case and given
         swhid (expected to be a revision ID).
         We start by downloading from the vault, to let `swh fs mount` finish its mount in
-        the background.
+        the background... also because the vault returns an error almost half of the time.
         """
         start_dt = datetime.now().isoformat(timespec="seconds")
 
