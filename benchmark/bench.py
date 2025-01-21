@@ -31,6 +31,10 @@ def python_files(directory: Path) -> int:
     return nbfiles
 
 
+def scancode(directory: Path) -> int:
+    run(["scancode", "-clpieu", "--json-pp", "-", directory.absolute()])
+    return 0
+
 class Runner:
 
     def __init__(self):
@@ -131,6 +135,8 @@ def main(case:str, swhids: tuple[str, ...]):
             case_function = python_sloc
         case "pythonfiles":
             case_function = python_files
+        case "scancode":
+            case_function = scancode
 
     runner = Runner()
     for swhid in argv[2:]:

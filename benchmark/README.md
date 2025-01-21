@@ -4,10 +4,10 @@
 
  * Python SLOCs: glob `**/*.py`, open each file (in Python), count lines. Batches of 10 SWHIDs.
  * Python files: glob `**/*.py`, count files. Batches of 100 SWHIDs because FUSE should not be too slow, for once.
+ * Scancode: `scancode -clpieu --json-pp - .` ie. a pretty complete report.
 
 ## Measures
 
-Before each batch of SWHIDs, we `swh fs clean` so `swh-fuse`'s cache stays small.
 For each SWHID we measure 4 runtimes:
 
 * **cold FUSE** launch the case on `mountpoint/archive/swh:1:dir:...` - during this first run, `swh-fuse` has to make many API calls
