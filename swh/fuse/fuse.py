@@ -90,6 +90,7 @@ class Fuse(pyfuse3.Operations):
             typify = False  # Get the raw JSON from the API
             # TODO: async web API
             loop = asyncio.get_event_loop()
+            self.logger.debug("Fetching metadata for %s", swhid)
             metadata = await loop.run_in_executor(None, self.web_api.get, swhid, typify)
             await self.cache.metadata.set(swhid, metadata)
             # Retrieve it from cache so it is correctly typed

@@ -3,6 +3,7 @@
 ## Cases
 
  * Python SLOCs: glob `**/*.py`, open each file (in Python), count lines. Batches of 10 SWHIDs.
+ * Python files: glob `**/*.py`, count files. Batches of 100 SWHIDs because FUSE should not be too slow, for once.
 
 ## Measures
 
@@ -15,12 +16,12 @@ For each SWHID we measure 4 runtimes:
 * **baseline** is vault without the download/untar time, ie. measures how much time takes the case to run in a purely local setting.
 
 
-## Method
-
-TODO confirm the difference between hot/cold fuse.
+## Method and potential biases
 
 We pick SWHIDs randomly from the 12315 releases in
 [2021-03-23-popular-3k-python/compressed/graph.nodes.csv](cf. https://docs.softwareheritage.org/devel/swh-graph/quickstart.html#retrieving-a-compressed-graph).
+Randomness should ensure that the server side does not benefit from any cache...
+but as there is only ~1200 origins, we can likely encounter some contents again during those tests.
 The vault only works on directories,
 so revision IDs are converted -
 see `origins_to_directories.py` for the preparation step.

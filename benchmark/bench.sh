@@ -1,19 +1,23 @@
 #!/bin/bash
 
-BASENAME="pythonsloc-test"
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 CASE ATTEMPTS"
+    echo "pick CASE in pythonSLOC, pythonFiles"
+    exit 1
+fi
 
-SWHID_NUM=10
-CSV="$BASENAME.csv"
-LOG="$BASENAME.log"
+CASE=$1
+SWHID_NUM=$2
+BASENAME="$CASE-${SWHID_NUM}times"
 
 source ~/.pyenv/versions/swh/bin/activate
 swh fs clean
-swh --log-config ~/.config/swh/global.yml fs mount -f /home/martin/mountpoint/ 2>&1 | tee $LOG &
+swh --log-config ~/.config/swh/global.yml fs mount -f /home/martin/mountpoint/ 2>&1 | tee "${BASENAME}_fuse.log" &
 
 sleep 1
 
-for $swhid in `shuf -n $SWHID_NUM popular-python-releases-targetdirectories.csv`; do
-    ./python_sloc.py $swhid >> $CSV
+for swhid in `shuf -n $SWHID_NUM popular-python-releases-targetdirectories.csv`; do
+    ./bench.py $CASE $swhid >> "$BASENAME.csv" 2>> "${BASENAME}_test.log"
 done
 
 kill %1
