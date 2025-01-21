@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from typing import Tuple
+from datetime import datetime
 from pathlib import Path
 from time import perf_counter, sleep
 from sys import argv
@@ -16,55 +18,67 @@ def count_sloc_fs(directory:Path) -> int:
 
     return pysloc
 
-def count_sloc_tarball(swhid:str) -> int:
-    pysloc = 0
-    cooker_url = f"https://archive.softwareheritage.org/api/1/vault/flat/{swhid}"
+def download_vault(swhid:str) -> Tuple[TemporaryDirectory, Path]:
+    vault_url = f"https://archive.softwareheritage.org/api/1/vault/flat/{swhid}"
     # TODO add bearer token
 
-    with TemporaryDirectory() as tmpdir:
-        response = requests.post(cooker_url)
-        print(f"POST /flat got {response.status_code}")
+    tmpdir = TemporaryDirectory()
+    dirpath = tmpdir.name
+    response = requests.post(vault_url)
+    response.raise_for_status()
+
+    while True:
+        response = requests.get(vault_url)
         response.raise_for_status()
+        obj = response.json()
+        if obj["status"] == "done":
+            break
+        else:
+            sleep(2)
 
-        while True:
-            response = requests.get(cooker_url)
-            response.raise_for_status()
-            obj = response.json()
-            if obj['status'] == 'done':
-                print(obj)
-                break
-            else:
-                print(f"{obj['id']} is {obj['status']} {obj['progress_message']}")
-                sleep(5)
-
-        response = requests.get(obj['fetch_url'])
-        tarball = f"{tmpdir}/{obj['id']}.tag.gz"
-        with open(tarball, 'wb') as f:
-            f.write(response.content)
-        run(["tar", "-xzf", tarball, "-C", tmpdir])
-        Path(tarball).unlink()
-        untarred = Path(tmpdir) / obj["swhid"]
-        pysloc = count_sloc_fs(untarred)
-
-    return pysloc
-
-
+    response = requests.get(obj["fetch_url"])
+    tarball = f"{dirpath}/{obj['id']}.tag.gz"
+    with open(tarball, "wb") as f:
+        f.write(response.content)
+    run(["tar", "-xzf", tarball, "-C", dirpath])
+    Path(tarball).unlink()
+    untarred = Path(dirpath) / obj["swhid"]
+    return (tmpdir, untarred)
 
 def python_sloc(swhid):
     """
-    Benchmarks swh-fuse against tarball download when estimating Python SLOCs in given swhid (expected to be a revision ID).
+    Benchmarks swh-fuse against tarball download when estimating Python SLOCs in given
+    swhid (expected to be a revision ID).
+    We start by downloading from the vault, to let `swh fs mount` finish its mount in
+    the background.
     """
-    directory = Path(f"/home/martin/mountpoint/archive/{swhid}")
-    start = perf_counter()
-    sloc = count_sloc_fs(directory)
+    start_dt = datetime.now().isoformat(timespec='seconds')
+
+    start_dl = perf_counter()
+    tmpdir, untarred = download_vault(swhid)
+    start_count = perf_counter()
+    res_vault = count_sloc_fs(untarred)
     end = perf_counter()
-    print(f"Old fuse took {end-start} seconds to count {sloc} lines")
+    time_vault_total = end - start_dl
+    time_baseline = end - start_count
+    tmpdir.cleanup()
+
+    fuse_folder = Path(f"/home/martin/mountpoint/archive/{swhid}")
 
     start = perf_counter()
-    sloc = count_sloc_tarball(swhid)
+    res_fuse_cold = count_sloc_fs(fuse_folder)
     end = perf_counter()
-    print(f"Tarball took {end-start} seconds to count {sloc} lines")
+    time_fuse_cold = end-start
 
+    start = perf_counter()
+    res_fuse_hot = count_sloc_fs(fuse_folder)
+    end = perf_counter()
+    time_fuse_hot = end - start
+
+    print(f"{start_dt},{swhid},"\
+          f"{time_fuse_cold},{time_fuse_hot},{time_vault_total},{time_baseline},"\
+          f"{res_fuse_cold},{res_fuse_hot},{res_vault}")
 
 if __name__ == '__main__':
-    python_sloc(argv[1])
+    for swhid in argv[1:]:
+        python_sloc(swhid)
