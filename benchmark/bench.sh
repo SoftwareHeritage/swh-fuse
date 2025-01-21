@@ -12,7 +12,7 @@ BASENAME="$CASE-${SWHID_NUM}times"
 
 source ~/.pyenv/versions/swh/bin/activate
 swh fs clean
-swh --log-config ~/.config/swh/global.yml fs mount -f /home/martin/mountpoint/ 2>&1 | tee "${BASENAME}_fuse.log" &
+swh --log-config ~/.config/swh/global.yml fs mount -f /home/martin/mountpoint/ 2>&1 | tee -a "${BASENAME}_fuse.log" &
 
 sleep 1
 
