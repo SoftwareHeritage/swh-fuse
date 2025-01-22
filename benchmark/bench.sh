@@ -2,7 +2,7 @@
 
 if [ $# -ne 2 ]; then
     echo "Usage: $0 CASE ATTEMPTS"
-    echo "pick CASE in pythonSLOC, pythonFiles"
+    echo "pick CASE in pythonSLOC, pythonFiles, scancode"
     exit 1
 fi
 
