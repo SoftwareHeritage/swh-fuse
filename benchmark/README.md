@@ -19,11 +19,11 @@ For each SWHID we measure 4 runtimes:
 
 ## Results summary
 
-Cold FUSE is so slow (up to 7h on a single release folder) that it limits the number of cases we could run: 4 for ScanCode, 2 SLOC counts, 16 files counting... and its cache is not remembering so much by default.
+"Cold FUSE" is so slow (up to 7h on a single release folder) that it limits the number of cases we could run: 4 for ScanCode, 2 SLOC counts, 16 files counting... and its cache is not remembering everything by default.
+"Hot FUSE" is much faster, and its logs confirm it almost does not make any API query. In other words, the bottleneck of cold FUSE is API calls, as expected.
 
-**hot FUSE** is much faster, and its logs confirm it almost does not make any API query. In other words, the bottleneck of cold FUSE is API calls, as expected.
-
-For a complex task like ScanCode, vault does not add much overhead, below 4%. Hot FUSE is on par with local FS.
+For a complex task like ScanCode, vault does not add much overhead, below 4%.
+Hot FUSE is on par with local FS, and does not uses much CPU while ScanCode runs (less than 3s of CPU time while ScanCode took 80s).
 
 Complete results are in `results.ods` in this folder.
 
