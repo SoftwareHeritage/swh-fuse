@@ -1,20 +1,31 @@
 # Quick'n'dirty fwh-FUSE benchmark
 
-## Cases
+## Test cases
 
- * Python SLOCs: glob `**/*.py`, open each file (in Python), count lines. Batches of 10 SWHIDs.
- * Python files: glob `**/*.py`, count files. Batches of 100 SWHIDs because FUSE should not be too slow, for once.
- * Scancode: `scancode -clpieu --json-pp - .` ie. a pretty complete report.
+ * Counting Python SLOCs: glob `**/*.py`, open each file (in Python), count lines.
+ * Counting Python files: glob `**/*.py`, count resulting files. This one does not access files' content, so it should be the fastest.
+ * Scancode: `scancode -clpieu --json-pp [swhid.json] [swhid]` ie. a pretty complete report.
+
 
 ## Measures
 
 For each SWHID we measure 4 runtimes:
 
-* **cold FUSE** launch the case on `mountpoint/archive/swh:1:dir:...` - during this first run, `swh-fuse` has to make many API calls
-* **hot FUSE** launch the same thing again: this time `swh-fuse` should have everything in its cache, so this measures FUSE's overhead
 * **vault** downloads the directory from the archive, untar locally, runs the test.
 * **baseline** is vault without the download/untar time, ie. measures how much time takes the case to run in a purely local setting.
+* **cold FUSE** launch the case on `mountpoint/archive/swh:1:dir:...` - during this first run, `swh-fuse` has to make *many* calls to the SWH Web API (one per traversed inode).
+* **hot FUSE** launch the same case again: this time `swh-fuse` should have everything in its cache, so this measures FUSE's overhead
 
+
+## Results summary
+
+Cold FUSE is so slow (up to 7h on a single release folder) that it limits the number of cases we could run: 4 for ScanCode, 2 SLOC counts, 16 files counting... and its cache is not remembering so much by default.
+
+**hot FUSE** is much faster, and its logs confirm it almost does not make any API query. In other words, the bottleneck of cold FUSE is API calls, as expected.
+
+For a complex task like ScanCode, vault does not add much overhead, below 4%. Hot FUSE is on par with local FS.
+
+Complete results are in `results.ods` in this folder.
 
 ## Method and potential biases
 
