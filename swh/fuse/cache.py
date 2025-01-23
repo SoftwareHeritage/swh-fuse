@@ -155,7 +155,10 @@ class MetadataCache(AbstractCache):
         )
         cache = await cursor.fetchone()
         if cache:
-            metadata = json.loads(cache[0])
+            try:
+                metadata = json.loads(cache[0]) # FIXME we won't ever put it as JSON , right ?
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return cache[0]
             return (
                 typify_json(metadata, swhid.object_type.name.lower())
                 if typify
@@ -192,9 +195,14 @@ class MetadataCache(AbstractCache):
                 year=date.year, month=date.month, day=date.day
             )
 
+        if isinstance(metadata, bytes): # comes from gRPC
+            serialized = metadata
+        else:
+            serialized = json.dumps(metadata) # FIXME same as above
+
         await self.conn.execute(
             "insert into metadata_cache values (?, ?, ?)",
-            (str(swhid), json.dumps(metadata), swhid_date),
+            (str(swhid), serialized, swhid_date),
         )
         await self.conn.commit()
 
