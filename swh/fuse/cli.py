@@ -139,11 +139,8 @@ def mount(ctx, swhids, path, foreground):
 
     from swh.fuse import LOGGER_NAME, fuse
 
-    # TODO: set default logging settings when --log-config is not passed
-    # DEFAULT_LOG_PATH = Path(".local/swh/fuse/mount.log")
     with ExitStack() as stack:
         if not foreground:
-            # TODO: temporary fix until swh.core has the proper logging utilities
             # Disable logging config before daemonizing, and reset it once
             # daemonized to be sure to not close file handlers
             log_level = logging.getLogger(LOGGER_NAME).getEffectiveLevel()
