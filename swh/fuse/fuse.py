@@ -3,33 +3,40 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import asyncio
 import errno
-import functools
 import logging
 import os
 from pathlib import Path
 import time
 from typing import Any, Dict, List
-import urllib.parse
 
 import pyfuse3
 import pyfuse3.asyncio
-import requests
 
 from swh.fuse import LOGGER_NAME
+from swh.fuse.backends import FuseBackend
 from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
 from swh.model.swhids import CoreSWHID, ObjectType
-from swh.web.client.client import WebAPIClient
 
 
 class Fuse(pyfuse3.Operations):
-    """Software Heritage Filesystem in Userspace (FUSE). Locally mount parts of
-    the archive and navigate it as a virtual file system."""
+    """
+    Software Heritage Filesystem in Userspace (FUSE).
 
-    def __init__(self, root_path: Path, cache: FuseCache, conf: Dict[str, Any]):
+    Locally mount parts of the archive and navigate it as a virtual file system.
+
+    This class ties together `pyfuse3` and the configured cache and back-end.
+    """
+
+    def __init__(
+        self,
+        root_path: Path,
+        cache: FuseCache,
+        conf: Dict[str, Any],
+        backend: FuseBackend,
+    ):
         super(Fuse, self).__init__()
 
         self._next_inode: pyfuse3.InodeT = pyfuse3.ROOT_INODE
@@ -43,9 +50,7 @@ class Fuse(pyfuse3.Operations):
         self.gid = os.getgid()
         self.uid = os.getuid()
 
-        self.web_api = WebAPIClient(
-            conf["web-api"]["url"], conf["web-api"]["auth-token"]
-        )
+        self.backend = backend
         self.cache = cache
 
     def shutdown(self) -> None:
@@ -86,17 +91,10 @@ class Fuse(pyfuse3.Operations):
         if cache:
             return cache
 
-        try:
-            typify = False  # Get the raw JSON from the API
-            # TODO: async web API
-            loop = asyncio.get_event_loop()
-            metadata = await loop.run_in_executor(None, self.web_api.get, swhid, typify)
-            await self.cache.metadata.set(swhid, metadata)
-            # Retrieve it from cache so it is correctly typed
-            return await self.cache.metadata.get(swhid)
-        except requests.HTTPError as err:
-            self.logger.error("Cannot fetch metadata for object %s: %s", swhid, err)
-            raise
+        metadata = await self.backend.get_metadata(swhid)
+        await self.cache.metadata.set(swhid, metadata)
+        # Retrieve it from cache so it is correctly typed
+        return await self.cache.metadata.get(swhid)
 
     async def get_blob(self, swhid: CoreSWHID) -> bytes:
         """Retrieve the blob bytes for a given content SWHID using Software
@@ -113,16 +111,9 @@ class Fuse(pyfuse3.Operations):
             self.logger.debug("Found blob %s in cache", swhid)
             return cache
 
-        try:
-            self.logger.debug("Retrieving blob %s via web API...", swhid)
-            loop = asyncio.get_event_loop()
-            resp = await loop.run_in_executor(None, self.web_api.content_raw, swhid)
-            blob = b"".join(list(resp))
-            await self.cache.blob.set(swhid, blob)
-            return blob
-        except requests.HTTPError as err:
-            self.logger.error("Cannot fetch blob for object %s: %s", swhid, err)
-            raise
+        blob = await self.backend.get_blob(swhid)
+        await self.cache.blob.set(swhid, blob)
+        return blob
 
     async def get_history(self, swhid: CoreSWHID) -> List[CoreSWHID]:
         """Retrieve a revision's history using Software Heritage Graph API"""
@@ -137,23 +128,11 @@ class Fuse(pyfuse3.Operations):
             )
             return cache
 
-        try:
-            # Use the swh-graph API to retrieve the full history very fast
-            self.logger.debug("Retrieving history of %s via graph API...", swhid)
-            call = f"graph/visit/edges/{swhid}?edges=rev:rev"
-            loop = asyncio.get_event_loop()
-            history = await loop.run_in_executor(None, self.web_api._call, call)
-            await self.cache.history.set(history.text)
-            # Retrieve it from cache so it is correctly typed
-            res = await self.cache.history.get(swhid)
-            return res
-        except requests.HTTPError as err:
-            self.logger.error("Cannot fetch history for object %s: %s", swhid, err)
-            # Ignore exception since swh-graph does not necessarily contain the
-            # most recent artifacts from the archive. Computing the full history
-            # from the Web API is too computationally intensive so simply return
-            # an empty list.
-            return []
+        history = await self.backend.get_history(swhid)
+        await self.cache.history.set(history)
+        # Retrieve it from cache so it is correctly typed
+        res = await self.cache.history.get(swhid)
+        return res
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
         """Retrieve origin visits given an encoded-URL using Software Heritage API"""
@@ -167,34 +146,11 @@ class Fuse(pyfuse3.Operations):
             )
             return cache
 
-        try:
-            self.logger.debug(
-                "Retrieving visits for origin '%s' via web API...", url_encoded
-            )
-            typify = False  # Get the raw JSON from the API
-            loop = asyncio.get_event_loop()
-            # Web API only takes non-encoded URL
-            url = urllib.parse.unquote_plus(url_encoded)
-
-            origin_exists = await loop.run_in_executor(
-                None, self.web_api.origin_exists, url
-            )
-            if not origin_exists:
-                raise ValueError("origin does not exist")
-
-            visits_it = await loop.run_in_executor(
-                None, functools.partial(self.web_api.visits, url, typify=typify)
-            )
-            visits = list(visits_it)
-            await self.cache.metadata.set_visits(url_encoded, visits)
-            # Retrieve it from cache so it is correctly typed
-            res = await self.cache.metadata.get_visits(url_encoded)
-            return res
-        except (ValueError, requests.HTTPError) as err:
-            self.logger.error(
-                "Cannot fetch visits for origin '%s': %s", url_encoded, err
-            )
-            raise
+        visits = await self.backend.get_visits(url_encoded)
+        await self.cache.metadata.set_visits(url_encoded, visits)
+        # Retrieve it from cache so it is correctly typed
+        res = await self.cache.metadata.get_visits(url_encoded)
+        return res
 
     async def get_attrs(self, entry: FuseEntry) -> pyfuse3.EntryAttributes:
         """Return entry attributes"""
@@ -344,6 +300,12 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
 
+def backend_factory(conf: Dict[str, Any]) -> FuseBackend:
+    from swh.fuse.backends.web_api import WebApiBackend
+
+    return WebApiBackend(conf)
+
+
 async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -> None:
     """swh-fuse CLI entry-point"""
 
@@ -351,7 +313,7 @@ async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -
     pyfuse3.asyncio.enable()
 
     async with FuseCache(conf["cache"]) as cache:
-        fs = Fuse(root_path, cache, conf)
+        fs = Fuse(root_path, cache, conf, backend_factory(conf))
 
         # Initially populate the cache
         for swhid in swhids:
