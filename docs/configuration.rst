@@ -14,8 +14,27 @@ The configuration file location is subject to the `XDG Base Directory
 well as explicitly overridden on the :ref:`command line <swh-fuse-cli>` via the
 ``-C/--config-file`` flag.
 
-The following sub-sections and fields can be used within the ``swh > fuse``
-stanza:
+You can choose how `swh-fuse` will fetch content from the archive.
+The fastest way relies on a :ref:`compressed graph <swh-graph>`
+and an :ref:`objstorage <swh-objstorage>` close to your server.
+To choose this method, define the following block:
+
+- ``graph``:
+  - ``grpc-url``: URL to the graph's :ref:`gRPC server <swh-graph-grpc-api>`.
+  - ``objstorage``: an usual `swh-objstorage` configuration block.
+    When using a local instance, you should include these two entries:
+    - ``cls: remote``
+    - ``url: http://127.0.0.1:15003``
+  - ``hashes-path``: path to ORC files providing complete hashes by SWHID.
+
+Otherwise, the simplest (but slow) method is to query the SWH public API.
+You can configure this method as follows:
+
+- ``web-api``:
+  - ``url``: archive API URL
+  - ``auth-token``: authentication token used with the API URL
+
+`swh-fuse` will also search for the following options:
 
 - ``cache``:
 
@@ -27,11 +46,6 @@ stanza:
   - ``direntry``: how much memory should be used by the direntry cache,
     specified using a ``maxram`` entry (either as a percentage of available RAM,
     or with disk storage unit suffixes: ``B``, ``KB``, ``MB``, ``GB``).
-
-- ``web-api``:
-
-  - ``url``: archive API URL
-  - ``auth-token``: authentication token used with the API URL
 
 - ``json-indent``: number of spaces used to print JSON metadata files (setting
   it to ``null`` disables indentation).
@@ -67,6 +81,8 @@ direntry), using the default Web API service:
           url: "https://archive.softwareheritage.org/api/1/"
           auth-token: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMTMxYTQ1My1hM2IyLTQwMTUtO...
 
+
+TODO: graph/storage example
 
 Logging
 -------
