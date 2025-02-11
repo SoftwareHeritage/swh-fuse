@@ -16,7 +16,6 @@ import urllib.parse
 import pyfuse3
 import pyfuse3.asyncio
 import requests
-import grpc
 
 from swh.fuse import LOGGER_NAME
 from swh.fuse.cache import FuseCache
@@ -24,8 +23,6 @@ from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlin
 from swh.fuse.fs.mountpoint import Root
 from swh.model.swhids import CoreSWHID, ObjectType
 from swh.web.client.client import WebAPIClient
-import swh.graph.grpc.swhgraph_pb2 as swhgraph
-import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
 
 
 class Fuse(pyfuse3.Operations):
@@ -50,10 +47,6 @@ class Fuse(pyfuse3.Operations):
             conf["web-api"]["url"], conf["web-api"]["auth-token"]
         )
         self.cache = cache
-
-        self.grpc_stub = swhgraph_grpc.TraversalServiceStub(
-            grpc.insecure_channel("localhost:50091") # FIXME: get it from config
-        )
 
     def shutdown(self) -> None:
         pass
@@ -91,17 +84,16 @@ class Fuse(pyfuse3.Operations):
 
         cache = await self.cache.metadata.get(swhid)
         if cache:
-            return swhgraph.Node.FromString(cache)
+            return cache
 
         try:
+            typify = False  # Get the raw JSON from the API
+            # TODO: async web API
             loop = asyncio.get_event_loop()
-            metadata = await loop.run_in_executor(
-                None,
-                self.grpc_stub.GetNode,
-                swhgraph.GetNodeRequest(swhid=str(swhid)),
-            )
-            await self.cache.metadata.set(swhid, swhgraph.Node.SerializeToString(metadata))
-            return metadata
+            metadata = await loop.run_in_executor(None, self.web_api.get, swhid, typify)
+            await self.cache.metadata.set(swhid, metadata)
+            # Retrieve it from cache so it is correctly typed
+            return await self.cache.metadata.get(swhid)
         except requests.HTTPError as err:
             self.logger.error("Cannot fetch metadata for object %s: %s", swhid, err)
             raise
@@ -114,8 +106,7 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.EINVAL)
 
         # Make sure the metadata cache is also populated with the given SWHID
-        # await self.get_metadata(swhid)
-        # FIXME cf. Content instantiation.
+        await self.get_metadata(swhid)
 
         cache = await self.cache.blob.get(swhid)
         if cache:

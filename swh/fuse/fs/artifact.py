@@ -72,15 +72,15 @@ class Directory(FuseDirEntry):
 
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         metadata = await self.fuse.get_metadata(self.swhid)
-        for entry in metadata.successor:
-            name = entry.label[0].name.decode()
-            swhid = CoreSWHID.from_string(entry.swhid)
+        for entry in metadata:
+            name = entry["name"]
+            swhid = entry["target"]
             mode = (
                 # Archived permissions for directories are always set to
                 # 0o040000 so use a read-only permission instead
                 int(EntryMode.RDONLY_DIR)
                 if swhid.object_type == ObjectType.DIRECTORY
-                else entry.label[0].permission
+                else entry["perms"]
             )
 
             # 1. Symlink (check symlink first because condition is less restrictive)
@@ -106,7 +106,7 @@ class Directory(FuseDirEntry):
                     swhid=swhid,
                     # The directory API has extra info we can use to set
                     # attributes without additional Software Heritage API call
-                    # prefetch=entry,  #### FIXME we would need an additional fetch of all files'metadata here, just to have their size when listing a folder.
+                    prefetch=entry,
                 )
             # 3. Regular directory
             elif swhid.object_type == ObjectType.DIRECTORY:
