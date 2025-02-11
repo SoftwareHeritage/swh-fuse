@@ -3,17 +3,18 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import asyncio
 import json
-from multiprocessing import Process
 import os
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
+import threading
 import time
 
 from click.testing import CliRunner
 import pytest
-import yaml
 
+from swh.fuse import fuse
 import swh.fuse.cli as cli
 from swh.fuse.tests.data.api_data import API_URL, MOCK_ARCHIVE
 
@@ -36,49 +37,42 @@ def web_api_mock(requests_mock):
 
 @pytest.fixture
 def fuse_mntdir(web_api_mock):
-    tmpdir = TemporaryDirectory(suffix=".swh-fuse-test")
+    with TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir:
+        mountpoint = Path(tmpdir)
+        config = {
+            "cache": {
+                "metadata": {"in-memory": True},
+                "blob": {"in-memory": True},
+                "direntry": {"maxram": "10%"},
+            },
+            "web-api": {"url": API_URL, "auth-token": None},
+            "json-indent": None,
+        }
 
-    config = {
-        "cache": {
-            "metadata": {"in-memory": True},
-            "blob": {"in-memory": True},
-        },
-        "web-api": {"url": API_URL, "auth-token": None},
-        "json-indent": None,
-    }
+        def mount():
+            loop = asyncio.new_event_loop()
+            try:
+                loop.run_until_complete(fuse.main([], mountpoint, config))
+            finally:
+                if loop.is_running():
+                    loop.stop()
+                loop.close()
 
-    # Run FUSE in foreground mode but in a separate process, so it does not
-    # block execution and remains easy to kill during teardown
-    def fuse_process(mntdir: Path):
-        with NamedTemporaryFile(suffix=".swh-fuse-test.yml") as tmpfile:
-            config_path = Path(tmpfile.name)
-            config_path.write_text(yaml.dump(config))
-            CliRunner().invoke(
-                cli.fuse,
-                args=[
-                    "--config-file",
-                    str(config_path),
-                    "mount",
-                    str(mntdir),
-                    "--foreground",
-                ],
-            )
+        mount_thread = threading.Thread(target=mount)
+        mount_thread.start()
 
-    fuse = Process(target=fuse_process, args=[Path(tmpdir.name)])
-    fuse.start()
-    # Wait max 3 seconds for the FUSE to correctly mount
-    for i in range(30):
+        for i in range(30):
+            try:
+                root = os.listdir(tmpdir)
+                if root:
+                    break
+            except FileNotFoundError:
+                pass
+            time.sleep(0.1)
+        else:
+            raise FileNotFoundError(f"Could not mount FUSE in {tmpdir}")
+
         try:
-            root = os.listdir(tmpdir.name)
-            if root:
-                break
-        except FileNotFoundError:
-            pass
-        time.sleep(0.1)
-    else:
-        raise FileNotFoundError(f"Could not mount FUSE in {tmpdir.name}")
-
-    yield Path(tmpdir.name)
-
-    CliRunner().invoke(cli.umount, [tmpdir.name])
-    fuse.join()
+            yield mountpoint
+        finally:
+            CliRunner().invoke(cli.umount, [tmpdir])
