@@ -1,5 +1,5 @@
-from swh.fuse.tests.common import get_data_from_web_archive
-from swh.fuse.tests.data.config import REGULAR_FILE
+from .common import get_data_from_web_archive
+from .data.config import REGULAR_FILE
 
 
 def test_access_file(fuse_mntdir):

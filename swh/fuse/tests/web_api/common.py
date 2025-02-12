@@ -7,12 +7,8 @@ import os
 from pathlib import Path
 from typing import Any, List
 
-from swh.fuse.tests.api_url import (
-    GRAPH_API_REQUEST,
-    swhid_to_graph_url,
-    swhid_to_web_url,
-)
-from swh.fuse.tests.data.api_data import MOCK_ARCHIVE
+from .api_url import GRAPH_API_REQUEST, swhid_to_graph_url, swhid_to_web_url
+from .data.api_data import MOCK_ARCHIVE
 
 
 def get_data_from_web_archive(swhid: str, raw: bool = False) -> Any:

@@ -5,15 +5,16 @@ import time
 import dateutil.parser
 
 from swh.fuse.fs.artifact import RevisionHistoryShardByDate, RevisionHistoryShardByPage
-from swh.fuse.tests.api_url import GRAPH_API_REQUEST
-from swh.fuse.tests.common import (
+from swh.model.hashutil import hash_to_hex
+from swh.model.swhids import CoreSWHID
+
+from .api_url import GRAPH_API_REQUEST
+from .common import (
     check_dir_name_entries,
     get_data_from_graph_archive,
     get_data_from_web_archive,
 )
-from swh.fuse.tests.data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
-from swh.model.hashutil import hash_to_hex
-from swh.model.swhids import CoreSWHID
+from .data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
 
 
 def test_access_meta(fuse_mntdir):

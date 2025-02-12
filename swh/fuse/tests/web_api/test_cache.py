@@ -5,9 +5,10 @@
 
 import os
 
-from swh.fuse.tests.data.config import REGULAR_FILE
 from swh.model.hashutil import hash_to_hex
 from swh.model.swhids import CoreSWHID
+
+from .data.config import REGULAR_FILE
 
 
 def test_cache_artifact(fuse_mntdir):

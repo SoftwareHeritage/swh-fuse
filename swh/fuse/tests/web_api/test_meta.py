@@ -1,7 +1,7 @@
 import json
 
-from swh.fuse.tests.common import get_data_from_web_archive
-from swh.fuse.tests.data.config import ALL_ENTRIES
+from .common import get_data_from_web_archive
+from .data.config import ALL_ENTRIES
 
 
 def test_access_meta_file(fuse_mntdir):

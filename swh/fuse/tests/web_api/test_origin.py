@@ -4,8 +4,9 @@ from pathlib import Path
 import dateutil.parser
 
 from swh.fuse.fs.artifact import Origin
-from swh.fuse.tests.common import get_origin_data_from_web_archive
-from swh.fuse.tests.data.config import ORIGIN_URL, ORIGIN_URL_ENCODED
+
+from .common import get_origin_data_from_web_archive
+from .data.config import ORIGIN_URL, ORIGIN_URL_ENCODED
 
 
 def test_list_visits(fuse_mntdir):

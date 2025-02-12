@@ -16,7 +16,8 @@ import pytest
 
 from swh.fuse import fuse
 import swh.fuse.cli as cli
-from swh.fuse.tests.data.api_data import API_URL, MOCK_ARCHIVE
+
+from .data.api_data import API_URL, MOCK_ARCHIVE
 
 
 @pytest.fixture

@@ -11,20 +11,17 @@ from typing import Any, Dict
 
 import requests
 
-from swh.fuse.tests.api_url import (
-    GRAPH_API_REQUEST,
-    swhid_to_graph_url,
-    swhid_to_web_url,
-)
-from swh.fuse.tests.data.config import (
+from swh.model.hashutil import hash_to_bytes
+from swh.model.swhids import CoreSWHID, ObjectType
+
+from ..api_url import GRAPH_API_REQUEST, swhid_to_graph_url, swhid_to_web_url
+from ..data.config import (
     ALL_ENTRIES,
     FAKE_SNP_SPECIAL_CASES,
     FAKE_SNP_SPECIAL_CASES_SWHID,
     ORIGIN_URL,
     REV_SMALL_HISTORY,
 )
-from swh.model.hashutil import hash_to_bytes
-from swh.model.swhids import CoreSWHID, ObjectType
 
 API_URL_real = "https://archive.softwareheritage.org/api/1"
 API_URL_test = "https://invalid-test-only.archive.softwareheritage.org/api/1"

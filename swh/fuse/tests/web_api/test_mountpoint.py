@@ -5,8 +5,9 @@
 
 import os
 
-from swh.fuse.tests.data.config import ORIGIN_URL_ENCODED, REGULAR_FILE
 from swh.model.swhids import CoreSWHID
+
+from .data.config import ORIGIN_URL_ENCODED, REGULAR_FILE
 
 
 def test_mountpoint(fuse_mntdir):

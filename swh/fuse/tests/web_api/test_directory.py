@@ -1,7 +1,7 @@
 import os
 
-from swh.fuse.tests.common import check_dir_name_entries
-from swh.fuse.tests.data.config import (
+from .common import check_dir_name_entries
+from .data.config import (
     DIR_WITH_CNT_SYMLINK,
     DIR_WITH_DIR_SYMLINK,
     DIR_WITH_REV_SYMLINK,
