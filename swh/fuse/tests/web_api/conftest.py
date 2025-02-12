@@ -13,6 +13,7 @@ import time
 
 from click.testing import CliRunner
 import pytest
+import requests_mock
 
 from swh.fuse import fuse
 import swh.fuse.cli as cli
@@ -20,25 +21,22 @@ import swh.fuse.cli as cli
 from .data.api_data import API_URL, MOCK_ARCHIVE
 
 
-@pytest.fixture
-def web_api_mock(requests_mock):
-    for api_call, data in MOCK_ARCHIVE.items():
-        # Convert Python dict JSON into a string (only for non-raw API call)
-        if not api_call.endswith("raw/") and not api_call.startswith("graph/"):
-            data = json.dumps(data)
 
-        http_method = requests_mock.get
-        if api_call.startswith("origin/") and api_call.endswith("get/"):
-            http_method = requests_mock.head
+@pytest.fixture(scope="module")
+def fuse_mntdir():
+    with (
+        TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir,
+        requests_mock.Mocker() as mocker
+    ):
+        for api_call, data in MOCK_ARCHIVE.items():
+            # Convert Python dict JSON into a string (only for non-raw API call)
+            if not api_call.endswith("raw/") and not api_call.startswith("graph/"):
+                data = json.dumps(data)
+            mocked_method = mocker.get
+            if api_call.startswith("origin/") and api_call.endswith("get/"):
+                mocked_method = mocker.head
+            mocked_method(f"{API_URL}/{api_call}", text=data)
 
-        http_method(f"{API_URL}/{api_call}", text=data)
-
-    return requests_mock
-
-
-@pytest.fixture
-def fuse_mntdir(web_api_mock):
-    with TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir:
         mountpoint = Path(tmpdir)
         config = {
             "cache": {
