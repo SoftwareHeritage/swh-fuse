@@ -301,9 +301,14 @@ class Fuse(pyfuse3.Operations):
 
 
 def backend_factory(conf: Dict[str, Any]) -> FuseBackend:
-    from swh.fuse.backends.web_api import WebApiBackend
+    if "graph" in conf:
+        from swh.fuse.backends.graph import GraphBackend
 
-    return WebApiBackend(conf)
+        return GraphBackend(conf)
+    else:
+        from swh.fuse.backends.web_api import WebApiBackend
+
+        return WebApiBackend(conf)
 
 
 async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -> None:
