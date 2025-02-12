@@ -34,7 +34,7 @@ class GraphBackend(FuseBackend):
         )
         self.logger = logging.getLogger(LOGGER_NAME)
 
-    async def get_metadata(self, swhid: CoreSWHID) -> dict:
+    async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
         """
         Entries in the returned `dict` depend on the `swhid` type.
 
@@ -46,6 +46,16 @@ class GraphBackend(FuseBackend):
             self.grpc_stub.GetNode,
             swhgraph.GetNodeRequest(swhid=str(swhid)),
         )
+
+        # something like
+        # for entry in metadata.successor:
+        #   name = entry.label[0].name.decode()
+        #   swhid = CoreSWHID.from_string(entry.swhid)
+        #   mode = (...
+        #     entry.label[0].permission
+
+
+
         return metadata
 
     async def get_blob(self, swhid: CoreSWHID) -> bytes:

@@ -24,11 +24,30 @@ class FuseBackend(ABC):
     """
 
     @abstractmethod
-    async def get_metadata(self, swhid: CoreSWHID) -> dict:
+    async def get_metadata(self, swhid: CoreSWHID) -> Dict|List:
         """
         Entries in the returned `dict` depend on the `swhid` type.
 
-        TODO detail per type
+        For `cnt`, return a dict containing at least `'length': [int]`
+        TODO: support also `status: [str:visible|...]` ?
+
+        For `dir`, return a list of entries like
+        ```
+        {
+            "name": "dir item name",
+            "target": "target swhid",
+            "perms": "permissions [int]",
+            "length": "file size, if target is a cnt [int]",
+        }
+
+        For `rev`, return a dict containing at least `directory` (SWHID) and
+        `parents` (list of objects containing at list `id` (SWHID))
+
+        For `rel`, return a dict containing at least `target` (SWHID)
+
+        For `snp`, return a dict where each key is a branch name,
+        each value is a dict containing at least `target`, `target_type`.
+        ```
         """
 
     @abstractmethod
@@ -48,5 +67,7 @@ class FuseBackend(ABC):
         """
         Return a list of objects
 
-        TODO which fields ?
+        Each object should contain fields `date` (ISO), `origin` (str),
+        `snapshot` (SWHID) and ... anything we cant because the object
+        will by in the `meta.json` file.
         """

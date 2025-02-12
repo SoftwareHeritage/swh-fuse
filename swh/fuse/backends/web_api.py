@@ -25,7 +25,7 @@ class WebApiBackend(FuseBackend):
     exploring big directories.
     """
 
-    def __init__(self, conf: dict):
+    def __init__(self, conf: Dict):
         """
         Only needs the `web-api` key of `conf`, searching for `url` and maybe `auth-token` keys.
         """
@@ -34,7 +34,7 @@ class WebApiBackend(FuseBackend):
         )
         self.logger = logging.getLogger(LOGGER_NAME)
 
-    async def get_metadata(self, swhid: CoreSWHID) -> dict:
+    async def get_metadata(self, swhid: CoreSWHID) -> Dict|List:
         try:
             self.logger.debug(f"Fetching metadata via Web API for {swhid}")
             loop = asyncio.get_event_loop()
