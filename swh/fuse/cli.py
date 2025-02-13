@@ -67,24 +67,18 @@ def fuse(ctx, config_file):
         config_file = DEFAULT_CONFIG_PATH
 
     if os.path.isfile(config_file):
-        try:
-            conf = config.read_raw_config(config_file)
-            if not conf:
-                raise ValueError(f"Cannot parse configuration file: {config_file}")
+        conf = config.read_raw_config(config_file)
+        if not conf:
+            raise ValueError(f"Cannot parse configuration file: {config_file}")
 
-            if config_file == DEFAULT_CONFIG_PATH:
-                try:
-                    conf = conf["swh"]["fuse"]
-                except KeyError:
-                    pass
+        if config_file == DEFAULT_CONFIG_PATH:
+            try:
+                conf = conf["swh"]["fuse"]
+            except KeyError:
+                pass
 
-            # recursive merge not done by config.read
-            conf = config.merge_configs(DEFAULT_CONFIG, conf)
-        except Exception:
-            logging.warning(
-                "Using default configuration (cannot load custom one)", exc_info=True
-            )
-            conf = DEFAULT_CONFIG
+        # recursive merge not done by config.read
+        conf = config.merge_configs(DEFAULT_CONFIG, conf)
     else:
         logging.info("Using default configuration")
         conf = DEFAULT_CONFIG
