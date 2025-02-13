@@ -24,29 +24,34 @@ class FuseBackend(ABC):
     """
 
     @abstractmethod
-    async def get_metadata(self, swhid: CoreSWHID) -> Dict|List:
+    async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
         """
         Entries in the returned `dict` depend on the `swhid` type.
 
         For `cnt`, return a dict containing at least `'length': [int]`
-        TODO: support also `status: [str:visible|...]` ?
 
         For `dir`, return a list of entries like
         ```
         {
+            "dir_id": "dir's hash",
             "name": "dir item name",
-            "target": "target swhid",
+            "type": "str=dir|file|rev",  # yes, `file`...
+            "target": "target hash",
             "perms": "permissions [int]",
-            "length": "file size, if target is a cnt [int]",
+            # if target is a cnt:
+            "length": "file size [int]",
         }
 
-        For `rev`, return a dict containing at least `directory` (SWHID) and
-        `parents` (list of objects containing at list `id` (SWHID))
+        For `rev`, return a dict containing at least `directory` (SWHID),
+        `parents` (list of objects containing at list `id` (hash)),
+        `date` (str, isoformat), `id` (object's hash).
 
-        For `rel`, return a dict containing at least `target` (SWHID)
+        For `rel`, return a dict containing at least `target` (SWHID),
+        `target_type`,  `date` (str, isoformat), `id` (object's hash).
 
         For `snp`, return a dict where each key is a branch name,
-        each value is a dict containing at least `target`, `target_type`.
+        each value is a dict containing at least `target` (hash),
+        `target_type` (content, directory, revision, release, snapshot or alias).
         ```
         """
 
