@@ -68,6 +68,6 @@ class FuseBackend(ABC):
         Return a list of objects
 
         Each object should contain fields `date` (ISO), `origin` (str),
-        `snapshot` (SWHID) and ... anything we cant because the object
+        `snapshot` (SWHID's hash as str) and ... anything we cant because the object
         will by in the `meta.json` file.
         """

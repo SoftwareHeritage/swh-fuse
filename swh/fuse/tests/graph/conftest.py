@@ -3,6 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+"""
+Fixtures for the GraphBackend-ed swh-fuse
+-----------------------------------------
+
+Those rely on the test graph in `swh-graph`.
+Data expected in the test graph is provided here as fixtures.
+"""
+
 import asyncio
 import os
 from pathlib import Path
@@ -10,6 +18,7 @@ from tempfile import TemporaryDirectory
 import threading
 import time
 from typing import Generator
+from urllib.parse import quote_plus
 
 from click.testing import CliRunner
 import pytest
@@ -82,3 +91,8 @@ def fuse_graph_mountpoint(
             yield mountpoint
         finally:
             CliRunner().invoke(cli.umount, [tmpdir])
+
+@pytest.fixture()
+def example_origin() -> str:
+    "Adapted from swh.graph.tests.test_http_client.TEST_ORIGIN_ID"
+    return quote_plus("https://example.com/swh/graph")

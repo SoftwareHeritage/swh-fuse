@@ -6,6 +6,9 @@
 import asyncio
 import logging
 from typing import Any, Dict, List, Tuple
+import hashlib
+from urllib.parse import unquote_plus
+from datetime import date
 
 import grpc
 
@@ -72,5 +75,55 @@ class GraphBackend(FuseBackend):
         """
         Return a list of objects
 
-        TODO which fields ?
+        This GetNode returns:
+
+        swhid: "swh:1:ori:872aeac9f211c8b12c58e6a5092a0ae20e517b11"
+        successor {
+            swhid: "swh:1:snp:c7d88f7679e29a81440682c558bb439c7628cd20"
+            label {
+                visit_timestamp: 1677206735
+                is_full_visit: true
+            }
+        }
+        successor {
+            swhid: "swh:1:snp:a972d1e29dc327c661d7ebc30334b604aff3a96f"
+            label {
+                visit_timestamp: 1712340909
+                is_full_visit: true
+            }
+            label {
+                visit_timestamp: 1712368096
+                is_full_visit: true
+            }
+        }
+        ...
+        ori {
+        url: "https://github.com/ytdl-org/youtube-dl"
+        }
+        num_successors: 168
+
+
         """
+        url = unquote_plus(url_encoded).encode()
+        swhid = "swh:1:ori:" + hashlib.sha1(url).hexdigest()
+
+        loop = asyncio.get_event_loop()
+        ori_node = await loop.run_in_executor(
+            None,
+            self.grpc_stub.GetNode,
+            swhgraph.GetNodeRequest(swhid=str(swhid)),
+        )
+
+        origin = ori_node.ori.url
+        visits = []
+        for entry in ori_node.successor:
+            snapshot = CoreSWHID.from_string(entry.swhid)
+            for label in entry.label:
+                visit_date = date.fromtimestamp(label.visit_timestamp)
+                visits.append({
+                    "date": visit_date.isoformat(),
+                    "origin": origin,
+                    "snapshot": snapshot.object_id.hex(),
+                })
+
+        return visits
