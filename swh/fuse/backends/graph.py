@@ -4,18 +4,19 @@
 # See top-level LICENSE file for more information
 
 import asyncio
+from datetime import date, datetime, timedelta, timezone
+import hashlib
 import logging
 from typing import Any, Dict, List, Tuple
-import hashlib
 from urllib.parse import unquote_plus
-from datetime import date
 
+from google.protobuf.field_mask_pb2 import FieldMask
 import grpc
 
 from swh.fuse import LOGGER_NAME
 import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
-from swh.model.swhids import CoreSWHID
+from swh.model.swhids import CoreSWHID, ObjectType
 
 from ..backends import FuseBackend
 
@@ -38,26 +39,138 @@ class GraphBackend(FuseBackend):
         self.logger = logging.getLogger(LOGGER_NAME)
 
     async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
-        """
-        Entries in the returned `dict` depend on the `swhid` type.
-
-        TODO detail per type
-        """
         loop = asyncio.get_event_loop()
-        metadata = await loop.run_in_executor(
+        raw = await loop.run_in_executor(
             None,
             self.grpc_stub.GetNode,
             swhgraph.GetNodeRequest(swhid=str(swhid)),
         )
 
+        match swhid.object_type:
+            case ObjectType.SNAPSHOT:
+                return self._snapshot_metadata(raw)
+
+            case ObjectType.REVISION:
+                return self._revision_metadata(swhid, raw)
+
+            case ObjectType.RELEASE:
+                return self._release_metadata(swhid, raw)
+
+            case ObjectType.DIRECTORY:
+                return await self._directory_metadata(swhid, raw)
+
+            case _:
+                raise NotImplementedError(
+                    f"get_metadata({swhid.object_type}) not supported"
+                )
+
+    def _snapshot_metadata(self, raw) -> Dict:
+        metadata = {}
+        for successor in raw.successor:
+            target = CoreSWHID.from_string(successor.swhid)
+            branch = successor.label[0].name.decode()
+            metadata[branch] = {
+                "target": target.object_id.hex(),
+                "target_type": target.object_type.name.lower(),
+            }
+        return metadata
+
+    def _revision_metadata(self, swhid: CoreSWHID, raw) -> Dict:
+        parents = []
+        directory = None
+        for successor in raw.successor:
+            target = CoreSWHID.from_string(successor.swhid)
+            if target.object_type == ObjectType.DIRECTORY:
+                directory = target.object_id.hex()
+            else:
+                parent = CoreSWHID.from_string(successor.swhid)
+                parents.append({"id": parent.object_id.hex()})
+        # we also provide fields from protobuf message RevisionData
+        author_date = datetime.fromtimestamp(raw.rev.author_date, tz=timezone.utc)
+        author_tz = timezone(timedelta(seconds=raw.rev.author_date_offset))
+        author_date = author_date.astimezone(author_tz)
+        committer_date = datetime.fromtimestamp(raw.rev.committer_date, tz=timezone.utc)
+        committer_tz = timezone(timedelta(seconds=raw.rev.committer_date_offset))
+        committer_date = committer_date.astimezone(committer_tz)
+        metadata = {
+            "author": raw.rev.author,
+            "committer": raw.rev.committer,
+            "message": raw.rev.message.decode(),
+            "date": author_date.isoformat(),
+            "committer_date": committer_date.isoformat(),
+            "parents": parents,
+            "directory": directory,
+            "id": swhid.object_id.hex(),
+        }
+        return metadata
+
+    def _release_metadata(self, swhid: CoreSWHID, raw) -> Dict:
+        for successor in raw.successor:
+            target = CoreSWHID.from_string(successor.swhid)
+            break
+        else:
+            raise ValueError(f"Cannot find target for release {swhid}")
+
+        rel_date = datetime.fromtimestamp(raw.rel.author_date, tz=timezone.utc)
+        rel_tz = timezone(timedelta(seconds=raw.rel.author_date_offset))
+        rel_date = rel_date.astimezone(rel_tz)
+
+        metadata = {
+            "target": target.object_id.hex(),
+            "target_type": target.object_type.name.lower(),
+            "id": swhid.object_id.hex(),
+            "message": raw.rel.message.decode(),
+            "name": raw.rel.name.decode(),
+            "author": raw.rel.author,
+            "date": rel_date.isoformat(),
+        }
+        return metadata
+
+    async def _directory_metadata(self, swhid: CoreSWHID, raw) -> List:
+        loop = asyncio.get_event_loop()
+        raw_cnt = await loop.run_in_executor(
+            None,
+            self.grpc_stub.Traverse,
+            swhgraph.TraversalRequest(
+                src=[str(swhid)],
+                max_depth=1,
+                edges="dir:cnt",
+                mask=FieldMask(paths=["swhid", "cnt"]),
+            ),
+        )
+        cnt_metadata = {}
+        for item in raw_cnt:
+            if item.HasField("cnt"):
+                cnt_metadata[item.swhid] = {
+                    "length": item.cnt.length,
+                    "status": "skipped" if item.cnt.is_skipped else "visible",
+                }
+
+        metadata = []
         # something like
-        # for entry in metadata.successor:
-        #   name = entry.label[0].name.decode()
-        #   swhid = CoreSWHID.from_string(entry.swhid)
-        #   mode = (...
-        #     entry.label[0].permission
-
-
+        for successor in raw.successor:
+            target = CoreSWHID.from_string(successor.swhid)
+            target_type = target.object_type.value
+            if target_type == ObjectType.CONTENT.value:
+                # complying with swh-web-client.typify_json is hard
+                target_type = "file"
+            entry = {
+                "dir_id": swhid.object_id.hex(),
+                "name": successor.label[0].name.decode(),
+                "perms": successor.label[0].permission,
+                "type": target_type,
+                "target": target.object_id.hex(),
+            }
+            if target.object_type == ObjectType.CONTENT:
+                if successor.swhid in cnt_metadata:
+                    entry.update(cnt_metadata[successor.swhid])
+                else:
+                    self.logger.warning(
+                        "%s listed as successor of %s, but not fetched by raw_cnt",
+                        target,
+                        swhid,
+                    )
+            metadata.append(entry)
 
         return metadata
 
@@ -120,10 +233,12 @@ class GraphBackend(FuseBackend):
             snapshot = CoreSWHID.from_string(entry.swhid)
             for label in entry.label:
                 visit_date = date.fromtimestamp(label.visit_timestamp)
-                visits.append({
-                    "date": visit_date.isoformat(),
-                    "origin": origin,
-                    "snapshot": snapshot.object_id.hex(),
-                })
+                visits.append(
+                    {
+                        "date": visit_date.isoformat(),
+                        "origin": origin,
+                        "snapshot": snapshot.object_id.hex(),
+                    }
+                )
 
         return visits
