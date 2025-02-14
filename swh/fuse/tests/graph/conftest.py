@@ -62,6 +62,7 @@ def fuse_graph_mountpoint(
                 "blob": {"in-memory": True},
                 "direntry": {"maxram": "10%"},
             },
+            "web-api": {"url": "https://should.not.be.called.org/", "auth-token": None},
             "json-indent": None,
         }
 

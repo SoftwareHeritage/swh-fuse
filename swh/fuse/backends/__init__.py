@@ -16,11 +16,14 @@ from typing import Any, Dict, List, Tuple
 from swh.model.swhids import CoreSWHID
 
 
-class FuseBackend(ABC):
+class GraphBackend(ABC):
     """
-    Methods required by the FUSE logic.
+    Methods required by the FUSE logic to create its folders layout.
     Those methods must return dicts compliant with the Web API, to ease their use and
     caching in the :ref:`swh.fuse.fuse.Fuse` class.
+    Fields listed in method specifications below are the minimal required fields,
+    additional fields will be included in the various `meta.json` files proposed
+    by this virtual file system.
     """
 
     @abstractmethod
@@ -56,12 +59,6 @@ class FuseBackend(ABC):
         """
 
     @abstractmethod
-    async def get_blob(self, swhid: CoreSWHID) -> bytes:
-        """
-        Fetch the content of a `cnt` object.
-        """
-
-    @abstractmethod
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
         """
         Return a list of tuples `(swhid, revision swhid)`
@@ -73,6 +70,17 @@ class FuseBackend(ABC):
         Return a list of objects
 
         Each object should contain fields `date` (ISO), `origin` (str),
-        `snapshot` (SWHID's hash as str) and ... anything we cant because the object
-        will by in the `meta.json` file.
+        `snapshot` (SWHID's hash as str)
+        """
+
+
+class ObjBackend(ABC):
+    """
+    Methods required by the FUSE logic to provide files' contents.
+    """
+
+    @abstractmethod
+    async def get_blob(self, swhid: CoreSWHID) -> bytes:
+        """
+        Fetch the content of a `cnt` object.
         """

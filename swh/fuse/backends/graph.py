@@ -18,10 +18,10 @@ import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
 from swh.model.swhids import CoreSWHID, ObjectType
 
-from ..backends import FuseBackend
+from ..backends import GraphBackend
 
 
-class GraphBackend(FuseBackend):
+class CompressedGraphBackend(GraphBackend):
     """
     A Backend querying everything via Software Heritage's public API.
 
@@ -173,11 +173,6 @@ class GraphBackend(FuseBackend):
             metadata.append(entry)
 
         return metadata
-
-    async def get_blob(self, swhid: CoreSWHID) -> bytes:
-        """
-        Fetch the content of a `cnt` object.
-        """
 
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
         """

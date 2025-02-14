@@ -12,12 +12,12 @@ from urllib.parse import unquote_plus
 from requests import HTTPError
 
 from swh.fuse import LOGGER_NAME
-from swh.fuse.backends import FuseBackend
+from swh.fuse.backends import GraphBackend, ObjBackend
 from swh.model.swhids import CoreSWHID
 from swh.web.client.client import WebAPIClient
 
 
-class WebApiBackend(FuseBackend):
+class WebApiBackend(GraphBackend, ObjBackend):
     """
     A Backend querying everything via Software Heritage's public API.
 
@@ -34,7 +34,7 @@ class WebApiBackend(FuseBackend):
         )
         self.logger = logging.getLogger(LOGGER_NAME)
 
-    async def get_metadata(self, swhid: CoreSWHID) -> Dict|List:
+    async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
         try:
             self.logger.debug(f"Fetching metadata via Web API for {swhid}")
             loop = asyncio.get_event_loop()

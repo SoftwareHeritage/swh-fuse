@@ -14,7 +14,7 @@ import pyfuse3
 import pyfuse3.asyncio
 
 from swh.fuse import LOGGER_NAME
-from swh.fuse.backends import FuseBackend
+from swh.fuse.backends import GraphBackend, ObjBackend
 from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
@@ -32,10 +32,10 @@ class Fuse(pyfuse3.Operations):
 
     def __init__(
         self,
-        root_path: Path,
         cache: FuseCache,
         conf: Dict[str, Any],
-        backend: FuseBackend,
+        graph_backend: GraphBackend,
+        obj_backend: ObjBackend,
     ):
         super(Fuse, self).__init__()
 
@@ -50,7 +50,8 @@ class Fuse(pyfuse3.Operations):
         self.gid = os.getgid()
         self.uid = os.getuid()
 
-        self.backend = backend
+        self.graph_backend = graph_backend
+        self.obj_backend = obj_backend
         self.cache = cache
 
     def shutdown(self) -> None:
@@ -91,7 +92,7 @@ class Fuse(pyfuse3.Operations):
         if cache:
             return cache
 
-        metadata = await self.backend.get_metadata(swhid)
+        metadata = await self.graph_backend.get_metadata(swhid)
         await self.cache.metadata.set(swhid, metadata)
         # Retrieve it from cache so it is correctly typed
         return await self.cache.metadata.get(swhid)
@@ -111,7 +112,7 @@ class Fuse(pyfuse3.Operations):
             self.logger.debug("Found blob %s in cache", swhid)
             return cache
 
-        blob = await self.backend.get_blob(swhid)
+        blob = await self.obj_backend.get_blob(swhid)
         await self.cache.blob.set(swhid, blob)
         return blob
 
@@ -128,7 +129,7 @@ class Fuse(pyfuse3.Operations):
             )
             return cache
 
-        history = await self.backend.get_history(swhid)
+        history = await self.graph_backend.get_history(swhid)
         await self.cache.history.set(history)
         # Retrieve it from cache so it is correctly typed
         res = await self.cache.history.get(swhid)
@@ -146,7 +147,7 @@ class Fuse(pyfuse3.Operations):
             )
             return cache
 
-        visits = await self.backend.get_visits(url_encoded)
+        visits = await self.graph_backend.get_visits(url_encoded)
         await self.cache.metadata.set_visits(url_encoded, visits)
         # Retrieve it from cache so it is correctly typed
         res = await self.cache.metadata.get_visits(url_encoded)
@@ -300,15 +301,21 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.ENOENT)
 
 
-def backend_factory(conf: Dict[str, Any]) -> FuseBackend:
+def graph_backend_factory(conf: Dict[str, Any]) -> GraphBackend:
     if "graph" in conf:
-        from swh.fuse.backends.graph import GraphBackend
+        from swh.fuse.backends.graph import CompressedGraphBackend
 
-        return GraphBackend(conf)
+        return CompressedGraphBackend(conf)
     else:
         from swh.fuse.backends.web_api import WebApiBackend
 
         return WebApiBackend(conf)
+
+
+def obj_backend_factory(conf: Dict[str, Any]) -> ObjBackend:
+    from swh.fuse.backends.web_api import WebApiBackend
+
+    return WebApiBackend(conf)
 
 
 async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -> None:
@@ -318,7 +325,7 @@ async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -
     pyfuse3.asyncio.enable()
 
     async with FuseCache(conf["cache"]) as cache:
-        fs = Fuse(root_path, cache, conf, backend_factory(conf))
+        fs = Fuse(cache, conf, graph_backend_factory(conf), obj_backend_factory(conf))
 
         # Initially populate the cache
         for swhid in swhids:
