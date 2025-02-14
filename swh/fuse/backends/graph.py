@@ -87,10 +87,10 @@ class GraphBackend(FuseBackend):
                 parents.append({"id": parent.object_id.hex()})
         # we also provide fields from protobuf message RevisionData
         author_date = datetime.fromtimestamp(raw.rev.author_date, tz=timezone.utc)
-        author_tz = timezone(timedelta(seconds=raw.rev.author_date_offset))
+        author_tz = timezone(timedelta(minutes=raw.rev.author_date_offset))
         author_date = author_date.astimezone(author_tz)
         committer_date = datetime.fromtimestamp(raw.rev.committer_date, tz=timezone.utc)
-        committer_tz = timezone(timedelta(seconds=raw.rev.committer_date_offset))
+        committer_tz = timezone(timedelta(minutes=raw.rev.committer_date_offset))
         committer_date = committer_date.astimezone(committer_tz)
         metadata = {
             "author": raw.rev.author,
@@ -112,7 +112,7 @@ class GraphBackend(FuseBackend):
             raise ValueError(f"Cannot find target for release {swhid}")
 
         rel_date = datetime.fromtimestamp(raw.rel.author_date, tz=timezone.utc)
-        rel_tz = timezone(timedelta(seconds=raw.rel.author_date_offset))
+        rel_tz = timezone(timedelta(minutes=raw.rel.author_date_offset))
         rel_date = rel_date.astimezone(rel_tz)
 
         metadata = {
@@ -183,6 +183,18 @@ class GraphBackend(FuseBackend):
         """
         Return a list of tuples `(swhid, revision swhid)`
         """
+        loop = asyncio.get_event_loop()
+        raw_cnt = await loop.run_in_executor(
+            None,
+            self.grpc_stub.Traverse,
+            swhgraph.TraversalRequest(
+                src=[str(swhid)],
+                edges="rev:rev",
+                mask=FieldMask(paths=["swhid"]),
+            ),
+        )
+        str_swhid = str(swhid)
+        return [(str_swhid, str(entry.swhid)) for entry in raw_cnt]
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
         """

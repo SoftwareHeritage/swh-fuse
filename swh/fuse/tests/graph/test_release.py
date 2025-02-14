@@ -18,8 +18,8 @@ def test_release(fuse_graph_mountpoint: Path, example_release: str):
         assert parsed["id"] in example_release
         assert "name" in parsed
         assert "author" in parsed
-        assert "date" in parsed
         assert "message" in parsed
+        assert parsed["date"] == "2009-02-14T01:31:30+02:00"
 
     assert (root / "root").is_symlink()
     assert (root / "target").is_symlink()

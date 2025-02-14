@@ -18,10 +18,10 @@ def test_revision(fuse_graph_mountpoint: Path, example_revision: str):
         assert "author" in parsed
         assert "committer" in parsed
         assert "message" in parsed
-        assert "date" in parsed
-        assert "committer_date" in parsed
         assert "parents" in parsed
         assert "directory" in parsed
+        assert parsed["date"] == "2005-03-18T13:14:00+02:00"
+        assert parsed["committer_date"] == "2005-03-18T16:19:10+02:00"
 
     assert (root / "parents").is_dir()
     assert (root / "parent").is_symlink()
