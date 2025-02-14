@@ -8,7 +8,8 @@ Fixtures for the GraphBackend-ed swh-fuse
 -----------------------------------------
 
 Those rely on the test graph in `swh-graph`.
-Data expected in the test graph is provided here as fixtures.
+Data expected in the test graph is provided here as fixtures and will have to be kept
+in sync with swh/graph/tests/grpc/test_getnode.py
 """
 
 import asyncio
@@ -92,7 +93,28 @@ def fuse_graph_mountpoint(
         finally:
             CliRunner().invoke(cli.umount, [tmpdir])
 
+
 @pytest.fixture()
 def example_origin() -> str:
     "Adapted from swh.graph.tests.test_http_client.TEST_ORIGIN_ID"
     return quote_plus("https://example.com/swh/graph")
+
+
+@pytest.fixture()
+def example_snapshot() -> str:
+    return "swh:1:snp:0000000000000000000000000000000000000020"
+
+
+@pytest.fixture()
+def example_revision() -> str:
+    return "swh:1:rev:0000000000000000000000000000000000000009"
+
+
+@pytest.fixture()
+def example_release() -> str:
+    return "swh:1:rel:0000000000000000000000000000000000000010"
+
+
+@pytest.fixture()
+def example_directory() -> str:
+    return "swh:1:dir:0000000000000000000000000000000000000008"
