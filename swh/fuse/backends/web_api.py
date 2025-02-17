@@ -21,8 +21,7 @@ class WebApiBackend(GraphBackend, ObjBackend):
     """
     A Backend querying everything via Software Heritage's public API.
 
-    This is simpler to configure and deploy, but expect long response times when
-    exploring big directories.
+    This is simpler to configure and deploy, but expect long response times.
     """
 
     def __init__(self, conf: Dict):

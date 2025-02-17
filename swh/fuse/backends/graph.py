@@ -23,15 +23,12 @@ from ..backends import GraphBackend
 
 class CompressedGraphBackend(GraphBackend):
     """
-    A Backend querying everything via Software Heritage's public API.
-
-    This is simpler to configure and deploy, but expect long response times when
-    exploring big directories.
+    A Backend querying a compressed graph instance via gRPC.
     """
 
     def __init__(self, conf: dict):
         """
-        Only needs the `web-api` key of `conf`, searching for `url` and maybe `auth-token` keys.
+        Only needs `graph.grpc-url`.
         """
         self.grpc_stub = swhgraph_grpc.TraversalServiceStub(
             grpc.insecure_channel(conf["graph"]["grpc-url"])
@@ -127,6 +124,13 @@ class CompressedGraphBackend(GraphBackend):
         return metadata
 
     async def _directory_metadata(self, swhid: CoreSWHID, raw) -> List:
+        """
+        In this case the ``raw`` object obtained from ``getNode`` is not enough,
+        because we also need each successors' ``length`` property (if it's a content) to
+        be on par with the WebAPI. We use a filtered traversal request to obtain lengths
+        in a single gRPC call.
+        """
+        
         loop = asyncio.get_event_loop()
         raw_cnt = await loop.run_in_executor(
             None,
@@ -147,7 +151,6 @@ class CompressedGraphBackend(GraphBackend):
                 }
 
         metadata = []
-        # something like
         for successor in raw.successor:
             target = CoreSWHID.from_string(successor.swhid)
             target_type = target.object_type.value
@@ -175,9 +178,6 @@ class CompressedGraphBackend(GraphBackend):
         return metadata
 
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
-        """
-        Return a list of tuples `(swhid, revision swhid)`
-        """
         loop = asyncio.get_event_loop()
         raw_cnt = await loop.run_in_executor(
             None,
@@ -192,38 +192,6 @@ class CompressedGraphBackend(GraphBackend):
         return [(str_swhid, str(entry.swhid)) for entry in raw_cnt]
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
-        """
-        Return a list of objects
-
-        This GetNode returns:
-
-        swhid: "swh:1:ori:872aeac9f211c8b12c58e6a5092a0ae20e517b11"
-        successor {
-            swhid: "swh:1:snp:c7d88f7679e29a81440682c558bb439c7628cd20"
-            label {
-                visit_timestamp: 1677206735
-                is_full_visit: true
-            }
-        }
-        successor {
-            swhid: "swh:1:snp:a972d1e29dc327c661d7ebc30334b604aff3a96f"
-            label {
-                visit_timestamp: 1712340909
-                is_full_visit: true
-            }
-            label {
-                visit_timestamp: 1712368096
-                is_full_visit: true
-            }
-        }
-        ...
-        ori {
-        url: "https://github.com/ytdl-org/youtube-dl"
-        }
-        num_successors: 168
-
-
-        """
         url = unquote_plus(url_encoded).encode()
         swhid = "swh:1:ori:" + hashlib.sha1(url).hexdigest()
 
