@@ -27,7 +27,7 @@ class Fuse(pyfuse3.Operations):
 
     Locally mount parts of the archive and navigate it as a virtual file system.
 
-    This class ties together `pyfuse3` and the configured cache and back-end.
+    This class ties together ``pyfuse3`` and the configured cache and back-end.
     """
 
     def __init__(
@@ -319,7 +319,7 @@ def obj_backend_factory(conf: Dict[str, Any]) -> ObjBackend:
 
 
 async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -> None:
-    """swh-fuse CLI entry-point"""
+    """``swh-fuse`` CLI entry-point"""
 
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
     pyfuse3.asyncio.enable()

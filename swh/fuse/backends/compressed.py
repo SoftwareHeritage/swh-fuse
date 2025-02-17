@@ -28,7 +28,7 @@ class CompressedGraphBackend(GraphBackend):
 
     def __init__(self, conf: dict):
         """
-        Only needs `graph.grpc-url`.
+        Only needs ``graph.grpc-url``.
         """
         self.grpc_stub = swhgraph_grpc.TraversalServiceStub(
             grpc.insecure_channel(conf["graph"]["grpc-url"])

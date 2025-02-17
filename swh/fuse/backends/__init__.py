@@ -20,7 +20,7 @@ class GraphBackend(ABC):
     """
     Methods required by the FUSE logic to create its folders layout.
     Those methods must return dicts compliant with the Web API, to ease their use and
-    caching in the :ref:`swh.fuse.fuse.Fuse` class.
+    caching in the :py:class:`swh.fuse.fuse.Fuse` class.
     Fields listed in method specifications below are the minimal required fields,
     additional fields will be included in the various `meta.json` files proposed
     by this virtual file system.
@@ -29,39 +29,40 @@ class GraphBackend(ABC):
     @abstractmethod
     async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
         """
-        Entries in the returned `dict` depend on the `swhid` type.
+        Entries in the returned ``dict`` depend on the ``swhid`` type.
 
-        For `cnt`, return a dict containing at least `'length': [int]`
+        For ``cnt``, return a dict containing at least ``'length': [int]``
 
-        For `dir`, return a list of entries like
-        ```
-        {
-            "dir_id": "dir's hash",
-            "name": "dir item name",
-            "type": "str=dir|file|rev",  # yes, `file`...
-            "target": "target hash",
-            "perms": "permissions [int]",
-            # if target is a cnt:
-            "length": "file size [int]",
-        }
+        For ``dir``, return a list of entries like
 
-        For `rev`, return a dict containing at least `directory` (SWHID),
-        `parents` (list of objects containing at list `id` (hash)),
-        `date` (str, isoformat), `id` (object's hash).
+        .. code:: python
 
-        For `rel`, return a dict containing at least `target` (SWHID),
-        `target_type`,  `date` (str, isoformat), `id` (object's hash).
+            {
+                "dir_id": "dir's hash",
+                "name": "dir item name",
+                "type": "str=dir|file|rev",  # yes, `file`...
+                "target": "target hash",
+                "perms": "permissions [int]",
+                # if target is a cnt:
+                "length": "file size [int]",
+            }
 
-        For `snp`, return a dict where each key is a branch name,
-        each value is a dict containing at least `target` (hash),
-        `target_type` (content, directory, revision, release, snapshot or alias).
-        ```
+        For ``rev``, return a dict containing at least ``directory`` (SWHID),
+        ``parents`` (list of objects containing at list ``id`` (hash)),
+        ``date`` (str, isoformat), ``id`` (object's hash).
+
+        For ``rel``, return a dict containing at least ``target`` (SWHID),
+        ``target_type``,  ``date`` (str, isoformat), ``id`` (object's hash).
+
+        For ``snp``, return a dict where each key is a branch name,
+        each value is a dict containing at least ``target`` (hash),
+        ``target_type`` (content, directory, revision, release, snapshot or alias).
         """
 
     @abstractmethod
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
         """
-        Return a list of tuples `(swhid, revision swhid)`
+        Return a list of tuples ``(swhid, revision swhid)``
         """
 
     @abstractmethod
@@ -69,8 +70,8 @@ class GraphBackend(ABC):
         """
         Return a list of objects
 
-        Each object should contain fields `date` (ISO), `origin` (str),
-        `snapshot` (SWHID's hash as str)
+        Each object should contain fields ``date`` (ISO), ``origin`` (str),
+        ``snapshot`` (SWHID's hash as str)
         """
 
 
@@ -82,5 +83,5 @@ class ObjBackend(ABC):
     @abstractmethod
     async def get_blob(self, swhid: CoreSWHID) -> bytes:
         """
-        Fetch the content of a `cnt` object.
+        Fetch the content of a ``cnt`` object.
         """
