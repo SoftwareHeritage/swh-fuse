@@ -21,12 +21,11 @@ import swh.fuse.cli as cli
 from .data.api_data import API_URL, MOCK_ARCHIVE
 
 
-
 @pytest.fixture(scope="module")
 def fuse_mntdir():
     with (
         TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir,
-        requests_mock.Mocker() as mocker
+        requests_mock.Mocker() as mocker,
     ):
         for api_call, data in MOCK_ARCHIVE.items():
             # Convert Python dict JSON into a string (only for non-raw API call)
