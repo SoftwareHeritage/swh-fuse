@@ -5,3 +5,4 @@ pyfuse3 >= 3.4.0
 python-daemon
 requests
 protobuf >=5.29.3
+mypy-protobuf
