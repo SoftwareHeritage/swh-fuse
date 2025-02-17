@@ -26,36 +26,17 @@ import pytest
 
 from swh.fuse import fuse
 import swh.fuse.cli as cli
-from swh.graph.pytest_plugin import *  # noqa ; provides the graph_grpc_server fixture
+from swh.graph.pytest_plugin import *  # noqa ; this provides the graph_grpc_server fixture
 
-
-@pytest.fixture(scope="module")
-def objstorage() -> dict:
-    """
-    TODO spawn a real objstorage ? or maybe implement a "cls: mock" ?
-    """
-    return {"cls": "remote", "url": "http://127.0.0.1:15003"}
 
 
 @pytest.fixture(scope="module")
-def hashes_path() -> str:
-    """
-    TODO maybe this should be in swh.graph along the test graph
-    """
-    return os.path.join(os.path.dirname(__file__), "hashes.orc")
-
-
-@pytest.fixture(scope="module")
-def fuse_graph_mountpoint(
-    hashes_path, objstorage, graph_grpc_server
-) -> Generator[Path, None, None]:
+def fuse_graph_mountpoint(graph_grpc_server) -> Generator[Path, None, None]:
     with TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir:
         mountpoint = Path(tmpdir)
         config = {
             "graph": {
                 "grpc-url": graph_grpc_server,
-                "objstorage": objstorage,
-                "hashes-path": hashes_path,
             },
             "cache": {
                 "metadata": {"in-memory": True},
