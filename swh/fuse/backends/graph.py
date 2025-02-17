@@ -130,7 +130,7 @@ class CompressedGraphBackend(GraphBackend):
         be on par with the WebAPI. We use a filtered traversal request to obtain lengths
         in a single gRPC call.
         """
-        
+
         loop = asyncio.get_event_loop()
         raw_cnt = await loop.run_in_executor(
             None,

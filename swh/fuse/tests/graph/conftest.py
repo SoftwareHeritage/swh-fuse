@@ -29,7 +29,6 @@ import swh.fuse.cli as cli
 from swh.graph.pytest_plugin import *  # noqa ; this provides the graph_grpc_server fixture
 
 
-
 @pytest.fixture(scope="module")
 def fuse_graph_mountpoint(graph_grpc_server) -> Generator[Path, None, None]:
     with TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir:
