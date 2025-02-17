@@ -18,7 +18,7 @@ import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
 from swh.model.swhids import CoreSWHID, ObjectType
 
-from ..backends import GraphBackend
+from . import GraphBackend
 
 
 class CompressedGraphBackend(GraphBackend):

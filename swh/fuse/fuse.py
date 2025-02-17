@@ -303,7 +303,7 @@ class Fuse(pyfuse3.Operations):
 
 def graph_backend_factory(conf: Dict[str, Any]) -> GraphBackend:
     if "graph" in conf:
-        from swh.fuse.backends.graph import CompressedGraphBackend
+        from swh.fuse.backends.compressed import CompressedGraphBackend
 
         return CompressedGraphBackend(conf)
     else:
