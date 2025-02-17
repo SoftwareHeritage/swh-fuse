@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-""" Use the Rust compiler (v1.42.0) as a testing repository """
+"""Use the Rust compiler (v1.42.0) as a testing repository"""
 
 
 def remove_swhid_prefix(swhid_str: str) -> str:

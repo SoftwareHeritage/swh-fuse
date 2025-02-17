@@ -3,5 +3,6 @@ requests-mock
 swh.core[testing]
 
 types-python-dateutil
+types-psutil
 types-pyyaml
 types-requests
