@@ -61,7 +61,7 @@ class CompressedGraphBackend(GraphBackend):
                     f"get_metadata({swhid.object_type}) not supported"
                 )
 
-    def _snapshot_metadata(self, raw) -> Dict:
+    def _snapshot_metadata(self, raw: swhgraph.Node) -> Dict:
         metadata = {}
         for successor in raw.successor:
             target = CoreSWHID.from_string(successor.swhid)
@@ -72,7 +72,7 @@ class CompressedGraphBackend(GraphBackend):
                 }
         return metadata
 
-    def _revision_metadata(self, swhid: CoreSWHID, raw) -> Dict:
+    def _revision_metadata(self, swhid: CoreSWHID, raw: swhgraph.Node) -> Dict:
         parents = []
         directory = None
         for successor in raw.successor:
@@ -101,7 +101,7 @@ class CompressedGraphBackend(GraphBackend):
         }
         return metadata
 
-    def _release_metadata(self, swhid: CoreSWHID, raw) -> Dict:
+    def _release_metadata(self, swhid: CoreSWHID, raw: swhgraph.Node) -> Dict:
         for successor in raw.successor:
             target = CoreSWHID.from_string(successor.swhid)
             break
@@ -123,7 +123,7 @@ class CompressedGraphBackend(GraphBackend):
         }
         return metadata
 
-    async def _directory_metadata(self, swhid: CoreSWHID, raw) -> List:
+    async def _directory_metadata(self, swhid: CoreSWHID, raw: swhgraph.Node) -> List:
         """
         In this case the ``raw`` object obtained from ``getNode`` is not enough,
         because we also need each successors' ``length`` property (if it's a content) to
