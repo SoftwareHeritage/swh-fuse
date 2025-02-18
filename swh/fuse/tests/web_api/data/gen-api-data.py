@@ -143,24 +143,24 @@ def generate_origin_archive_web_api(url: str):
     url_get = f"origin/{url}/get/"
     MOCK_ARCHIVE[url_get] = ""
 
+if __name__ == "__main__":
+    for entry in ALL_ENTRIES:
+        swhid = CoreSWHID.from_string(entry)
+        generate_archive_web_api(swhid, recursive=True)
+        generate_archive_graph_api(swhid)
 
-for entry in ALL_ENTRIES:
-    swhid = CoreSWHID.from_string(entry)
-    generate_archive_web_api(swhid, recursive=True)
-    generate_archive_graph_api(swhid)
+    # Custom fake snapshot to handle most special cases
+    MOCK_ARCHIVE[swhid_to_web_url(FAKE_SNP_SPECIAL_CASES_SWHID)] = {
+        "branches": FAKE_SNP_SPECIAL_CASES
+    }
 
-# Custom fake snapshot to handle most special cases
-MOCK_ARCHIVE[swhid_to_web_url(FAKE_SNP_SPECIAL_CASES_SWHID)] = {
-    "branches": FAKE_SNP_SPECIAL_CASES
-}
+    # Origin artifacts are not identified by SWHID but using an URL
+    generate_origin_archive_web_api(ORIGIN_URL)
 
-# Origin artifacts are not identified by SWHID but using an URL
-generate_origin_archive_web_api(ORIGIN_URL)
-
-print("# GENERATED FILE, DO NOT EDIT.")
-print("# Run './gen-api-data.py > api_data.py' instead.")
-print("# flake8: noqa")
-print("from typing import Any, Dict")
-print("")
-print(f"API_URL = '{API_URL_test}'\n")
-print(f"MOCK_ARCHIVE: Dict[str, Any] = {MOCK_ARCHIVE}")
+    print("# GENERATED FILE, DO NOT EDIT.")
+    print("# Run './gen-api-data.py > api_data.py' instead.")
+    print("# flake8: noqa")
+    print("from typing import Any, Dict")
+    print("")
+    print(f"API_URL = '{API_URL_test}'\n")
+    print(f"MOCK_ARCHIVE: Dict[str, Any] = {MOCK_ARCHIVE}")
