@@ -9,11 +9,10 @@ from pathlib import Path
 def test_origin(fuse_graph_mountpoint: Path, example_origin: str):
     root = fuse_graph_mountpoint / "origin" / example_origin
     assert root.is_dir()
-    empty = True
-    for d in root.iterdir():
-        empty = False
+    entries = list(root.iterdir())
+    for d in entries:
         assert d.is_dir()
-    if empty:
+    if not entries:
         raise AssertionError(f"No directories in {root}")
     assert (d / "meta.json").is_file()
     assert (d / "snapshot").is_symlink()
