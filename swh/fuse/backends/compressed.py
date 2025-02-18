@@ -65,11 +65,11 @@ class CompressedGraphBackend(GraphBackend):
         metadata = {}
         for successor in raw.successor:
             target = CoreSWHID.from_string(successor.swhid)
-            branch = successor.label[0].name.decode()
-            metadata[branch] = {
-                "target": target.object_id.hex(),
-                "target_type": target.object_type.name.lower(),
-            }
+            for branch in successor.label:
+                metadata[branch.name.decode()] = {
+                    "target": target.object_id.hex(),
+                    "target_type": target.object_type.name.lower(),
+                }
         return metadata
 
     def _revision_metadata(self, swhid: CoreSWHID, raw) -> Dict:
