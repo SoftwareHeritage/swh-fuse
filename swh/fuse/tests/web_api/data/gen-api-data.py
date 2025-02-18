@@ -11,17 +11,20 @@ from typing import Any, Dict
 
 import requests
 
-from swh.model.hashutil import hash_to_bytes
-from swh.model.swhids import CoreSWHID, ObjectType
-
-from ..api_url import GRAPH_API_REQUEST, swhid_to_graph_url, swhid_to_web_url
-from ..data.config import (
+from swh.fuse.tests.web_api.api_url import (
+    GRAPH_API_REQUEST,
+    swhid_to_graph_url,
+    swhid_to_web_url,
+)
+from swh.fuse.tests.web_api.data.config import (
     ALL_ENTRIES,
     FAKE_SNP_SPECIAL_CASES,
     FAKE_SNP_SPECIAL_CASES_SWHID,
     ORIGIN_URL,
     REV_SMALL_HISTORY,
 )
+from swh.model.hashutil import hash_to_bytes
+from swh.model.swhids import CoreSWHID, ObjectType
 
 API_URL_real = "https://archive.softwareheritage.org/api/1"
 API_URL_test = "https://invalid-test-only.archive.softwareheritage.org/api/1"
@@ -38,7 +41,10 @@ METADATA: Dict[CoreSWHID, Any] = {}
 
 def get_from_api(endpoint: str) -> str:
     headers = {"Authorization": f"Bearer {API_TOKEN}"} if API_TOKEN else {}
-    return requests.get(f"{API_URL_real}/{endpoint}", headers=headers).text
+    result = requests.get(f"{API_URL_real}/{endpoint}", headers=headers)
+    if result.status_code != 200:
+        raise RuntimeError(f"API request failed: {result.status_code} {result.text}")
+    return result.text
 
 
 def generate_archive_web_api(
@@ -63,8 +69,11 @@ def generate_archive_web_api(
         if swhid.object_type == ObjectType.CONTENT:
             generate_archive_web_api(swhid, raw=True)
         elif swhid.object_type == ObjectType.RELEASE:
-            target_type = METADATA[swhid]["target_type"]
-            target_id = METADATA[swhid]["target"]
+            try:
+                target_type = METADATA[swhid]["target_type"]
+                target_id = METADATA[swhid]["target"]
+            except KeyError:
+                print(f"keyerror on METADATA[{swhid}]={METADATA[swhid]}")
             target = CoreSWHID(
                 object_type=ObjectType[target_type.upper()],
                 object_id=hash_to_bytes(target_id),
@@ -142,6 +151,7 @@ def generate_origin_archive_web_api(url: str):
     # Necessary since swh-fuse will check the origin URL using the get/ endpoint
     url_get = f"origin/{url}/get/"
     MOCK_ARCHIVE[url_get] = ""
+
 
 if __name__ == "__main__":
     for entry in ALL_ENTRIES:
