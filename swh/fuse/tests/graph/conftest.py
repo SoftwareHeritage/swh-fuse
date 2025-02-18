@@ -42,7 +42,10 @@ def fuse_graph_mountpoint(graph_grpc_server) -> Generator[Path, None, None]:
                 "blob": {"in-memory": True},
                 "direntry": {"maxram": "10%"},
             },
-            "web-api": {"url": "https://should.not.be.called.swhid.org/", "auth-token": None},
+            "web-api": {
+                "url": "https://should.not.be.called.swhid.org/",
+                "auth-token": None,
+            },
             "json-indent": None,
         }
 
