@@ -2994,7 +2994,7 @@ MOCK_ARCHIVE: Dict[str, Any] = {
                 "target_type": "revision",
                 "target_url": "https://archive.softwareheritage.org/api/1/revision/c980aba9a88704717229da3c1ec02685333c0db2/",
             },
-            "refs/heads/grammer": {
+            "refs/heads/grammar": {
                 "target": "d7b93216cdeb477e1af813f898096af867550338",
                 "target_type": "revision",
                 "target_url": "https://archive.softwareheritage.org/api/1/revision/d7b93216cdeb477e1af813f898096af867550338/",
