@@ -79,9 +79,13 @@ class CompressedGraphBackend(GraphBackend):
             target = CoreSWHID.from_string(successor.swhid)
             if target.object_type == ObjectType.DIRECTORY:
                 directory = target.object_id.hex()
-            else:
+            elif target.object_type == ObjectType.REVISION:
                 parent = CoreSWHID.from_string(successor.swhid)
                 parents.append({"id": parent.object_id.hex()})
+            else:
+                raise ValueError(
+                    f"Unsupported successor type for {swhid}: {target.object_type}"
+                )
         # we also provide fields from protobuf message RevisionData
         author_date = datetime.fromtimestamp(raw.rev.author_date, tz=timezone.utc)
         author_tz = timezone(timedelta(minutes=raw.rev.author_date_offset))
