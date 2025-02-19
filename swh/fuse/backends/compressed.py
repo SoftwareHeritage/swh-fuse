@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import asyncio
+import base64
 from datetime import date, datetime, timedelta, timezone
 import hashlib
 import logging
@@ -19,6 +20,16 @@ import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
 from swh.model.swhids import CoreSWHID, ObjectType
 
 from . import GraphBackend
+
+
+def decode_or_base64(data: bytes) -> str:
+    """
+    If ``data`` is not proper UTF-8, return it as base64.
+    """
+    try:
+        return data.decode()
+    except UnicodeDecodeError:
+        return base64.b64encode(data).decode()
 
 
 class CompressedGraphBackend(GraphBackend):
@@ -66,7 +77,8 @@ class CompressedGraphBackend(GraphBackend):
         for successor in raw.successor:
             target = CoreSWHID.from_string(successor.swhid)
             for branch in successor.label:
-                metadata[branch.name.decode()] = {
+                branch_name = decode_or_base64(branch.name)
+                metadata[branch_name] = {
                     "target": target.object_id.hex(),
                     "target_type": target.object_type.name.lower(),
                 }
@@ -93,10 +105,11 @@ class CompressedGraphBackend(GraphBackend):
         committer_date = datetime.fromtimestamp(raw.rev.committer_date, tz=timezone.utc)
         committer_tz = timezone(timedelta(minutes=raw.rev.committer_date_offset))
         committer_date = committer_date.astimezone(committer_tz)
+        message = decode_or_base64(raw.rev.message)
         metadata = {
             "author": raw.rev.author,
             "committer": raw.rev.committer,
-            "message": raw.rev.message.decode(),
+            "message": message,
             "date": author_date.isoformat(),
             "committer_date": committer_date.isoformat(),
             "parents": parents,
@@ -116,12 +129,15 @@ class CompressedGraphBackend(GraphBackend):
         rel_tz = timezone(timedelta(minutes=raw.rel.author_date_offset))
         rel_date = rel_date.astimezone(rel_tz)
 
+        message = decode_or_base64(raw.rel.message)
+        name = decode_or_base64(raw.rel.name)
+
         metadata = {
             "target": target.object_id.hex(),
             "target_type": target.object_type.name.lower(),
             "id": swhid.object_id.hex(),
-            "message": raw.rel.message.decode(),
-            "name": raw.rel.name.decode(),
+            "message": message,
+            "name": name,
             "author": raw.rel.author,
             "date": rel_date.isoformat(),
         }
@@ -161,9 +177,10 @@ class CompressedGraphBackend(GraphBackend):
             if target_type == ObjectType.CONTENT.value:
                 # complying with swh-web-client.typify_json is hard
                 target_type = "file"
+            name = decode_or_base64(successor.label[0].name)
             entry = {
                 "dir_id": swhid.object_id.hex(),
-                "name": successor.label[0].name.decode(),
+                "name": name,
                 "perms": successor.label[0].permission,
                 "type": target_type,
                 "target": target.object_id.hex(),
