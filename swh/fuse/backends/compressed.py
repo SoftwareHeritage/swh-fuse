@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import asyncio
 import base64
 from datetime import date, datetime, timedelta, timezone
 import hashlib
@@ -12,7 +11,7 @@ from typing import Any, Dict, List, Tuple
 from urllib.parse import unquote_plus
 
 from google.protobuf.field_mask_pb2 import FieldMask
-import grpc
+import grpc.aio
 
 from swh.fuse import LOGGER_NAME
 import swh.graph.grpc.swhgraph_pb2 as swhgraph
@@ -42,17 +41,12 @@ class CompressedGraphBackend(GraphBackend):
         Only needs ``graph.grpc-url``.
         """
         self.grpc_stub = swhgraph_grpc.TraversalServiceStub(
-            grpc.insecure_channel(conf["graph"]["grpc-url"])
+            grpc.aio.insecure_channel(conf["graph"]["grpc-url"])
         )
         self.logger = logging.getLogger(LOGGER_NAME)
 
     async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
-        loop = asyncio.get_event_loop()
-        raw = await loop.run_in_executor(
-            None,
-            self.grpc_stub.GetNode,
-            swhgraph.GetNodeRequest(swhid=str(swhid)),
-        )
+        raw = await self.grpc_stub.GetNode(swhgraph.GetNodeRequest(swhid=str(swhid)))
 
         match swhid.object_type:
             case ObjectType.SNAPSHOT:
@@ -151,16 +145,13 @@ class CompressedGraphBackend(GraphBackend):
         in a single gRPC call.
         """
 
-        loop = asyncio.get_event_loop()
-        raw_cnt = await loop.run_in_executor(
-            None,
-            self.grpc_stub.Traverse,
+        raw_cnt = await self.grpc_stub.Traverse(
             swhgraph.TraversalRequest(
                 src=[str(swhid)],
                 max_depth=1,
                 edges="dir:cnt",
                 mask=FieldMask(paths=["swhid", "cnt"]),
-            ),
+            )
         )
         cnt_metadata = {}
         for item in raw_cnt:
@@ -199,15 +190,12 @@ class CompressedGraphBackend(GraphBackend):
         return metadata
 
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
-        loop = asyncio.get_event_loop()
-        raw_cnt = await loop.run_in_executor(
-            None,
-            self.grpc_stub.Traverse,
+        raw_cnt = await self.grpc_stub.Traverse(
             swhgraph.TraversalRequest(
                 src=[str(swhid)],
                 edges="rev:rev",
                 mask=FieldMask(paths=["swhid"]),
-            ),
+            )
         )
         str_swhid = str(swhid)
         return [(str_swhid, str(entry.swhid)) for entry in raw_cnt]
@@ -216,12 +204,7 @@ class CompressedGraphBackend(GraphBackend):
         url = unquote_plus(url_encoded).encode()
         swhid = "swh:1:ori:" + hashlib.sha1(url).hexdigest()
 
-        loop = asyncio.get_event_loop()
-        ori_node = await loop.run_in_executor(
-            None,
-            self.grpc_stub.GetNode,
-            swhgraph.GetNodeRequest(swhid=str(swhid)),
-        )
+        ori_node = await self.grpc_stub.GetNode(swhgraph.GetNodeRequest(swhid=str(swhid)))
 
         origin = ori_node.ori.url
         visits = []
