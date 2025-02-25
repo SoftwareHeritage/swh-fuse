@@ -187,10 +187,18 @@ class MetadataCache(AbstractCache):
         # Fill in the date column for revisions (used as cache for history/by-date/)
         swhid_date = ""
         if swhid.object_type == ObjectType.REVISION:
-            date = dateutil.parser.parse(metadata["date"])
-            swhid_date = RevisionHistoryShardByDate.DATE_FMT.format(
-                year=date.year, month=date.month, day=date.day
-            )
+            try:
+                date = dateutil.parser.parse(metadata["date"])
+                swhid_date = RevisionHistoryShardByDate.DATE_FMT.format(
+                    year=date.year, month=date.month, day=date.day
+                )
+            except TypeError:
+                # for the rare case of missing/incorrect error, we'll display this
+                # obviously wrong date. This avoids further complexity in
+                # RevisionHistoryShardByDate
+                swhid_date = RevisionHistoryShardByDate.DATE_FMT.format(
+                    year=1970, month=1, day=1
+                )
 
         await self.conn.execute(
             "insert into metadata_cache values (?, ?, ?)",
@@ -325,12 +333,10 @@ class HistoryCache(AbstractCache):
                 logging.warning("Cannot parse object from history cache: %s", parent)
         return history
 
-    async def set(self, history: str) -> None:
-        history = history.strip()
+    async def set(self, history: List[Tuple[str, str]]) -> None:
         if history:
-            edges = [edge.split(" ") for edge in history.split("\n")]
             await self.conn.executemany(
-                "insert or ignore into history_graph values (?, ?)", edges
+                "insert or ignore into history_graph values (?, ?)", history
             )
             await self.conn.commit()
 

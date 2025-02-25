@@ -14,3 +14,4 @@ docs/README.md
 # this should be a symlink for people who want to build the sphinx doc
 # without using tox, generally created by the swh-env/bin/update script
 docs/Makefile.sphinx
+.vscode/

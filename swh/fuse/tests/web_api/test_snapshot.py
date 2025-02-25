@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 
-from swh.fuse.tests.common import get_data_from_web_archive
-from swh.fuse.tests.data.config import FAKE_SNP_SPECIAL_CASES_SWHID, ROOT_SNP
+from .common import get_data_from_web_archive
+from .data.config import FAKE_SNP_SPECIAL_CASES_SWHID, ROOT_SNP
 
 
 def test_list_branches(fuse_mntdir):

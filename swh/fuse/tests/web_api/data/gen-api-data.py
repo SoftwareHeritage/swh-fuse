@@ -11,12 +11,12 @@ from typing import Any, Dict
 
 import requests
 
-from swh.fuse.tests.api_url import (
+from swh.fuse.tests.web_api.api_url import (
     GRAPH_API_REQUEST,
     swhid_to_graph_url,
     swhid_to_web_url,
 )
-from swh.fuse.tests.data.config import (
+from swh.fuse.tests.web_api.data.config import (
     ALL_ENTRIES,
     FAKE_SNP_SPECIAL_CASES,
     FAKE_SNP_SPECIAL_CASES_SWHID,
@@ -41,7 +41,10 @@ METADATA: Dict[CoreSWHID, Any] = {}
 
 def get_from_api(endpoint: str) -> str:
     headers = {"Authorization": f"Bearer {API_TOKEN}"} if API_TOKEN else {}
-    return requests.get(f"{API_URL_real}/{endpoint}", headers=headers).text
+    result = requests.get(f"{API_URL_real}/{endpoint}", headers=headers)
+    if result.status_code != 200:
+        raise RuntimeError(f"API request failed: {result.status_code} {result.text}")
+    return result.text
 
 
 def generate_archive_web_api(
@@ -66,8 +69,11 @@ def generate_archive_web_api(
         if swhid.object_type == ObjectType.CONTENT:
             generate_archive_web_api(swhid, raw=True)
         elif swhid.object_type == ObjectType.RELEASE:
-            target_type = METADATA[swhid]["target_type"]
-            target_id = METADATA[swhid]["target"]
+            try:
+                target_type = METADATA[swhid]["target_type"]
+                target_id = METADATA[swhid]["target"]
+            except KeyError:
+                print(f"keyerror on METADATA[{swhid}]={METADATA[swhid]}")
             target = CoreSWHID(
                 object_type=ObjectType[target_type.upper()],
                 object_id=hash_to_bytes(target_id),
@@ -147,23 +153,24 @@ def generate_origin_archive_web_api(url: str):
     MOCK_ARCHIVE[url_get] = ""
 
 
-for entry in ALL_ENTRIES:
-    swhid = CoreSWHID.from_string(entry)
-    generate_archive_web_api(swhid, recursive=True)
-    generate_archive_graph_api(swhid)
+if __name__ == "__main__":
+    for entry in ALL_ENTRIES:
+        swhid = CoreSWHID.from_string(entry)
+        generate_archive_web_api(swhid, recursive=True)
+        generate_archive_graph_api(swhid)
 
-# Custom fake snapshot to handle most special cases
-MOCK_ARCHIVE[swhid_to_web_url(FAKE_SNP_SPECIAL_CASES_SWHID)] = {
-    "branches": FAKE_SNP_SPECIAL_CASES
-}
+    # Custom fake snapshot to handle most special cases
+    MOCK_ARCHIVE[swhid_to_web_url(FAKE_SNP_SPECIAL_CASES_SWHID)] = {
+        "branches": FAKE_SNP_SPECIAL_CASES
+    }
 
-# Origin artifacts are not identified by SWHID but using an URL
-generate_origin_archive_web_api(ORIGIN_URL)
+    # Origin artifacts are not identified by SWHID but using an URL
+    generate_origin_archive_web_api(ORIGIN_URL)
 
-print("# GENERATED FILE, DO NOT EDIT.")
-print("# Run './gen-api-data.py > api_data.py' instead.")
-print("# flake8: noqa")
-print("from typing import Any, Dict")
-print("")
-print(f"API_URL = '{API_URL_test}'\n")
-print(f"MOCK_ARCHIVE: Dict[str, Any] = {MOCK_ARCHIVE}")
+    print("# GENERATED FILE, DO NOT EDIT.")
+    print("# Run './gen-api-data.py > api_data.py' instead.")
+    print("# flake8: noqa")
+    print("from typing import Any, Dict")
+    print("")
+    print(f"API_URL = '{API_URL_test}'\n")
+    print(f"MOCK_ARCHIVE: Dict[str, Any] = {MOCK_ARCHIVE}")

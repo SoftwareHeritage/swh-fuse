@@ -86,3 +86,4 @@ max-line-length = 88
 norecursedirs = "build docs .*"
 asyncio_mode = "strict"
 consider_namespace_packages = true
+asyncio_default_fixture_loop_scope = "function"

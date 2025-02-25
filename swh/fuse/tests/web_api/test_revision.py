@@ -5,15 +5,16 @@ import time
 import dateutil.parser
 
 from swh.fuse.fs.artifact import RevisionHistoryShardByDate, RevisionHistoryShardByPage
-from swh.fuse.tests.api_url import GRAPH_API_REQUEST
-from swh.fuse.tests.common import (
+from swh.model.hashutil import hash_to_hex
+from swh.model.swhids import CoreSWHID
+
+from .api_url import GRAPH_API_REQUEST
+from .common import (
     check_dir_name_entries,
     get_data_from_graph_archive,
     get_data_from_web_archive,
 )
-from swh.fuse.tests.data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
-from swh.model.hashutil import hash_to_hex
-from swh.model.swhids import CoreSWHID
+from .data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
 
 
 def test_access_meta(fuse_mntdir):
@@ -41,6 +42,19 @@ def test_list_parent(fuse_mntdir):
     file_path = fuse_mntdir / "archive" / ROOT_REV / "parent"
     assert file_path.is_symlink()
     assert os.readlink(file_path) == "parents/1/"
+
+
+def wait_check_no_status(dir_path):
+    """
+    Wait max 2 seconds to populate folders that have a ``.status`` flag,
+    like ``by-date/``, and assert the file is gone.
+    """
+    for i in range(20):
+        entries = os.listdir(dir_path)
+        if entries and ".status" not in entries:
+            break
+        time.sleep(0.1)
+    assert not (dir_path / ".status").exists()
 
 
 def test_list_history(fuse_mntdir):
@@ -73,13 +87,7 @@ def test_list_history(fuse_mntdir):
         assert depth2 in (os.listdir(dir_by_page / depth1))
 
     dir_by_date = dir_path / "by-date"
-    # Wait max 2 seconds to populate by-date/ dir
-    for i in range(200):
-        entries = os.listdir(dir_by_date)
-        if entries and ".status" not in entries:
-            break
-        time.sleep(0.1)
-    assert not (dir_by_date / ".status").exists()
+    wait_check_no_status(dir_by_date)
 
     for swhid in expected:
         meta = get_data_from_web_archive(str(swhid))

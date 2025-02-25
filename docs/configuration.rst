@@ -14,8 +14,24 @@ The configuration file location is subject to the `XDG Base Directory
 well as explicitly overridden on the :ref:`command line <swh-fuse-cli>` via the
 ``-C/--config-file`` flag.
 
-The following sub-sections and fields can be used within the ``swh > fuse``
-stanza:
+You can choose how ``swh-fuse`` will fetch content from the archive.
+The simplest (and default) way is to query the SWH public API.
+This method can be configured with the following block:
+
+- ``web-api``:
+
+  - ``url``: archive API URL
+  - ``auth-token``: (optional) authentication token used with the API URL
+
+You can use a :ref:`compressed graph <swh-graph>` close to your server, via its gRPC API,
+to traverse the folder hierarchy much faster.
+This can be configured with the following block:
+
+- ``graph``:
+
+  - ``grpc-url``: URL to the graph's :ref:`gRPC server <swh-graph-grpc-api>`.
+
+``swh-fuse`` will also search for the following options:
 
 - ``cache``:
 
@@ -27,11 +43,6 @@ stanza:
   - ``direntry``: how much memory should be used by the direntry cache,
     specified using a ``maxram`` entry (either as a percentage of available RAM,
     or with disk storage unit suffixes: ``B``, ``KB``, ``MB``, ``GB``).
-
-- ``web-api``:
-
-  - ``url``: archive API URL
-  - ``auth-token``: authentication token used with the API URL
 
 - ``json-indent``: number of spaces used to print JSON metadata files (setting
   it to ``null`` disables indentation).
@@ -45,12 +56,28 @@ If no configuration is given, default values are:
 - ``json-indent``: 2 spaces.
 
 
-Example
--------
+Examples
+--------
 
-Here is a full ``~/.config/swh/global.yml`` example, showcasing different cache
-storage strategies (in-memory for metadata, on-disk for blob, 20% RAM for
-direntry), using the default Web API service:
+Here is a full ``~/.config/swh/global.yml`` equivalent to the default configuration:
+
+.. code:: yaml
+
+    swh:
+      fuse:
+        cache:
+          metadata:
+            path: "/path/to/cache/blob.sqlite"
+          blob:
+            path: "/path/to/cache/blob.sqlite"
+          direntry:
+            maxram: 10%
+        web-api:
+          url: "https://archive.softwareheritage.org/api/1/"
+        json-indent: 2
+
+This example uses a local compressed graph, an in-memory cache for metadata,
+and authenticates against the SWH public API to benefit from higher rate limits:
 
 .. code:: yaml
 
@@ -61,12 +88,11 @@ direntry), using the default Web API service:
             in-memory: true
           blob:
             path: "/path/to/cache/blob.sqlite"
-          direntry:
-            maxram: 20%
+        graph:
+          grpc-url: localhost:50091
         web-api:
           url: "https://archive.softwareheritage.org/api/1/"
           auth-token: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMTMxYTQ1My1hM2IyLTQwMTUtO...
-
 
 Logging
 -------

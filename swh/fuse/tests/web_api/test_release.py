@@ -1,8 +1,8 @@
 import json
 import os
 
-from swh.fuse.tests.common import check_dir_name_entries, get_data_from_web_archive
-from swh.fuse.tests.data.config import (
+from .common import check_dir_name_entries, get_data_from_web_archive
+from .data.config import (
     REL_TARGET_CNT,
     REL_TARGET_DIR,
     ROOT_DIR,
