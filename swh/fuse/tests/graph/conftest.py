@@ -105,6 +105,7 @@ def example_release() -> str:
 def example_directory() -> str:
     return "swh:1:dir:0000000000000000000000000000000000000008"
 
+
 @pytest.fixture()
 def example_content() -> str:
     return "swh:1:cnt:0000000000000000000000000000000000000001"
