@@ -67,6 +67,9 @@ class CompressedGraphBackend(GraphBackend):
             case ObjectType.DIRECTORY:
                 return await self._directory_metadata(swhid, raw)
 
+            case ObjectType.CONTENT:
+                return await self._content_metadata(swhid, raw)
+
             case _:
                 raise NotImplementedError(
                     f"get_metadata({swhid.object_type}) not supported"
@@ -213,6 +216,12 @@ class CompressedGraphBackend(GraphBackend):
             metadata.append(entry)
 
         return metadata
+
+    async def _content_metadata(self, swhid: CoreSWHID, raw: swhgraph.Node) -> Dict:
+        return {
+            "length": raw.cnt.length,
+            "status": "skipped" if raw.cnt.is_skipped else "visible",
+        }
 
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
         loop = asyncio.get_event_loop()
