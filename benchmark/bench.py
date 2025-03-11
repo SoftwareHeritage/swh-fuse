@@ -72,7 +72,7 @@ class Runner:
 
         response = requests.get(obj["fetch_url"], headers=headers)
 
-        tmpdir = TemporaryDirectory()
+        tmpdir = TemporaryDirectory(dir="/data/martin/tmp")
         dirpath = tmpdir.name
         tarball = f"{dirpath}/{obj['id']}.tag.gz"
         with open(tarball, "wb") as f:
