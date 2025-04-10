@@ -35,6 +35,16 @@ def scancode(directory: Path, output: str) -> int:
     run(["scancode", "-clpieu", "--json-pp", output, directory.absolute()])
     return 0
 
+def hyply(directory: Path, output: str) -> int:
+    res = run(["hyply", directory.absolute()], capture_output=True, text=True)
+    lines = res.stdout.split("\n")
+    with open(output, 'w') as output_f:
+        output_f.write(res.stdout)
+    try:
+        return lines[0]
+    except IndexError:
+        return -1
+
 class Runner:
 
     def __init__(self):
@@ -138,6 +148,8 @@ def main(case:str, swhids: tuple[str, ...]):
             case_function = python_files
         case "scancode":
             case_function = scancode
+        case "hyply":
+            case_function = hyply
 
     runner = Runner()
     for swhid in argv[2:]:
