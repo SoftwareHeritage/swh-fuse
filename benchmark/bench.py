@@ -32,7 +32,14 @@ def python_files(directory: Path, output: str) -> int:
 
 
 def scancode(directory: Path, output: str) -> int:
-    run(["scancode", "-clpieu", "--json-pp", output, directory.absolute()])
+    run([
+        "scancode",
+        "--license",
+        # doc suggests to add --copyright --package --email --info
+        "--json-pp",
+        output,
+        directory.absolute()
+    ])
     return 0
 
 def hyply(directory: Path, output: str) -> int:
