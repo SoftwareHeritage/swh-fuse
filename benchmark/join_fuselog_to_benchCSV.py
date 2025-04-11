@@ -1,19 +1,8 @@
 #!/usr/bin/env python
-import logging
-import os
-from typing import Tuple
-from datetime import datetime
-from pathlib import Path
-from time import perf_counter, sleep
-from sys import argv
-from tempfile import TemporaryDirectory
-from subprocess import run
 from dataclasses import dataclass
 import re
 
 import click
-import requests
-import yaml
 
 float_re = re.compile(r"[-+]?\d*\.\d+|\d+")
 
@@ -40,7 +29,7 @@ def parse_fuse_log(filename):
         for line in lines[-10:]:
             if "waiting for graph backend" in line:
                 measure.waiting_graph = parse_float(line)
-            elif "waiting for storage backend" in line:
+            elif "seconds waiting for storage" in line:
                 measure.waiting_storage = parse_float(line)
             elif "waiting for objstorage backend" in line:
                 measure.waiting_objstorage = parse_float(line)
