@@ -1,3 +1,50 @@
+# 2025-04-14 First 100% local swh-fuse on python-popular-500k
+
+## Setting
+
+Very similar to the 2025-03-11 bench (see below), but we added
+ * a [digestmap](https://gitlab.softwareheritage.org/swh/devel/swh-digestmap/-/merge_requests/3), read via the Python binding, able to map locally SWHIDs to SHA1 for contents in this graph
+ * a third test case with [hyperpolyglot](https://github.com/monkslc/hyperpolyglot) a language detector implemented in Rust (it's fast!),
+   hopyfully slower than counting Python LOC in Python but faster than Scancode
+
+## Results are OK
+
+Detailed results are in `.ods` in benchmark folders:
+[folder1](https://gitlab.softwareheritage.org/swh/devel/swh-fuse/-/tree/bench/benchmark/2025-04-10?ref_type=heads)
+[folder2](https://gitlab.softwareheritage.org/swh/devel/swh-fuse/-/tree/bench/benchmark/2025-04-14_nocache?ref_type=heads)
+
+* in that setting most of the "cold fuse" overhead is spent waiting for the `graph-grpc` server (even locally), which is expected as it's the most complex service in the stack
+* Scancode is so slow (even running only `--licence`) that there's no significant difference between FUSE/vault
+* a first access via FUSE takes ~50 more times than the computation itself
+  + variance is non-negligible: on that grade minimum is 6 times longer, maximum 200 times longer... but all this is sub-second
+* Hyperpolyglot is a bit faster than our Python lines counter 😅 and it's multi-threaded so we're not reporting FUSE's waiting times correctly in that case
+* Even on cold start, running cases via fuse is vaguely 5 times faster than downloading from the vault (but it's much much farther away)
+
+## Should we cut swh.fuse.cache ?
+
+Also ran a bonus variant, [removing `swh.fuse.cache`](https://gitlab.softwareheritage.org/martin/swh-fuse/-/commit/ebcac8b2b3f869bda48a8908e957a5a4de321dac)
+Granted, that module provides a fancy configurable cache - but it's deeply intricated in
+the implementation, and forces all meta-data through a JSON (de)serialization. What
+happens if we remove it entirely ?
+
+Note that this comparison was not made as consecutive runs on the same content with/without cache, but as a second batch running against the vault again.
+So numbers below still use the uncompressed vault archive as a baseline.
+
+* Hyperpolyglot (who's multi-threaded) was 56 times slower on cold-FUSE / 13 times when cached
+  + without the caching module, it's 17 times slower, 4 times when cached
+* PythonLOC counter was 53 times slower, 10 times when cached
+  + without the caching module, it's 50 times/ 10 times when cached
+* Scancode is too slow
+
+so it is a bit faster, but
+ * `swh.fuse.cache` still provides a configurable, potentially persistant, cache, which is
+still relevant for WebAPI users - that is, people developping FUSE traversers.
+* in the final setting nothing will be local, so FUSE will spend most of its wall-clock time waiting for distant services anyway
+
+so let's keep that cache, it's time to run a full-scale test.
+
+
+
 # 2025-03-11 First test of swh-fuse with a local graph+objstorage
 
 ## TLDR just give me numbers
