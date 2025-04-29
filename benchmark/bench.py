@@ -11,6 +11,7 @@ from subprocess import run
 
 import click
 import requests
+from requests.exceptions import HTTPError
 import yaml
 
 
@@ -36,6 +37,8 @@ def scancode(directory: Path, output: str) -> int:
         "scancode",
         "--license",
         # doc suggests to add --copyright --package --email --info
+        "-n",
+        "6",
         "--json-pp",
         output,
         directory.absolute()
@@ -65,7 +68,9 @@ class Runner:
         self.token = token
 
 
-    def download_vault(self, swhid: str) -> Tuple[TemporaryDirectory, Path]:
+    def download_vault(self, swhid: str, attempt=1) -> Tuple[TemporaryDirectory, Path]:
+        if attempt > 1:
+            logging.info("attempt {d}...", attempt)
         vault_url = f"https://archive.softwareheritage.org/api/1/vault/flat/{swhid}"
         headers = {}
         if self.token:
@@ -74,20 +79,26 @@ class Runner:
         response = requests.post(vault_url, headers=headers)
         try:
             response.raise_for_status()
-        except:
-            logging.warning("POST /vault failed: %s", response.text)
-            sleep(3)
 
-        while True:
-            response = requests.get(vault_url, headers=headers)
+            while True:
+                response = requests.get(vault_url, headers=headers)
+                response.raise_for_status()
+                obj = response.json()
+                if obj["status"] == "done":
+                    break
+                else:
+                    sleep(2)
+
+            response = requests.get(obj["fetch_url"], headers=headers)
             response.raise_for_status()
-            obj = response.json()
-            if obj["status"] == "done":
-                break
-            else:
-                sleep(2)
 
-        response = requests.get(obj["fetch_url"], headers=headers)
+        except HTTPError as e:
+            logging.warning("POST /vault failed (%s): %s", e, response.text)
+            if attempt < 3:
+                sleep(10)
+                return self.download_vault(swhid, attempt+1)
+            else:
+                raise
 
         tmpdir = TemporaryDirectory(dir="/data/martin/tmp")
         dirpath = tmpdir.name
