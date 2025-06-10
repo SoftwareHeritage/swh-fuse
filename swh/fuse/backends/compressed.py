@@ -14,6 +14,7 @@ from urllib.parse import unquote_plus
 from google.protobuf.field_mask_pb2 import FieldMask
 import grpc
 
+from swh.core.statsd import Statsd, TimedContextManagerDecorator
 from swh.fuse import LOGGER_NAME
 import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
@@ -45,14 +46,24 @@ class CompressedGraphBackend(GraphBackend):
             grpc.insecure_channel(conf["graph"]["grpc-url"])
         )
         self.logger = logging.getLogger(LOGGER_NAME)
+        self.time_tracker = TimedContextManagerDecorator(
+            Statsd(), "swh_fuse_graph_waiting_time"
+        )
+
+    def shutdown(self) -> None:
+        self.logger.info(
+            "Spent %f ms waiting for graph server",
+            self.time_tracker.total_elapsed,
+        )
 
     async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
         loop = asyncio.get_event_loop()
-        raw = await loop.run_in_executor(
-            None,
-            self.grpc_stub.GetNode,
-            swhgraph.GetNodeRequest(swhid=str(swhid)),
-        )
+        with self.time_tracker:
+            raw = await loop.run_in_executor(
+                None,
+                self.grpc_stub.GetNode,
+                swhgraph.GetNodeRequest(swhid=str(swhid)),
+            )
 
         match swhid.object_type:
             case ObjectType.SNAPSHOT:
@@ -171,16 +182,17 @@ class CompressedGraphBackend(GraphBackend):
         """
 
         loop = asyncio.get_event_loop()
-        raw_cnt = await loop.run_in_executor(
-            None,
-            self.grpc_stub.Traverse,
-            swhgraph.TraversalRequest(
-                src=[str(swhid)],
-                max_depth=1,
-                edges="dir:cnt",
-                mask=FieldMask(paths=["swhid", "cnt"]),
-            ),
-        )
+        with self.time_tracker:
+            raw_cnt = await loop.run_in_executor(
+                None,
+                self.grpc_stub.Traverse,
+                swhgraph.TraversalRequest(
+                    src=[str(swhid)],
+                    max_depth=1,
+                    edges="dir:cnt",
+                    mask=FieldMask(paths=["swhid", "cnt"]),
+                ),
+            )
         cnt_metadata = {}
         for item in raw_cnt:
             if item.HasField("cnt"):
@@ -225,30 +237,32 @@ class CompressedGraphBackend(GraphBackend):
 
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
         loop = asyncio.get_event_loop()
-        raw_cnt = await loop.run_in_executor(
-            None,
-            self.grpc_stub.Traverse,
-            swhgraph.TraversalRequest(
-                src=[str(swhid)],
-                edges="rev:rev",
-                mask=FieldMask(paths=["swhid"]),
-            ),
-        )
+        with self.time_tracker:
+            raw_cnt = await loop.run_in_executor(
+                None,
+                self.grpc_stub.Traverse,
+                swhgraph.TraversalRequest(
+                    src=[str(swhid)],
+                    edges="rev:rev",
+                    mask=FieldMask(paths=["swhid"]),
+                ),
+            )
         str_swhid = str(swhid)
         return [(str_swhid, str(entry.swhid)) for entry in raw_cnt]
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
-        url = unquote_plus(url_encoded).encode()
-        swhid = "swh:1:ori:" + hashlib.sha1(url).hexdigest()
+        url = unquote_plus(url_encoded)
+        swhid = "swh:1:ori:" + hashlib.sha1(url.encode()).hexdigest()
 
         loop = asyncio.get_event_loop()
-        ori_node = await loop.run_in_executor(
-            None,
-            self.grpc_stub.GetNode,
-            swhgraph.GetNodeRequest(swhid=str(swhid)),
-        )
+        with self.time_tracker:
+            ori_node = await loop.run_in_executor(
+                None,
+                self.grpc_stub.GetNode,
+                swhgraph.GetNodeRequest(swhid=str(swhid)),
+            )
 
-        origin = ori_node.ori.url
+        origin = url
         visits = []
         for entry in ori_node.successor:
             snapshot = CoreSWHID.from_string(entry.swhid)

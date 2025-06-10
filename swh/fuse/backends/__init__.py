@@ -33,7 +33,7 @@ class GraphBackend(ABC):
         """
         Entries in the returned ``dict`` depend on the ``swhid`` type.
 
-        For ``cnt``, return a dict containing at least ``'length': [int]``
+        For ``cnt``, return a dict containing at least ``length`` (int).
 
         For ``dir``, return a list of entries like
 
@@ -50,9 +50,9 @@ class GraphBackend(ABC):
             }
 
         For ``rev``, return a dict containing at least ``directory`` (SWHID),
-        ``parents`` (list of objects containing at list ``id`` (hash)),
+        ``parents`` (list of objects containing at least ``id`` (hash)),
         ``date`` (str, isoformat), ``committer_date`` (str, isoformat),
-        `id`` (object's hash).
+        ``id`` (object's hash).
 
         For ``rel``, return a dict containing at least ``target`` (SWHID),
         ``target_type``,  ``date`` (str, isoformat), ``id`` (object's hash).
@@ -77,8 +77,13 @@ class GraphBackend(ABC):
         ``snapshot`` (SWHID's hash as str)
         """
 
+    def shutdown(self) -> None:
+        """
+        Called when the FUSE object is destroyed.
+        """
 
-class ObjBackend(ABC):
+
+class ContentBackend(ABC):
     """
     Methods required by the FUSE logic to provide files' contents.
     """
@@ -87,4 +92,9 @@ class ObjBackend(ABC):
     async def get_blob(self, swhid: CoreSWHID) -> bytes:
         """
         Fetch the content of a ``cnt`` object.
+        """
+
+    def shutdown(self) -> None:
+        """
+        Called when the FUSE object is destroyed.
         """

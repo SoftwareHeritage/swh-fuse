@@ -4,20 +4,16 @@
 # See top-level LICENSE file for more information
 
 from pathlib import Path
-import re
 
-import requests_mock
-
-from . import WEB_API_URL
+from swh.model.model import Content
 
 
-def test_content(fuse_graph_mountpoint: Path, example_content: str):
-    root = fuse_graph_mountpoint / "archive" / example_content
-    with requests_mock.Mocker() as mocker:
-        pattern = re.compile(f"{WEB_API_URL}/content/sha1_git:[0-9a-f]+/raw/")
-        mocker.get(pattern, text="Hello world")
+def test_content(
+    fuse_graph_mountpoint: Path, example_content_swhid: str, example_content: Content
+):
+    root = fuse_graph_mountpoint / "archive" / example_content_swhid
 
-        assert root.is_file()
-        with root.open("rb") as f:
-            content = f.read()
-            assert len(content) > 0
+    assert root.is_file()
+    with root.open("rb") as f:
+        content = f.read()
+        assert content == example_content.data

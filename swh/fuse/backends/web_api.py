@@ -12,12 +12,12 @@ from urllib.parse import unquote_plus
 from requests import HTTPError
 
 from swh.fuse import LOGGER_NAME
-from swh.fuse.backends import GraphBackend, ObjBackend
+from swh.fuse.backends import ContentBackend, GraphBackend
 from swh.model.swhids import CoreSWHID
 from swh.web.client.client import WebAPIClient
 
 
-class WebApiBackend(GraphBackend, ObjBackend):
+class WebApiBackend(GraphBackend, ContentBackend):
     """
     A Backend querying everything via Software Heritage's public API.
 
@@ -26,7 +26,8 @@ class WebApiBackend(GraphBackend, ObjBackend):
 
     def __init__(self, conf: Dict):
         """
-        Only needs the `web-api` key of `conf`, searching for `url` and maybe `auth-token` keys.
+        Only needs the ``web-api`` key of ``conf``, searching for ``url`` and maybe
+        ``auth-token`` keys.
         """
         self.web_api = WebAPIClient(
             conf["web-api"]["url"], conf["web-api"]["auth-token"]

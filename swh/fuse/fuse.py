@@ -14,7 +14,7 @@ import pyfuse3
 import pyfuse3.asyncio
 
 from swh.fuse import LOGGER_NAME
-from swh.fuse.backends import GraphBackend, ObjBackend
+from swh.fuse.backends import ContentBackend, GraphBackend
 from swh.fuse.cache import FuseCache
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
@@ -35,7 +35,7 @@ class Fuse(pyfuse3.Operations):
         cache: FuseCache,
         conf: Dict[str, Any],
         graph_backend: GraphBackend,
-        obj_backend: ObjBackend,
+        obj_backend: ContentBackend,
     ):
         super(Fuse, self).__init__()
 
@@ -55,7 +55,8 @@ class Fuse(pyfuse3.Operations):
         self.cache = cache
 
     def shutdown(self) -> None:
-        pass
+        self.graph_backend.shutdown()
+        self.obj_backend.shutdown()
 
     def _alloc_inode(self, entry: FuseEntry) -> int:
         """Return a unique inode integer for a given entry"""
@@ -309,20 +310,32 @@ def graph_backend_factory(conf: Dict[str, Any]) -> GraphBackend:
         return WebApiBackend(conf)
 
 
-def obj_backend_factory(conf: Dict[str, Any]) -> ObjBackend:
-    from swh.fuse.backends.web_api import WebApiBackend
+def obj_backend_factory(conf: Dict[str, Any]) -> ContentBackend:
+    if "content" in conf and conf["content"]:
+        from swh.fuse.backends.objstorage import ObjStorageBackend
 
-    return WebApiBackend(conf)
+        return ObjStorageBackend(conf)
+    else:
+        from swh.fuse.backends.web_api import WebApiBackend
+
+        return WebApiBackend(conf)
 
 
-async def main(swhids: List[CoreSWHID], root_path: Path, conf: Dict[str, Any]) -> None:
+async def main(
+    swhids: List[CoreSWHID],
+    root_path: Path,
+    conf: Dict[str, Any],
+    content_backend: ContentBackend | None = None,
+) -> None:
     """``swh-fuse`` CLI entry-point"""
 
     # Use pyfuse3 asyncio layer to match the rest of Software Heritage codebase
     pyfuse3.asyncio.enable()
 
     async with FuseCache(conf["cache"]) as cache:
-        fs = Fuse(cache, conf, graph_backend_factory(conf), obj_backend_factory(conf))
+        if content_backend is None:
+            content_backend = obj_backend_factory(conf)
+        fs = Fuse(cache, conf, graph_backend_factory(conf), content_backend)
 
         # Initially populate the cache
         for swhid in swhids:

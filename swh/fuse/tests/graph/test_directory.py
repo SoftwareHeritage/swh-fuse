@@ -2,16 +2,17 @@
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
-
 from pathlib import Path
-import re
 
-import requests_mock
-
-from . import WEB_API_URL
+import pytest
 
 
 def test_directory(fuse_graph_mountpoint: Path, example_directory: str):
+    with pytest.raises(FileNotFoundError):
+        # this should not crash the process
+        void = fuse_graph_mountpoint / "archive" / example_directory / "not-there"
+        void.stat()
+
     root = fuse_graph_mountpoint / "archive" / example_directory
     assert root.is_dir()
 
@@ -25,12 +26,6 @@ def test_directory(fuse_graph_mountpoint: Path, example_directory: str):
         elif item.is_file():
             assert item.stat().st_size > 0
 
-            with requests_mock.Mocker() as mocker:
-                pattern = re.compile(f"{WEB_API_URL}/content/sha1_git:[0-9a-f]+/raw/")
-                mocker.get(pattern, text="Hello world")
-                with item.open("rb") as f:
-                    content = f.read()
-                    assert len(content) > 0
         else:
             raise AssertionError(
                 f"{item} is not a file or directory, that's unexpected in the test graph"

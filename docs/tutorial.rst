@@ -222,7 +222,6 @@ as branch names:
    $ ls -f refs/heads/ | grep Bell
    Bell-32V-Snapshot-Development
    Bell-Release
-
    $ cd refs/heads/Bell-Release
    $ jq .message,.date meta.json
    "Bell 32V release\nSnapshot of the completed development branch\n\nSynthesized-from: 32v\n"
@@ -276,3 +275,15 @@ The ``search`` tool is also useful to escape URL:
 
    $ swh web search "torvalds linux" --limit 1 --url-encode | cut -f1
    https%3A%2F%2Fgithub.com%2Ftorvalds%2Flinux
+
+
+Faster access in HPC settings
+-----------------------------
+
+The default configuration uses Software Heritage's public Web API.
+As it is relatively slow,
+when using ``swh-fuse`` this is tractable only if you perform repeated accesses to a
+small subset of the archive. Otherwise,
+and if your infrastructure can hold a compressed graph server,
+you may configure ``swh-fuse`` to use it directly.
+This is described in the section :ref:`Configure swh-fuse for HPC access`.

@@ -46,12 +46,12 @@ class FuseCache:
     to minimize network transfer.
 
     Caches are stored on disk in SQLite databases located at
-    `$XDG_CACHE_HOME/swh/fuse/`.
+    ``$XDG_CACHE_HOME/swh/fuse/``.
 
     All caches are persistent (i.e., they survive the restart of the SwhFS process) and
     global (i.e., they are shared by concurrent SwhFS processes).
 
-    We assume that no cache *invalidation* is necessary, due to intrinsic
+    We assume that no cache invalidation is necessary, due to intrinsic
     properties of the Software Heritage archive, such as integrity verification
     and append-only archive changes. To clean the caches one can just remove the
     corresponding files from disk.
@@ -65,7 +65,12 @@ class FuseCache:
         self.metadata = await MetadataCache(
             conf=self.cache_conf["metadata"]
         ).__aenter__()
-        self.blob = await BlobCache(conf=self.cache_conf["blob"]).__aenter__()
+
+        if self.cache_conf["blob"].get("bypass", False):
+            self.blob = await NoopBlobCache(conf=self.cache_conf["blob"]).__aenter__()
+        else:
+            self.blob = await BlobCache(conf=self.cache_conf["blob"]).__aenter__()
+
         # History and raw metadata share the same SQLite db (hence the same connection)
         self.history = await HistoryCache(
             conf=self.cache_conf["metadata"], conn=self.metadata.conn
@@ -131,7 +136,7 @@ class AbstractCache(ABC):
 class MetadataCache(AbstractCache):
     """The metadata cache map each artifact to the complete metadata of the
     referenced object. This is analogous to what is available in
-    `archive/<SWHID>.json` file (and generally used as data source for returning
+    ``archive/<SWHID>.json`` file (and generally used as data source for returning
     the content of those files). Artifacts are identified using their SWHIDs, or
     in the case of origin visits, using their URLs."""
 
@@ -222,11 +227,11 @@ class MetadataCache(AbstractCache):
 
 
 class BlobCache(AbstractCache):
-    """The blob cache map SWHIDs of type `cnt` to the bytes of their archived
+    """The blob cache map SWHIDs of type ``cnt`` to the bytes of their archived
     content.
 
     The blob cache entry for a given content object is populated, at the latest,
-    the first time the object is `read()`-d. It might be populated earlier on
+    the first time the object is ``read()``-d. It might be populated earlier on
     due to prefetching, e.g., when a directory pointing to the given content is
     listed for the first time."""
 
@@ -262,8 +267,36 @@ class BlobCache(AbstractCache):
         await self.conn.commit()
 
 
+class NoopBlobCache(BlobCache):
+    """This does not cache anything at all: use it to save some memory, if you have
+    access to a fast objstorage.
+    """
+
+    DB_SCHEMA = ""
+
+    def __init__(
+        self, conf: Dict[str, Any], conn: Optional[aiosqlite.Connection] = None
+    ):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, type=None, val=None, tb=None) -> None:
+        return None
+
+    async def get(self, swhid: CoreSWHID) -> Optional[bytes]:
+        return None
+
+    async def set(self, swhid: CoreSWHID, blob: bytes) -> None:
+        return None
+
+    async def remove(self, swhid: CoreSWHID) -> None:
+        return None
+
+
 class HistoryCache(AbstractCache):
-    """The history cache map SWHIDs of type `rev` to a list of `rev` SWHIDs
+    """The history cache map SWHIDs of type ``rev`` to a list of ``rev`` SWHIDs
     corresponding to all its revision ancestors, sorted in reverse topological
     order. As the parents cache, the history cache is lazily populated and can
     be prefetched. To efficiently store the ancestor lists, the history cache

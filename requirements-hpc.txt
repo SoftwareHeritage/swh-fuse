@@ -1,0 +1,5 @@
+swh.graph >= 6.7.1
+swh.objstorage >= 3.4.0
+swh.storage>=3.1.1
+protobuf >=5.29.3
+grpc-stubs

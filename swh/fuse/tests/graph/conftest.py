@@ -25,15 +25,43 @@ from click.testing import CliRunner
 import pytest
 
 from swh.fuse import fuse
+from swh.fuse.backends.objstorage import ObjStorageBackend
 import swh.fuse.cli as cli
 from swh.graph.pytest_plugin import *  # noqa ; this provides the graph_grpc_server fixture
-
-from . import WEB_API_URL
+from swh.model.model import Content
+from swh.objstorage.interface import objid_from_dict
 
 
 @pytest.fixture(scope="module")
-def fuse_graph_mountpoint(graph_grpc_server) -> Generator[Path, None, None]:
+def fuse_graph_mountpoint(
+    graph_grpc_server, example_content: Content
+) -> Generator[Path, None, None]:
     with TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir:
+        content_backend = ObjStorageBackend(
+            {
+                "content": {
+                    "storage": {
+                        "cls": "memory",
+                        "journal_writer": {
+                            "cls": "memory",
+                        },
+                    },
+                    "objstorage": {
+                        "cls": "memory",
+                    },
+                }
+            }
+        )
+        if content_backend.storage is not None:
+            content_backend.storage.content_add([example_content])
+        if content_backend.objstorage:
+            if example_content.data:
+                content_backend.objstorage.add(
+                    example_content.data, objid_from_dict(example_content.hashes())
+                )
+        else:
+            raise AssertionError("ObjStorageBackend should yield an objstorage")
+
         mountpoint = Path(tmpdir)
         config = {
             "graph": {
@@ -41,12 +69,8 @@ def fuse_graph_mountpoint(graph_grpc_server) -> Generator[Path, None, None]:
             },
             "cache": {
                 "metadata": {"in-memory": True},
-                "blob": {"in-memory": True},
+                "blob": {"bypass": True},
                 "direntry": {"maxram": "10%"},
-            },
-            "web-api": {
-                "url": WEB_API_URL,
-                "auth-token": None,
             },
             "json-indent": None,
         }
@@ -54,7 +78,9 @@ def fuse_graph_mountpoint(graph_grpc_server) -> Generator[Path, None, None]:
         def mount():
             loop = asyncio.new_event_loop()
             try:
-                loop.run_until_complete(fuse.main([], mountpoint, config))
+                loop.run_until_complete(
+                    fuse.main([], mountpoint, config, content_backend)
+                )
             finally:
                 if loop.is_running():
                     loop.stop()
@@ -107,5 +133,18 @@ def example_directory() -> str:
 
 
 @pytest.fixture()
-def example_content() -> str:
+def example_content_swhid() -> str:
     return "swh:1:cnt:0000000000000000000000000000000000000001"
+
+
+@pytest.fixture(scope="module")
+def example_content() -> Content:
+    h = bytes.fromhex("0000000000000000000000000000000000000001")
+    return Content(
+        sha1_git=h,
+        blake2s256=h,
+        sha256=h,
+        sha1=h,
+        data=b"Hello world",
+        length=11,
+    )

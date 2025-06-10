@@ -1,8 +1,13 @@
 pytest >= 8.1
 requests-mock
 swh.core[testing]
+swh.journal
 
 types-python-dateutil
 types-psutil
 types-pyyaml
 types-requests
+
+# HPC dependencies are tested too
+swh.graph >= 6.7.1
+swh.objstorage >= 3.4.0
