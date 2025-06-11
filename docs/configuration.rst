@@ -134,6 +134,7 @@ and you do not need any ``graph*transposed*`` files.
   * graph.pthash
   * graph.pthash.order
 
+.. _swh-fuse-config-teaser-graph-webapi:
 
 Sample configuration: teaser graph + WebAPI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,6 +158,8 @@ because it can be provided quickly by the graph.
           grpc-url: localhost:50091
         web-api:
           auth-token: "yhbGcOiJI1z1NiIsInR5CIgOiAiSlduIiWia2..."
+
+.. _swh-fuse-config-file-download:
 
 Configuring files' download
 ---------------------------
@@ -189,6 +192,7 @@ you'll probably want to set ``cls: digestmap``,
 provided by the package :ref:`swh.digestmap <swh-digestmap>`.
 It has been developed for that case and will be the fastest back-end.
 
+.. _swh-fuse-config-teaser-graph-s3:
 
 Sample configuration: teaser graph + S3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -228,6 +232,7 @@ and its corresponding :ref:`digestmap <swh-digestmap>`.
                 - 404
                 - 500
 
+.. _swh-fuse-config-hpc:
 
 Sample configuration: Large-scale access on a dedicated HPC
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

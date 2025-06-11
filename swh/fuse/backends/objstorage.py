@@ -26,7 +26,7 @@ class ObjStorageBackend(ContentBackend):
     This content backend relies on an ``swh-storage`` service,
     and maybe an ``swh-objstorage`` directly.
 
-    See :ref:`Configuring files' download`.
+    See :ref:`Configuring files' download <swh-fuse-config-file-download>`.
     """
 
     def __init__(self, conf: dict):

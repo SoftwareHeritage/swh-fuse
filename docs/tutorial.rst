@@ -286,4 +286,4 @@ when using ``swh-fuse`` this is tractable only if you perform repeated accesses 
 small subset of the archive. Otherwise,
 and if your infrastructure can hold a compressed graph server,
 you may configure ``swh-fuse`` to use it directly.
-This is described in the section :ref:`Configure swh-fuse for HPC access`.
+This is described in the section :ref:`Configure swh-fuse for HPC access <swh-fuse-config-hpc>`.
