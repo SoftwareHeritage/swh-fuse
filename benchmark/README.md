@@ -1,3 +1,104 @@
+# 2025-06-20 Detecting languages in TheStackV2, 2000 mounts at once
+
+## 🏭 Setting
+
+As part of [GRICAD's new cluster test campaign](https://gricad-doc.univ-grenoble-alpes.fr/hpc/kraken_freeride/),
+we could run [swh-fuse](https://docs.softwareheritage.org/devel/swh-fuse/index.html) at the unprecedented scale
+of 2000 mounts at once over 10 machines backed by a single, local objstorage and compressed graph.
+
+Hardware specs:
+ * 10 computing nodes with 192 cores (2 AMD EPYC 9654 2.4GHz), 768 GB RAM, 1.92 TB local NVMe SSD scratch
+ * 1 "fat" node - same as above with 1536 Go RAM - hosting [swh-graph-grpc-server](https://docs.softwareheritage.org/devel/swh-graph/grpc-api.html)
+ * 300 TB BeeGFS distributed scratch filesystem (full NVMe SSD) - hosting the objstorage
+ * all of this connected via Infiniband NDR 200 Gb/s HBA
+
+Data:
+ * [2024-12-06 compressed graph](https://docs.softwareheritage.org/devel/swh-export/graph/dataset.html#graph-dataset-2024-12-06), stripped to forward-only connections and directory-relevant labels and properties (precise list is [in the swhfuse doc](https://docs.softwareheritage.org/devel/swh-fuse/configuration.html#faster-file-system-traversal-with-a-local-compressed-graph)) so it's using only 5.5TB
+ * storage is provided by a specific [digestmap]() LINK TODO made from TheStack's listings (that contain, for each file, its `sha1` _and_ its `sha1_git` how cool is that?) so it weights only 112GB
+   - in a preliminary experiment this was hosted behind a `storage rpc-serve`, one instance per worker node, using tables on the distributed scratch. This turned the storage instance into a bottleneck because it was a single thread. therefore:
+   - results below use a machine-local copy of the digestmap, accessed directly by `swh-fuse` via the Python module. So far we cannot assess how much more CPU this consumes per `swh-fuse` process, but `htop` suggests it could be worth measuring.
+ * objstorage contains all of TheStack contents, in an uncompressed `0:2/0:5` pathslicer over the distributed scratch. Writing those 2.3 billion files took 4 days, averaging at over 8300 files written per second, and should weight 58TB  (I did not dare to `du -sh`).
+ * TheStack also provides, for each file, its origin's root `swh:1:dir`, so we pick source folders randomly from that list.
+
+ **Each machine is dispatching 20000 randomly picked root folders to its 200 processes: with 10 worker nodes, results below represent batches of 200k distincts origins. We ran 2 batches to compensate the randomization.** The two batches gave coherent results. Each node is picking randomly in a distinct origins interval.
+
+Software:
+* Payload is [Hyperpolyglot](https://github.com/monkslc/hyperpolyglot), one of CodeCommons' [benchmarked programming language detector](https://gitlab.softwareheritage.org/teams/codecommons/pli-benchmark/) - it's a Rust port of github-linguist, and is pretty fast indeed. It was picked for this first ride because it's really doing something, but quickly enough to be really demanding towards swh-fuse (as opposed to Scancode, who was meanwhile blocked trying to cache things in its nix-installed source folders). Each instance is mono-threaded because we're already running 200 in parallel, one per origin.
+
+* Everything is installed via Nix flakes (available [here](https://gitlab.softwareheritage.org/martin/oar-deployments/-/tree/main/flakes?ref_type=heads)).
+   - as we don't have anough permissions to FUSE-mount on these machines, we rely on [a surprise feature of namespaced mounts](https://zameermanji.com/blog/2022/8/5/using-fuse-without-root-on-linux/#alternative-approach).
+
+* `swh-fuse`is almost v1.2.0 (actually it's [3324f60](https://gitlab.softwareheritage.org/martin/swh-fuse/-/commit/3324f60) on my branch, it's functionally equivalent to v1.2.0 but does not require an update of `swh-core` which is a bit too hard to negociate with Nix).
+
+The [swh-config.yml is here](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/main/2025-06-20-bench2/config.yml?ref_type=heads).
+Detailed scripts, log and measures are now
+[in a dedicated repository](https://gitlab.softwareheritage.org/martin/oar-deployments/-/tree/main/2025-06-20-bench2?ref_type=heads)
+because many things are specific to OAR-driven clusters.
+
+Thanks to Bruno Bzeznik and Pierre Girard for their support during that ride.
+
+
+## ⚠️ Biases
+
+ * there's much external activity on the distributed scratch (sustained multi GB/s read/writes by other users) so that can slow down the graph or objstorage.
+ * not sure if mounting in a namespace and accessing it via `/proc` impacts performance
+ * TheStackV2 filtered _many_ contents from the listed origins - **75% queries to our storage (digestmap) raise an E_NOTFOUND, this is off-loading the objstorage artificially.**
+
+## 📈 Key result: ~10 origins/second/machine
+
+On average, analyzing one origin took 36s, including
+ * ~0.5s waiting for digestmap
+ * ~5s waiting for objstorage
+ * ~37s waiting for the graph - that's _too much_, probably unbalanced by the 3 times where processes had to wait for the graph for a long time - during almost vertical bars below:
+
+![waitingtimes_take1](2025-06-20-2000 workers/waitingtimes_take1.png)
+![waitingtimes_take2](2025-06-20-2000 workers/waitingtimes_take2.png)
+
+## 🔍 Detailed results
+
+(see also `2025-06-20-bench2-take{1,2}.ipynb` in this folder)
+
+At the very beginning, starting 200 FUSE mounts at the same time causes a weird load peak on worker nodes (during less than an minute). We could probably start more per machine, but should take care of shuffling their start time.
+
+We could analyze 200000 origins' roots over 1h and 77s, which averages at more than 5 origins/s/machine, but half of the time most machines were not working any more because of origins unbalancing: the "fastest" (read: lucky) 4 machines finished their whole batch at more than 10 origins/second on average. The second batch even lasted 1h and 20 minutes, because one process was working alone for half an hour.
+
+On a larger scale, we should be able to compensate this unbalancing by dispatching many origins over many machines over a longer time, so it's reasonable to measure the throughput after the starting peak and before the first machine has finished its batch - hence the "10 origins/s/machine" rule of thumb.
+
+Looking at `htop` during the experiment:
+ * on workers: htop shows almost 200 load, but less than 1% of CPU per hyply and less than 20% per swhfuse process. swh-fuse are very often in the `D: Uninterruptible sleep` state, ie. waiting for I/O.
+ * on the graph:
+     * a first experiment was badly started, but it allowed the kernel to pre-cache ~1TB of data
+     * CPU load had a small peak (800% CPU/62 load) when starting, then cruising around 200-400%CPU but system load averages around 8 so it might be waiting for the scratch FS too.
+
+We have a Grafana board showing activity on the distributed scratch FS. This shows the rate per user, and because FUSE is mounted as root (in a namespace) the monitoring is giving a figure for `root` (pure objstorage access) and another for `kirchgem` (graph access). This shows that
+ * objstorage is reading at a steady 1.5GB/s during the "cruise" phase, although that's only 25% of files that hyperpolyglot would like to read... reading rate is already important:
+
+![object_access_per_second_take1](2025-06-20-2000 workers/object_access_per_second_take1.png)
+![object_access_per_second_take2](2025-06-20-2000 workers/object_access_per_second_take2.png)
+
+
+## 🍿 SWH architectural take-aways
+
+ * `swh-fuse` itself is still as slow you can expect from a python-based FUSE, but it's still mostly waiting:
+ * swh-graph-grpc-server latency could be better if it was hosted on a machine with enough storage to hold its files locally (5.5TB).
+ * **then it's all about how much thoughput can be expected from storage/objstorage**
+ * node-local digestmap is very fast, but would require ~1.5TB storage on worker nodes when computing on the complete archive
+
+## ❓ RFC
+
+it would be cool to...
+
+* release [statsd_to_parquet](https://gitlab.softwareheritage.org/swh/devel/snippets/-/blob/master/martin/statsd_to_parquet.py?ref_type=heads#L165-179) on PyPI because I can't be the only one to prefer storing statsd events in parquet files instead of spawning the whole Grafana zoo
+* release/document swh-fuse mounted as a Python context manager (aka [SwhFuseContext](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/main/2025-06-20-bench2/krakenbench.py?ref_type=heads#L47-51)), because it's nicer when mounting 200 times on a system that does not really allow FUSE to your user
+
+## 👀 Soon
+
+"soon" as in "hopefully in the next 2 weeks"
+
+* tracking each payload's runtime, for the fun of observing the origins' size unbalance.
+* same setting running Scancode (because since this experiment I found the environment variable `SCANCODE_LICENSE_INDEX_CACHE` that can avoid Scancode trying to write in nix-forbidden source folders)
+* scancode and hyperpolyglot over 1m origins over the whole cluster (50 worker nodes so 10000 processes)
+
 # 2025-04-14 First 100% local swh-fuse on python-popular-500k
 
 ## Setting
