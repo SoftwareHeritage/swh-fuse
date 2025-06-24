@@ -1,5 +1,12 @@
 # 2025-06-20 Detecting languages in TheStackV2, over 2000 mounts in parallel
 
+## 🍿 SWH architectural take-aways
+
+ * `swh-fuse` itself is still as slow you can expect from a python-based FUSE, but it's still mostly waiting:
+ * `swh-graph-grpc-server` latency could be better if it was hosted on a machine with enough storage to hold its files locally (5.5TB), and that could make a difference.
+ * then it's all about how much thoughput can be expected from storage/objstorage
+ * node-local digestmap is very fast, and for the complete archive could allow to bypass the storage layer if we have ~1.5TB storage on worker nodes.
+
 ## 🏭 Setting
 
 As part of [GRICAD's new cluster test campaign](https://gricad-doc.univ-grenoble-alpes.fr/hpc/kraken_freeride/),
@@ -75,13 +82,6 @@ We have a Grafana board showing activity on the distributed scratch FS. This sho
 ![object_access_per_second_take2](2025-06-20-2000 workers/object_access_per_second_take2.png)
 
 For much more details, see `2025-06-20-bench2-take{1,2}.ipynb`
-
-## 🍿 SWH architectural take-aways
-
- * `swh-fuse` itself is still as slow you can expect from a python-based FUSE, but it's still mostly waiting:
- * `swh-graph-grpc-server` latency could be better if it was hosted on a machine with enough storage to hold its files locally (5.5TB), and that could make a difference.
- * then it's all about how much thoughput can be expected from storage/objstorage
- * node-local digestmap is very fast, and for the complete archive could allow to bypass the storage layer if we have ~1.5TB storage on worker nodes.
 
 ## ❓ RFC
 
