@@ -1,3 +1,28 @@
+# 2025-06-26 Erratum on detecting languages in TheStackV2, over 2000 mounts in parallel
+
+In the previous experience (section 2025-06-20 below) an unlucky configuration blocked hyperpolyglot from actually reading any file
+(although each file was downloaded to the worker node) and it still managed to guess languages !
+
+In the meantime we added a few other metrics, and managed to have Scancode almost running, so here are some numbers.
+
+## How bad is origins unbalance ?
+
+Very bad, much Zipf, wow:
+
+![durationshyply](2025-06-26-2000 workers, correctly/durationshyply.png)
+![durationsScancode](2025-06-26-2000 workers, correctly/durationsscancode.png)
+
+## What is swhfuse waiting for ?
+
+Mostly for the graph, **BUT**
+ * the average Scancode task lasted 131s, including 0,8s waiting for the graph
+ * the average Hyperpolyglot taks lasted 22s, including 0,2s waiting for the graph
+
+so swhfuse causes a fairly small time penalty, after all.
+
+![waitingtimesHyperpolyglot](2025-06-26-2000 workers, correctly/waitingtimeshyply.png)
+![waitingtimesHyperpolyglot](2025-06-26-2000 workers, correctly/waitingtimesscancode.png)
+
 # 2025-06-20 Detecting languages in TheStackV2, over 2000 mounts in parallel
 
 ## 🍿 SWH architectural take-aways
