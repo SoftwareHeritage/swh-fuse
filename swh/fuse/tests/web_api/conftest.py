@@ -16,7 +16,7 @@ from click.testing import CliRunner
 import pytest
 import requests_mock
 
-from swh.fuse import fuse, LOGGER_NAME
+from swh.fuse import LOGGER_NAME, fuse
 import swh.fuse.cli as cli
 
 from .data.api_data import API_URL, MOCK_ARCHIVE

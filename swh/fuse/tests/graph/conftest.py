@@ -13,6 +13,7 @@ in sync with swh/graph/tests/grpc/test_getnode.py
 """
 
 import asyncio
+import logging
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -24,7 +25,7 @@ from urllib.parse import quote_plus
 from click.testing import CliRunner
 import pytest
 
-from swh.fuse import fuse, LOGGER_NAME
+from swh.fuse import LOGGER_NAME, fuse
 from swh.fuse.backends.objstorage import ObjStorageBackend
 import swh.fuse.cli as cli
 from swh.graph.pytest_plugin import *  # noqa ; this provides the graph_grpc_server fixture
