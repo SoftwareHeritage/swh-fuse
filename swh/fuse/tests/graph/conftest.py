@@ -24,7 +24,7 @@ from urllib.parse import quote_plus
 from click.testing import CliRunner
 import pytest
 
-from swh.fuse import fuse
+from swh.fuse import fuse, LOGGER_NAME
 from swh.fuse.backends.objstorage import ObjStorageBackend
 import swh.fuse.cli as cli
 from swh.graph.pytest_plugin import *  # noqa ; this provides the graph_grpc_server fixture
@@ -77,6 +77,7 @@ def fuse_graph_mountpoint(
 
         def mount():
             loop = asyncio.new_event_loop()
+            logging.getLogger(LOGGER_NAME).setLevel(logging.DEBUG)
             try:
                 loop.run_until_complete(
                     fuse.main([], mountpoint, config, content_backend)
