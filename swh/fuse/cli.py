@@ -40,29 +40,13 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 }
 
 
-@swh_cli_group.group(name="fs", context_settings=CONTEXT_SETTINGS)
-@click.option(
-    "-C",
-    "--config-file",
-    default=None,
-    type=click.Path(exists=True, dir_okay=False, path_type=str),
-    help=f"Configuration file (default: {DEFAULT_CONFIG_PATH})",
-)
-@click.pass_context
-def fuse(ctx, config_file):
-    """Software Heritage virtual file system"""
-
+def load_config(config_file=None) -> dict:
     import logging
-    from shutil import which
 
     import yaml
 
     from swh.core import config
     from swh.fuse import LOGGER_NAME
-
-    if which("fusermount3") is None:
-        logging.error("Missing dependency: 'fusermount3'")
-        ctx.exit(1)
 
     logger = logging.getLogger(LOGGER_NAME)
 
@@ -88,6 +72,29 @@ def fuse(ctx, config_file):
         logger.info("Using default configuration")
         conf = DEFAULT_CONFIG
 
+    return conf
+
+
+@swh_cli_group.group(name="fs", context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "-C",
+    "--config-file",
+    default=None,
+    type=click.Path(exists=True, dir_okay=False, path_type=str),
+    help=f"Configuration file (default: {DEFAULT_CONFIG_PATH})",
+)
+@click.pass_context
+def fuse(ctx, config_file):
+    """Software Heritage virtual file system"""
+
+    import logging
+    from shutil import which
+
+    if which("fusermount3") is None:
+        logging.error("Missing dependency: 'fusermount3'")
+        ctx.exit(1)
+
+    conf = load_config(config_file)
     ctx.ensure_object(dict)
     ctx.obj["config"] = conf
 

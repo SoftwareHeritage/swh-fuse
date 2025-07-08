@@ -8,7 +8,10 @@ import errno
 import logging
 import os
 from pathlib import Path
+from shutil import which
+from subprocess import run
 from tempfile import TemporaryDirectory
+from threading import Thread
 import time
 from typing import Any, Dict, List
 
@@ -18,6 +21,7 @@ import pyfuse3.asyncio
 from swh.fuse import LOGGER_NAME
 from swh.fuse.backends import ContentBackend, GraphBackend
 from swh.fuse.cache import FuseCache
+from swh.fuse.cli import load_config
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
 from swh.model.swhids import CoreSWHID, ObjectType
@@ -343,34 +347,59 @@ def obj_backend_factory(conf: Dict[str, Any]) -> ContentBackend:
         return WebApiBackend(conf)
 
 
-class SwhFuseContext:
+class SwhFuseTmpMount:
     """
-    Mounts the SWH archive as a context manager over a temporary folder.
+    This context manager will mount the Software Heritage archive on a temporary
+    folder, in a separate thread. It returns a ``Path`` object pointing to the
+    mountpoint. Note that the main thread will likely wait a bit before entering the
+    context, while the system and the mounting thread are mounting. This usually takes
+    a few milliseconds.
 
     The mountpoint will be configured as if launched via the `swh fs mount` command,
-    ie. use the `SWH_CONFIG_FILE` environment variable to point an alternative
-    configuration file.
+    so please use the ``SWH_CONFIG_FILE`` environment variable to point an alternative
+    configuration file. The ``config`` parameter is intended for unit tests.
 
-    NOTE: we advise to run only one instance of this context per process, as this will
-    start an asyncio event loop.
+    Example::
+
+        with SwhFuseTmpMount() as mountpoint:
+            swhid = "swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2"
+            hello_world_path = mountpoint / "archive" / swhid
+            print(open(hello_world_path).read())
+
     """
 
-    def __init__(self):
-        # TODO find config
-
-        self.mountpoint = TemporaryDirectory()
+    def __init__(self, config=None):
+        if config is None:
+            self.config = load_config()
+        else:
+            self.config = config
+        self.mountpoint = TemporaryDirectory(ignore_cleanup_errors=True)
         self.loop = asyncio.get_event_loop()
-        self.swhfuse = None
+        self.swhfuse = self.loop.create_task(
+            main([], self.mountpoint.name, self.config)
+        )
+        self.thread = Thread(target=self.loop.run_until_complete, args=(self.swhfuse,))
 
-    def __enter__(self):
-        conf = ctx.obj["config"]
+    def __enter__(self) -> Path:
+        self.thread.start()
+        mounted = Path(self.mountpoint.name)
+        for i in range(10000):
+            if (mounted / "archive").exists():
+                break
+            else:
+                time.sleep(0.001)
+        else:
+            raise RuntimeError(
+                "Mountpoint failed to appear after 10 seconds, aborting."
+            )
+        return mounted
 
-        self.swhfuse = asyncio.run_coroutine_threadsafe(main([], self.mountpoint.name, conf), self.loop)
-
-    def __exit__(self, type, value, traceback):
-        self.swhfuse.cancel()
-        self.loop.close()
+    def __exit__(self, exc_type, exc_value, traceback):
+        mounted = Path(self.mountpoint.name)
+        if (mounted / "archive").exists():
+            run([which("fusermount3"), "-u", self.mountpoint.name])
         self.mountpoint.cleanup()
+        return False
 
 
 async def main(
