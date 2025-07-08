@@ -77,7 +77,9 @@ def fuse(ctx, config_file):
         try:
             conf = conf["swh"]["fuse"]
         except KeyError:
-            logger.warning("No swh:fuse: block found in configuration (%s)", config_file)
+            logger.warning(
+                "No swh:fuse: block found in configuration (%s)", config_file
+            )
 
         # recursive merge not done by config.read
         conf = config.merge_configs(DEFAULT_CONFIG, conf)
