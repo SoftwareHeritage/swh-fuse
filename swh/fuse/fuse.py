@@ -3,10 +3,12 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import asyncio
 import errno
 import logging
 import os
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import time
 from typing import Any, Dict, List
 
@@ -339,6 +341,36 @@ def obj_backend_factory(conf: Dict[str, Any]) -> ContentBackend:
         from swh.fuse.backends.web_api import WebApiBackend
 
         return WebApiBackend(conf)
+
+
+class SwhFuseContext:
+    """
+    Mounts the SWH archive as a context manager over a temporary folder.
+
+    The mountpoint will be configured as if launched via the `swh fs mount` command,
+    ie. use the `SWH_CONFIG_FILE` environment variable to point an alternative
+    configuration file.
+
+    NOTE: we advise to run only one instance of this context per process, as this will
+    start an asyncio event loop.
+    """
+
+    def __init__(self):
+        # TODO find config
+
+        self.mountpoint = TemporaryDirectory()
+        self.loop = asyncio.get_event_loop()
+        self.swhfuse = None
+
+    def __enter__(self):
+        conf = ctx.obj["config"]
+
+        self.swhfuse = asyncio.run_coroutine_threadsafe(main([], self.mountpoint.name, conf), self.loop)
+
+    def __exit__(self, type, value, traceback):
+        self.swhfuse.cancel()
+        self.loop.close()
+        self.mountpoint.cleanup()
 
 
 async def main(
