@@ -355,16 +355,22 @@ class SwhFuseTmpMount:
     context, while the system and the mounting thread are mounting. This usually takes
     a few milliseconds.
 
-    The mountpoint will be configured as if launched via the `swh fs mount` command,
-    so please use the ``SWH_CONFIG_FILE`` environment variable to point an alternative
-    configuration file. The ``config`` parameter is intended for unit tests.
-
     Example::
 
         with SwhFuseTmpMount() as mountpoint:
             swhid = "swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2"
             hello_world_path = mountpoint / "archive" / swhid
             print(open(hello_world_path).read())
+
+    The mountpoint will be configured as if launched via the `swh fs mount` command,
+    so please set the ``SWH_CONFIG_FILE`` environment variable pointing to the relevant
+    configuration file. The ``config`` parameter is intended for unit tests.
+
+    .. warning::
+
+        This can be used to create multiple mountpoints at the same time, for example
+        one mount per worker process. In that case, be careful to disable on-disk
+        caching entirely, using the ``in-memory`` or ``bypass`` settings.
 
     """
 
