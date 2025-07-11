@@ -5,6 +5,7 @@
 
 import asyncio
 import json
+import logging
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -15,7 +16,7 @@ from click.testing import CliRunner
 import pytest
 import requests_mock
 
-from swh.fuse import fuse
+from swh.fuse import LOGGER_NAME, fuse
 import swh.fuse.cli as cli
 
 from .data.api_data import API_URL, MOCK_ARCHIVE
@@ -49,6 +50,7 @@ def fuse_mntdir():
 
         def mount():
             loop = asyncio.new_event_loop()
+            logging.getLogger(LOGGER_NAME).setLevel(logging.DEBUG)
             try:
                 loop.run_until_complete(fuse.main([], mountpoint, config))
             finally:
