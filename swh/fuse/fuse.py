@@ -380,7 +380,7 @@ class SwhFuseTmpMount:
         else:
             self.config = config
         self.mountpoint = TemporaryDirectory(ignore_cleanup_errors=True)
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.get_event_loop_policy().get_event_loop()
         self.swhfuse = self.loop.create_task(
             main([], self.mountpoint.name, self.config)
         )
