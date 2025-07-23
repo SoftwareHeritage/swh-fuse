@@ -43,11 +43,21 @@ class CompressedGraphBackend(GraphBackend):
         Only needs ``graph.grpc-url``.
         """
         self.grpc_stub = swhgraph_grpc.TraversalServiceStub(
-            grpc.insecure_channel(conf["graph"]["grpc-url"])
+            grpc.insecure_channel(
+                conf["graph"]["grpc-url"],
+                [
+                    # advanced options are listed in
+                    # github.com/grpc/grpc/blob/master/include/grpc/impl/channel_arg_names.h
+                    #
+                    # disable the limit on message length, because listing some folders
+                    # may exceed the default value
+                    ("grpc.max_receive_message_length", -1),
+                ],
+            )
         )
         self.logger = logging.getLogger(LOGGER_NAME)
         self.time_tracker = TimedContextManagerDecorator(
-            Statsd(), "swh_fuse_graph_waiting_time"
+            Statsd(), "swhfuse_waiting_graph"
         )
 
     def shutdown(self) -> None:

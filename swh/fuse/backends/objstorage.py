@@ -6,7 +6,6 @@
 import logging
 import typing
 
-from swh.core.api import RemoteException
 from swh.core.statsd import Statsd, TimedContextManagerDecorator
 from swh.fuse import LOGGER_NAME
 from swh.model.swhids import CoreSWHID
@@ -46,11 +45,12 @@ class ObjStorageBackend(ContentBackend):
         except KeyError:
             self.objstorage = None
 
+        self.statsd = Statsd(namespace="swhfuse_")
         self.storage_tracker = TimedContextManagerDecorator(
-            Statsd(), "storage_response_time"
+            self.statsd, "waiting_storage"
         )
         self.objstorage_tracker = TimedContextManagerDecorator(
-            Statsd(), "objstorage_response_time"
+            self.statsd, "waiting_objstorage"
         )
 
     def shutdown(self) -> None:
@@ -67,28 +67,36 @@ class ObjStorageBackend(ContentBackend):
         """
         Fetch the content of a ``cnt`` object.
         """
+        self.statsd.increment("get_blob")
         hashes = None
-        with self.storage_tracker:
-            found = self.storage.content_get([swhid.object_id], algo="sha1_git")
-            if found and found[0]:
-                hashes = objid_from_dict(found[0].hashes())
-        if hashes:
-            self.logger.debug(f"downloading {hashes} from objstorage")
-            try:
-                if self.objstorage is not None:
-                    with self.objstorage_tracker:
-                        return self.objstorage.get(hashes)
-                else:
+        try:
+            with self.storage_tracker:
+                found = self.storage.content_get([swhid.object_id], algo="sha1_git")
+                if found and found[0]:
+                    hashes = objid_from_dict(found[0].hashes())
+            if hashes:
+                if self.objstorage is None:
+                    self.logger.debug("downloading %s from storage", hashes)
                     with self.storage_tracker:
                         content = self.storage.content_get_data(hashes)
                         if content:
                             return content
-                raise ValueError(f"SWH-storage Cannot find object {swhid}")
-            except RemoteException as e:
-                if e.response:
-                    self.logger.error(
-                        f"Failed to fetch {hashes} from objstorage: {e.response.text}"
-                    )
-                raise e
-        else:
-            raise ValueError(f"SWH-storage Cannot find object {swhid}")
+                    raise ValueError(f"SWH-storage cannot get object {hashes}")
+                # else let's reach the "try objstorage" block
+            else:
+                raise ValueError(f"SWH-storage cannot find object {swhid}")
+        except BaseException as e:
+            self.statsd.increment("blob_not_in_storage")
+            self.logger.error("Failed to fetch %s from storage: %s", swhid, e)
+            raise
+
+        try:
+            self.logger.debug("downloading %s from objstorage", hashes)
+            with self.objstorage_tracker:
+                return self.objstorage.get(hashes)
+            raise ValueError(f"SWH-objstorage cannot find object {hashes}")
+
+        except BaseException as e:
+            self.statsd.increment("blob_not_in_objstorage")
+            self.logger.error("Failed to fetch %s from objstorage: %s", swhid, e)
+            raise

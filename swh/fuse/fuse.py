@@ -90,7 +90,7 @@ class Fuse(pyfuse3.Operations):
         """Retrieve metadata for a given SWHID using Software Heritage API"""
 
         cache = await self.cache.metadata.get(swhid)
-        if cache:
+        if cache is not None:
             return cache
 
         metadata = await self.graph_backend.get_metadata(swhid)
@@ -106,7 +106,7 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.EINVAL)
 
         cache = await self.cache.blob.get(swhid)
-        if cache:
+        if cache is not None:
             self.logger.debug("Found blob %s in cache", swhid)
             return cache
 
@@ -121,7 +121,7 @@ class Fuse(pyfuse3.Operations):
             raise pyfuse3.FUSEError(errno.EINVAL)
 
         cache = await self.cache.history.get(swhid)
-        if cache:
+        if cache is not None:
             self.logger.debug(
                 "Found history of %s in cache (%d ancestors)", swhid, len(cache)
             )
@@ -137,7 +137,7 @@ class Fuse(pyfuse3.Operations):
         """Retrieve origin visits given an encoded-URL using Software Heritage API"""
 
         cache = await self.cache.metadata.get_visits(url_encoded)
-        if cache:
+        if cache is not None:
             self.logger.debug(
                 "Found %d visits for origin '%s' in cache",
                 len(cache),

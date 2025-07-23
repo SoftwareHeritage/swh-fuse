@@ -108,7 +108,7 @@ in the local NVMe so it would have been faster... Maybe.
 `swh-fuse` only needs `StorageInterface.content_get()`
 to find an object's `sha1` from its SWHID (`sha1_git`).
 
-![mandatory SWH private joke](<if the graph could content adress like objstorage thatd be great.jpg>)
+![mandatory SWH private joke](<if the graph could content address like objstorage thatd be great.jpg>)
 
 [swh-digestmap](https://docs.softwareheritage.org/devel/swh-digestmap/index.html)
 has been implemented precisely for this.
@@ -171,7 +171,7 @@ and start with a number of parallel jobs equal to the cores count -
 at least, because processes mostly wait.
 
 Also, **we start a fresh mountpoint per scan**.
-We could re-use mounts between jobs,
+We could reuse mounts between jobs,
 but they might leak memory over time and predicting `swhfuse`'s memory consumption is very hard
 because predicting the scanning job's size is very hard (cf. the section on unbalancing above).
 Even with one mount per job, we've seen a few `swhfuse` consuming 4GB of memory...
@@ -438,7 +438,7 @@ and even [configurable primary hashes](https://gitlab.softwareheritage.org/swh/d
     path: /path/to/shard
 ```
 
-that could ease significantly the archive re-use! And skip the digestmap entirely 🌈.
+that could ease significantly the archive reuse! And skip the digestmap entirely 🌈.
 
 ### 🚢 Ship "parallelized swhfuse" tooling
 

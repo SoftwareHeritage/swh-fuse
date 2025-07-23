@@ -73,21 +73,7 @@ flag.
     $ swh --log-level swh.fuse:DEBUG fs mount swhfs/ -f
 
 
-Monitoring
-----------
-
-``swh-fuse`` sends `statsd <https://github.com/statsd/statsd>`_ metrics
-to ``localhost:8125`` by default.
-This can be changed from `environment variables <https://statsd.readthedocs.io/en/stable/configure.html#from-the-environment>`_,
-in particular ``STATSD_HOST`` and ``STATSD_PORT``.
-
-Expect the following metrics:
-
-* ``swh_fuse.graph_response_time`` a timer measuring how long we are waiting for the graph backend
-* ``swh_fuse.storage_response_time`` a timer measuring how long we are waiting for the storage backend
-* ``swh_fuse.objstorage_response_time`` a timer measuring how long we are waiting for the objstorage (contents) backend
-
-Those can also be aggregated to show the number of requests made to each backend.
+.. _swh-fuse-config-graph:
 
 Faster file system traversal with a local compressed graph
 ----------------------------------------------------------
@@ -205,6 +191,8 @@ but cached locally to speed up repeated access to the same files.
 This can be useful to test on your own machine,
 using a :ref:`teaser dataset <swh-export-list>`
 and its corresponding :ref:`digestmap <swh-digestmap>`.
+To ensure the digestmap implementation is available,
+invoke ``pip install swh-digestmap``.
 
 .. code:: yaml
 
@@ -265,3 +253,22 @@ to save memory on the mounting system.
             cls: remote
             url: http://objstorage.local
             enable_requests_retry: true
+
+
+Monitoring
+----------
+
+When using a compressed graph or content back-ends,
+``swh-fuse`` sends `statsd <https://github.com/statsd/statsd>`_ metrics
+to ``localhost:8125`` by default.
+This can be changed from `environment variables <https://statsd.readthedocs.io/en/stable/configure.html#from-the-environment>`_,
+in particular ``STATSD_HOST`` and ``STATSD_PORT``.
+
+Expect the following metrics:
+
+* ``swhfuse_waiting_graph`` a timer measuring how long we are waiting for the graph backend
+* ``swhfuse_waiting_storage`` a timer measuring how long we are waiting for the storage backend
+* ``swhfuse_waiting_objstorage`` a timer measuring how long we are waiting for the objstorage (contents) backend
+* ``swhfuse_get_blob`` a counter of calls to storage/objstorage
+* ``swhfuse_blob_not_in_storage`` a counter of failed calls to storage (including objects not found)
+* ``swhfuse_blob_not_in_objstorage`` a counter of failed calls to objstorage (including objects not found)
