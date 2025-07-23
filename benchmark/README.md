@@ -375,13 +375,12 @@ This sounds intuitive, especially as it could use `ObjStorage.get_batch()`
 However, it does not fit payloads' access patterns at all:
 
  * hyperpolyglot and scancode (it's been confirmed by [Coccinelle developers](https://coccinelle.gitlabpages.inria.fr/website/), too) start by traversing the directory tree,
- then backtrace to read files and possibly prune branches:
- meanwhile, swhfuse would be trying to download everything.
- * some scanner try to avoid opening everything, or do not read complete files:
-   we would probably download for nothing.
- * it's very hard to predict from swhfuse the correct pre-loading order,
-   and most of the time the user program will attempt to open much faster than we'll be able to preload,
-   which suggest to also support a kind of pre-emption that would add a complexity layer on the existing cache lasagna.
+ then backtrace to read files, and prune branches as most as possible.
+ * some scanners try to avoid opening everything, or do not read complete files:
+   we would probably download too much.
+ * it would be very hard to predict the correct pre-loading order,
+   and most of the time the user program will attempt to open much faster than we'll be able to preload.
+   So we would need a kind of pre-emption of the pre-loading order, that would add a complexity layer on the existing cache lasagna.
 
 As shown in Scancode experiments,
 when scanning the whole archive a much more simple way to increase the throughput is
@@ -422,7 +421,7 @@ Compared to a local clone, surely the current `swhfuse` is slowing down computat
 
 Rewriting is also not trivial: porting [all configuration options](https://docs.softwareheritage.org/devel/swh-fuse/configuration) would pull many threads.
 
-### Creating standalone shards and/or teaser shards
+### 📦 Creating standalone shards and/or teaser shards
 
 It's nice to have a "teaser graph" like `2023-09-06-popular-1k`,
 and in the process we published its digestmap (`s3://softwareheritage/derived_datasets/2023-09-06-popular-1k/digestmap/`).
