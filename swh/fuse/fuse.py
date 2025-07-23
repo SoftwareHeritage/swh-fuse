@@ -298,6 +298,26 @@ class Fuse(pyfuse3.Operations):
             self.logger.exception("Cannot unlink: %s", err)
             raise pyfuse3.FUSEError(errno.ENOENT)
 
+    async def getxattr(
+        self,
+        inode: pyfuse3.InodeT,
+        name: pyfuse3.XAttrNameT,
+        _ctx: pyfuse3.RequestContext,
+    ) -> bytes:
+        """
+        This allows someone to get the extend attribute "user.swhid" on entities that
+        have one (this is mostly useful when traversing source trees).
+        The attribute value is the object ID, as 20 bytes, so you can
+        reconstruct the SWHID from it.
+        """
+        if name == b"user.swhid":
+            entry = self.inode2entry(inode)
+            try:
+                return entry.swhid.object_id  # type: ignore
+            except AttributeError:
+                pass
+        raise pyfuse3.FUSEError(errno.ENOSYS)
+
 
 def graph_backend_factory(conf: Dict[str, Any]) -> GraphBackend:
     if "graph" in conf:

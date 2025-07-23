@@ -89,7 +89,6 @@ directories. Hence, when accessing blobs from the top-level `archive/`
 directory, the permissions of the `archive/SWHID` file will be arbitrary and not
 meaningful (e.g., `0x644`).
 
-
 ### `dir` nodes (directories)
 
 Directory nodes are represented as directories on the file-system, containing
@@ -100,6 +99,9 @@ Note that SwhFS is mounted read-only, no matter what the permissions say. So it
 is possible that, in the context of a directory, a file is presented as
 writable, whereas actually writing to it will fail with `EPERM`.
 
+When traversing a directory, you can find the object identifier of each directory and
+content as an extended attribute called `user.swhid`.
+Examples are provided in the tutorial.
 
 ### `rev` nodes (commits)
 

@@ -2,6 +2,7 @@ pytest >= 8.1
 requests-mock
 swh.core[testing]
 swh.journal
+xattr >= 1.2.0
 
 types-python-dateutil
 types-psutil
