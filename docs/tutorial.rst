@@ -41,15 +41,16 @@ it.
 
 The configuration file ``~/.swh/config/global.yml`` is read if present. Its main use
 case is inserting a per-user authentication token for the SWH API, which might be needed
-in case of heavy use to bypass the default API rate limit. See the {ref}\
-``configuration documentation <swh-fuse-config>`` for details.
+in case of heavy use to bypass the default API rate limit. See the
+:ref:`configuration documentation <swh-fuse-config>` for details.
 
 Lazy loading
 ------------
 
 Once mounted, the archive can be navigated as if it were locally available on-disk.
-Archived objects are referenced by {ref}\ ``Software Heritage identifiers
-<persistent-identifiers>`` (SWHIDs). They are loaded on-demand from the archive and
+Archived objects are referenced by
+:ref:`Software Heritage identifiers <persistent-identifiers>` (SWHIDs).
+They are loaded on-demand from the archive and
 populate lazily the ``archive/`` directory below the SwhFS mount point.
 
 SWHIDs for source code that is not locally available can be obtained in various ways:
@@ -106,7 +107,7 @@ implementation:
    }
 
 Note: JSON metadata files are indented by default when read, this can be changed in the
-configuration file (see {ref}\ ``documentation <swh-fuse-config>``).
+configuration file (see :ref`documentation <swh-fuse-config>`).
 
 Source code trees
 -----------------
