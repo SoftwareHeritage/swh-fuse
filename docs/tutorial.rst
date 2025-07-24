@@ -159,9 +159,7 @@ They are stored as 20 bytes:
    # file: archive/swh:1:rev:9d76c0b163675505d1a901e5fe5249a2c55609bc/root/src
    user.swhid=0x2caafd2312b5d4d6c44345cb9b9342d575aeb134
 
-In Python, read this attribute using the ``xattr`` package:
-
-::
+In Python, read this attribute using the ``xattr`` package::
 
    import xattr
    from swh.model.swhids import CoreSWHID, ObjectType
