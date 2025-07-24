@@ -147,9 +147,7 @@ JavaScript lines of code (SLOC):
 
 When traversing a tree, you can get each directory and file's object ID (that allows
 you to reconstruct their SWHID) in an extended attribute called ``user.swhid``.
-They are stored as 20 bytes:
-
-::
+They are stored as 20 bytes::
 
    $ getfattr -n user.swhid  --encoding=hex archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
    # file: archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
