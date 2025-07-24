@@ -144,6 +144,35 @@ JavaScript lines of code (SLOC):
    $ find root/src/ -type f -name '*.js' | xargs cat | wc -l
    10136
 
+
+When traversing a tree, you can get each directory and file's object ID (that allows
+you to reconstruct their SWHID) in an extended attribute called ``user.swhid``.
+They are stored as 20 bytes::
+
+   $ getfattr -n user.swhid  --encoding=hex archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
+   # file: archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
+   user.swhid=0x775f08d911f2c19f1498f1a994a263dbf5adf9e1
+
+   $ getfattr -n user.swhid  --encoding=hex archive/swh:1:rev:9d76c0b163675505d1a901e5fe5249a2c55609bc/root/src
+   # file: archive/swh:1:rev:9d76c0b163675505d1a901e5fe5249a2c55609bc/root/src
+   user.swhid=0x2caafd2312b5d4d6c44345cb9b9342d575aeb134
+
+In Python, read this attribute using the ``xattr`` package::
+
+   import xattr
+   from swh.model.swhids import CoreSWHID, ObjectType
+
+   path = "mountpoint/archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s"
+   obj_id = xattr.getxattr(path, "user.swhid")
+   swhid = CoreSWHID(object_type=ObjectType.CONTENT, object_id=obj_id)
+   print(f"{path} is {swhid}")
+
+   path = "mountpoint/archive/swh:1:rev:9d76c0b163675505d1a901e5fe5249a2c55609bc/root/src"
+   obj_id = xattr.getxattr(path, "user.swhid")
+   swhid = CoreSWHID(object_type=ObjectType.DIRECTORY, object_id=obj_id)
+   print(f"{path} is {swhid}")
+
+
 History browsing
 ----------------
 
