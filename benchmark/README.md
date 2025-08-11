@@ -227,7 +227,7 @@ That caused the stat storm.
 Reproducibility note: other experiments listed 800 modules ([list here](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/08413ff795b52d342222d3979e4855826dee1e78/2025-07-15-checkstatstorm/importlist.py#L8)),
 my dev venv imports two thousands...
 
-We ran [a small benchmark](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/main/2025-07-15-checkstatstorm/) on a single machine:
+We ran [a small benchmark](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/f794b5a/2025-07-15-checkstatstorm/) on a single machine:
 using different methods to spawn 200 task processes, that only make their own temporary mountpoint.
 Each application is traced by `strace -e %file -f -c` so we can count syscalls related to the stat storm,
 including how many fail.
@@ -444,8 +444,8 @@ that could ease significantly the archive reuse! And skip the digestmap entirely
 We should include in the swhfuse package (and documentation) some helpers to parallelize locally,
 because that would amortize their development and could save much time to end-users.
 They probably don't want to find
-the [weird](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/main/2025-07-15-checkstatstorm/mountinthreadautopreload_run.sh?ref_type=heads)
-[hacks](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/main/2025-07-15-checkstatstorm/mountinthreadsimple.py?ref_type=heads)
+the [weird](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/f794b5a/2025-07-15-checkstatstorm/mountinthreadautopreload_run.sh?ref_type=heads)
+[hacks](https://gitlab.softwareheritage.org/martin/oar-deployments/-/blob/f794b5a/2025-07-15-checkstatstorm/mountinthreadsimple.py?ref_type=heads)
 that allow a reasonably-efficient multi-processing.
 
 ### 🚀 Run at CINES
