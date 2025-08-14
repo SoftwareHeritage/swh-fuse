@@ -319,7 +319,7 @@ class Fuse(pyfuse3.Operations):
         if name == b"user.swhid":
             entry = self.inode2entry(inode)
             try:
-                return entry.swhid.object_id  # type: ignore
+                return entry.swhid.to_bytes()  # type: ignore
             except AttributeError:
                 pass
         raise pyfuse3.FUSEError(errno.ENOSYS)
