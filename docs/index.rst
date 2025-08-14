@@ -7,10 +7,10 @@
    :maxdepth: 1
    :caption: Overview
 
-   cli
+   Tutorial <tutorial>
    configuration
    Design notes <design>
-   Tutorial <tutorial>
+   cli
 
 .. only:: standalone_package_doc
 
