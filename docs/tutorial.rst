@@ -161,10 +161,10 @@ In Python, read this attribute using the ``xattr`` package::
    print(f"{path} is {swhid}")
 
 
-History browsing
-----------------
+Revisions
+---------
 
-SwhFS presents revisions and their whole meta-data and history:
+SwhFS presents revisions and their whole meta-data:
 
 ::
 
@@ -194,61 +194,64 @@ SwhFS presents revisions and their whole meta-data and history:
    "[bot] build markdown from awesome-selfhosted-data 1361ca6\n"
 
 
+The ``root`` folder is a symbolic link to the directory that will let you browse the
+source tree matching that revision.
 
 
+..
+   FIXME history browsing is broken when using the WebAPI or the graph backend, so let's
+   not promote it here. commenting until there's a decision in
+   https://gitlab.softwareheritage.org/swh/devel/swh-fuse/-/issues/2921
 
 
+   Commit history can be browsed commit-by-commit digging into directories ``parent(s)/``
+   directories or, more efficiently, using the history summaries located under
+   ``history/``:
 
-TODO this got a 401 !!!
+   ::
 
-Commit history can be browsed commit-by-commit digging into directories ``parent(s)/``
-directories or, more efficiently, using the history summaries located under
-``history/``:
-
-::
-
-   $ ls -f history/by-page/000/ | wc -l
+      $ ls -f history/by-page/000/ | wc -l
 
 
-   $ ls -f history/by-page/000/ | head -n 5
-   swh:1:rev:358b769a00c3a09a8ec621b8dcb2d5e31b7da69a
-   swh:1:rev:4a7fc8544e2020c75047456d11979e4e3a517fdf
-   swh:1:rev:364476c3dc1231603ba61fc08068fa89fb095e1a
-   swh:1:rev:721744a9fab5b597febea64e466272eabfdb9463
-   swh:1:rev:4592595b478be979141ce35c693dbc6b65647173
+      $ ls -f history/by-page/000/ | head -n 5
+      swh:1:rev:358b769a00c3a09a8ec621b8dcb2d5e31b7da69a
+      swh:1:rev:4a7fc8544e2020c75047456d11979e4e3a517fdf
+      swh:1:rev:364476c3dc1231603ba61fc08068fa89fb095e1a
+      swh:1:rev:721744a9fab5b597febea64e466272eabfdb9463
+      swh:1:rev:4592595b478be979141ce35c693dbc6b65647173
 
-The jQuery commit at hand is preceded by 6469 commits, which can be listed in ``git
-log`` order via the ``by-page`` view. The ``by-hash`` and ``by-date`` views list commits
-sharded by commit identifier and timestamp:
+   The jQuery commit at hand is preceded by 6469 commits, which can be listed in ``git
+   log`` order via the ``by-page`` view. The ``by-hash`` and ``by-date`` views list commits
+   sharded by commit identifier and timestamp:
 
-::
+   ::
 
-   $ ls history/by-hash/00/ | head -n 5
-   swh:1:rev:00a9c2e5f4c855382435cec6b3908eb9bd5a53b7
-   swh:1:rev:005040379d8b64aacbe54941d878efa6e86df1cc
-   swh:1:rev:00cc67af23bf9cf2cdbaeaeee6ded76baf0292f0
-   swh:1:rev:00575d4d8c7421c5119f181009374ff2e7736127
-   swh:1:rev:0019a463bdcb81dc6ba3434505a45774ca27f363
+      $ ls history/by-hash/00/ | head -n 5
+      swh:1:rev:00a9c2e5f4c855382435cec6b3908eb9bd5a53b7
+      swh:1:rev:005040379d8b64aacbe54941d878efa6e86df1cc
+      swh:1:rev:00cc67af23bf9cf2cdbaeaeee6ded76baf0292f0
+      swh:1:rev:00575d4d8c7421c5119f181009374ff2e7736127
+      swh:1:rev:0019a463bdcb81dc6ba3434505a45774ca27f363
 
-   $ ls -1F history/by-date/
-   2006/
-   2007/
-   2008/
-   ...
-   2018/
-   2019/
-   2020/
+      $ ls -1F history/by-date/
+      2006/
+      2007/
+      2008/
+      ...
+      2018/
+      2019/
+      2020/
 
-   $ ls -f history/by-date/2020/03/16/
-   swh:1:ref:90fed4b453a5becdb7f173d9e3c1492390a1441f
+      $ ls -f history/by-date/2020/03/16/
+      swh:1:ref:90fed4b453a5becdb7f173d9e3c1492390a1441f
 
-   $ jq .date history/by-date/2020/03/16/*/meta.json
-   "2020-03-16T21:49:29+01:00"
+      $ jq .date history/by-date/2020/03/16/*/meta.json
+      "2020-03-16T21:49:29+01:00"
 
-Note that to populate the ``by-date`` view, metadata about all commits in the history
-are needed. To avoid blocking on that, metadata are retrieved asynchronously, populating
-the view incrementally. The hidden ``by-date/.status`` file provides a progress report
-and is removed upon completion.
+   Note that to populate the ``by-date`` view, metadata about all commits in the history
+   are needed. To avoid blocking on that, metadata are retrieved asynchronously, populating
+   the view incrementally. The hidden ``by-date/.status`` file provides a progress report
+   and is removed upon completion.
 
 Repository snapshots and branches
 ---------------------------------
