@@ -5,7 +5,7 @@
 
 from swh.core.config import merge_configs
 from swh.fuse.cli import DEFAULT_CONFIG
-from swh.fuse.fuse import SwhFuseTmpMount
+from swh.fuse.fuse import SwhFsTmpMount
 
 
 def test_swh_fuse_context():
@@ -19,7 +19,7 @@ def test_swh_fuse_context():
             },
         },
     )
-    with SwhFuseTmpMount(config=config) as mountpoint:
+    with SwhFsTmpMount(config=config) as mountpoint:
         cache = mountpoint / "cache"
         assert cache.is_dir()
         subfolders = list(cache.glob("*"))

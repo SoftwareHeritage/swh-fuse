@@ -347,17 +347,18 @@ def obj_backend_factory(conf: Dict[str, Any]) -> ContentBackend:
         return WebApiBackend(conf)
 
 
-class SwhFuseTmpMount:
+class SwhFsTmpMount:
     """
     This context manager will mount the Software Heritage archive on a temporary
-    folder, in a separate thread. It returns a ``Path`` object pointing to the
-    mountpoint. Note that the main thread will likely wait a bit before entering the
-    context, while the system and the mounting thread are mounting. This usually takes
-    a few milliseconds.
+    folder, in a separate thread running its own asyncio event loop. It returns a
+    ``Path`` object pointing to the mountpoint. Note that the main thread will likely
+    wait a bit before entering the context, until the mountpoint appears.
 
-    Example::
+    Example:
 
-        with SwhFuseTmpMount() as mountpoint:
+    ::
+
+        with SwhFsTmpMount() as mountpoint:
             swhid = "swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2"
             hello_world_path = mountpoint / "archive" / swhid
             print(open(hello_world_path).read())
@@ -366,12 +367,7 @@ class SwhFuseTmpMount:
     so please set the ``SWH_CONFIG_FILE`` environment variable pointing to the relevant
     configuration file. The ``config`` parameter is intended for unit tests.
 
-    .. warning::
-
-        This can be used to create multiple mountpoints at the same time, for example
-        one mount per worker process. In that case, be careful to disable on-disk
-        caching entirely, using the ``in-memory`` or ``bypass`` settings.
-
+    See also :ref:`swh-fuse-parallelization`.
     """
 
     def __init__(self, config=None):
