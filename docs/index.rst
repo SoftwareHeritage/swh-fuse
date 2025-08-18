@@ -9,6 +9,7 @@
 
    Tutorial <tutorial>
    configuration
+   parallelization
    Design notes <design>
    cli
 

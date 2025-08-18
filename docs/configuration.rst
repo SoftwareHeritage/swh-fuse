@@ -194,11 +194,6 @@ and its corresponding :ref:`digestmap <swh-digestmap>`.
 To ensure the digestmap implementation is available,
 invoke ``pip install swh-digestmap``.
 
-.. note::
-
-  As this is caching to SQLite, you cannot use this configuration to create multiple
-  mounts in parallel on the same machine.
-
 .. code:: yaml
 
     swh:

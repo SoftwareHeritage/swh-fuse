@@ -8,9 +8,9 @@ import errno
 import logging
 import os
 from pathlib import Path
-from shutil import which
+from shutil import which, rmtree
 from subprocess import run
-from tempfile import TemporaryDirectory
+from tempfile import mkdtemp
 from threading import Thread
 import time
 from typing import Any, Dict, List
@@ -375,32 +375,30 @@ class SwhFsTmpMount:
             self.config = load_config()
         else:
             self.config = config
-        self.mountpoint = TemporaryDirectory(ignore_cleanup_errors=True)
+        self.mountpoint = Path(mkdtemp())
         self.loop = asyncio.get_event_loop_policy().get_event_loop()
         self.swhfuse = self.loop.create_task(
-            main([], self.mountpoint.name, self.config)
+            main([], self.mountpoint, self.config)
         )
         self.thread = Thread(target=self.loop.run_until_complete, args=(self.swhfuse,))
 
     def __enter__(self) -> Path:
         self.thread.start()
-        mounted = Path(self.mountpoint.name)
-        for i in range(10000):
-            if (mounted / "archive").exists():
+        for i in range(30000):
+            if (self.mountpoint / "archive").exists():
                 break
             else:
-                time.sleep(0.001)
+                time.sleep(0.01)
         else:
             raise RuntimeError(
-                "Mountpoint failed to appear after 10 seconds, aborting."
+                "Mountpoint failed to appear after 5 minutes, aborting."
             )
-        return mounted
+        return self.mountpoint
 
     def __exit__(self, exc_type, exc_value, traceback):
-        mounted = Path(self.mountpoint.name)
-        if (mounted / "archive").exists():
-            run([which("fusermount3"), "-u", self.mountpoint.name])
-        self.mountpoint.cleanup()
+        if (self.mountpoint / "archive").exists():
+            run([which("fusermount3"), "-u", str(self.mountpoint)])
+        rmtree(self.mountpoint, ignore_errors=True)
         return False
 
 

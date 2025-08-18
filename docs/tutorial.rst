@@ -35,7 +35,7 @@ archive, use the ``swh fs mount`` command:
 To unmount use ``swh fs umount ~/swhfs``.
 Note that ``sudo`` is not needed,
 however on some systems you might need specific authorizations.
-Cf. TODO LINK on workarounds.
+See :ref:`swh-fuse-unshare`.
 
 By default SwhFS daemonizes into background and logs to syslog; it can be kept in
 foreground, logging to the console, by passing the ``-f/`` (``--foreground``) option to ``mount``.
