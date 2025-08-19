@@ -45,12 +45,12 @@ class ObjStorageBackend(ContentBackend):
         except KeyError:
             self.objstorage = None
 
-        self.statsd = Statsd(namespace="swhfuse_")
+        self.statsd = Statsd()
         self.storage_tracker = TimedContextManagerDecorator(
-            self.statsd, "waiting_storage"
+            self.statsd, "swhfuse_waiting_storage"
         )
         self.objstorage_tracker = TimedContextManagerDecorator(
-            self.statsd, "waiting_objstorage"
+            self.statsd, "swhfuse_waiting_objstorage"
         )
 
     def shutdown(self) -> None:
@@ -67,7 +67,7 @@ class ObjStorageBackend(ContentBackend):
         """
         Fetch the content of a ``cnt`` object.
         """
-        self.statsd.increment("get_blob")
+        self.statsd.increment("swhfuse_get_blob")
         hashes = None
         try:
             with self.storage_tracker:
@@ -86,7 +86,7 @@ class ObjStorageBackend(ContentBackend):
             else:
                 raise ValueError(f"SWH-storage cannot find object {swhid}")
         except BaseException as e:
-            self.statsd.increment("blob_not_in_storage")
+            self.statsd.increment("swhfuse_blob_not_in_storage")
             self.logger.error("Failed to fetch %s from storage: %s", swhid, e)
             raise
 
@@ -97,6 +97,6 @@ class ObjStorageBackend(ContentBackend):
             raise ValueError(f"SWH-objstorage cannot find object {hashes}")
 
         except BaseException as e:
-            self.statsd.increment("blob_not_in_objstorage")
+            self.statsd.increment("swhfuse_blob_not_in_objstorage")
             self.logger.error("Failed to fetch %s from objstorage: %s", swhid, e)
             raise
