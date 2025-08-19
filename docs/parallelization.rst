@@ -1,8 +1,8 @@
 .. _swh-fuse-parallelization:
 
 
-Advices for parallelization
-===========================
+Advice for parallelization
+==========================
 
 
 SwhFS is designed to provide access to the complete archive:
@@ -12,7 +12,7 @@ This requires parallelization.
 SwhFS has been tested up to 10000 concurrent processes,
 which was not trivial due to the FUSE architecture, to SwhFS being implemented in Python,
 or to system constraints sometimes enforced by HPC infrastructures.
-This section collects advices and tips for large deployments.
+This section collects advice and tips for large deployments.
 
 .. note::
 

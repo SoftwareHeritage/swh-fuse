@@ -8,7 +8,7 @@ import errno
 import logging
 import os
 from pathlib import Path
-from shutil import which, rmtree
+from shutil import rmtree, which
 from subprocess import run
 from tempfile import mkdtemp
 from threading import Thread
@@ -378,9 +378,7 @@ class SwhFsTmpMount:
             self.config = config
         self.mountpoint = Path(mkdtemp())
         self.loop = asyncio.get_event_loop_policy().get_event_loop()
-        self.swhfuse = self.loop.create_task(
-            main([], self.mountpoint, self.config)
-        )
+        self.swhfuse = self.loop.create_task(main([], self.mountpoint, self.config))
         self.thread = Thread(target=self.loop.run_until_complete, args=(self.swhfuse,))
 
     def __enter__(self) -> Path:
@@ -391,9 +389,7 @@ class SwhFsTmpMount:
             else:
                 time.sleep(0.01)
         else:
-            raise RuntimeError(
-                "Mountpoint failed to appear after 5 minutes, aborting."
-            )
+            raise RuntimeError("Mountpoint failed to appear after 5 minutes, aborting.")
         return self.mountpoint
 
     def __exit__(self, exc_type, exc_value, traceback):

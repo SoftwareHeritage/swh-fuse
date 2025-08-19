@@ -49,7 +49,7 @@ def main(workers_n: int):
     global_start = perf_counter()
     print(datetime.now().isoformat(), "starting")
 
-    with SwhFsTmpMount() as swhroot:
+    with SwhFsTmpMount():
         # some python imports are made only when mounting, so we mount once to
         # indirectly trigger those imports. This ensure that processes forked next
         # by ProcessPoolExecutor will be fully loaded.
