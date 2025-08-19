@@ -174,8 +174,9 @@ but this will probably be slower.
 
 When ``objstorage`` is provided,
 ``storage`` will be called only to match SWHIDs with contents' hashes set:
-you'll probably want to set ``cls: digestmap``,
-provided by the package :ref:`swh.digestmap <swh-digestmap>`.
+you'll probably want to set ``cls: digestmap``.
+That class is provided by the package :ref:`swh.digestmap <swh-digestmap>`,
+installed along the HPC dependency group.
 It has been developed for that case and will be the fastest back-end.
 
 .. _swh-fuse-config-teaser-graph-s3:
