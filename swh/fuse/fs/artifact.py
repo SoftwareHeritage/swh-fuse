@@ -90,7 +90,7 @@ class Directory(FuseDirEntry):
                     # Symlink target is stored in the blob content
                     target = await self.fuse.get_blob(swhid)
                 except Exception:
-                    pass  # Ignore error and create a (broken) symlink anyway
+                    self.fuse.logger.exception("while adding a symlink in %s", self.swhid)
 
                 yield self.create_child(
                     FuseSymlinkEntry,
@@ -123,7 +123,7 @@ class Directory(FuseDirEntry):
                     # symlink to distinguish it with regular directories
                     await self.fuse.get_metadata(swhid)
                 except Exception:
-                    pass  # Ignore error and create a (broken) symlink anyway
+                    self.fuse.logger.exception("while symlinking to revision in %s", self.swhid)
 
                 yield self.create_child(
                     FuseSymlinkEntry,
