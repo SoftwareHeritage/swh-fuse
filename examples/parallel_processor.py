@@ -29,6 +29,7 @@ def count_py_worker(swhdir: Path) -> int:
         path = mountpoint / swhdir
         for f in path.glob("**/*.py"):
             nbfiles += 1
+    print(datetime.now().isoformat(), f"Found {nbfiles} .py files in {swhdir}")
     return nbfiles
 
 
