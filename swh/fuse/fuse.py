@@ -352,7 +352,8 @@ class SwhFsTmpMount:
     This context manager will mount the Software Heritage archive on a temporary
     folder, in a separate thread running its own asyncio event loop. It returns a
     `Path <https://docs.python.org/3/library/pathlib.html>`_ object pointing to the
-    mountpoint. Note that the main thread will likely
+    mountpoint, that will be deleted when exiting the context.
+    Note that the main thread will likely
     wait a bit before entering the context, until the mountpoint appears.
 
     Example:
@@ -364,7 +365,7 @@ class SwhFsTmpMount:
             hello_world_path = mountpoint / "archive" / swhid
             print(open(hello_world_path).read())
 
-    The mountpoint will be configured as if launched via the `swh fs mount` command,
+    SwhFS will be configured as if launched via the `swh fs mount` command,
     so please set the ``SWH_CONFIG_FILE`` environment variable pointing to the relevant
     configuration file. The ``config`` parameter is intended for unit tests.
 
