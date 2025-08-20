@@ -145,12 +145,19 @@ because it can be provided quickly by the graph.
         web-api:
           auth-token: "yhbGcOiJI1z1NiIsInR5CIgOiAiSlduIiWia2..."
 
+
+.. note::
+
+  The way we encode symbolic links requires an access to the contents storage
+  (cf. :py:func:`swh.model.git_objects.directory_git_object`),
+  so in that setting source tree traversals can still cause accesses to the Web API.
+
 .. _swh-fuse-config-file-download:
 
-Configuring files' download
----------------------------
+Configuring files' content download
+-----------------------------------
 
-What follows also requires the ``hpc`` dependency group::
+What follows requires the ``hpc`` dependency group::
 
     $ pip install swh-fuse[hpc]
 
@@ -174,8 +181,9 @@ but this will probably be slower.
 
 When ``objstorage`` is provided,
 ``storage`` will be called only to match SWHIDs with contents' hashes set:
-you'll probably want to set ``cls: digestmap``,
-provided by the package :ref:`swh.digestmap <swh-digestmap>`.
+you'll probably want to set ``cls: digestmap``.
+That class is provided by the package :ref:`swh.digestmap <swh-digestmap>`,
+installed along the HPC dependency group.
 It has been developed for that case and will be the fastest back-end.
 
 .. _swh-fuse-config-teaser-graph-s3:

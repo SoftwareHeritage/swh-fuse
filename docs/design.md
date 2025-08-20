@@ -167,13 +167,6 @@ caches are used to minimize network transfer.
 Caches are stored on disk in SQLite DB(s) located under
 `$XDG_CACHE_HOME/swh/fuse/`.
 
-```{todo}
-
-- potential improvement: store blobs larger than a threshold on disk as files
-rather than in SQLite, e.g., under `$XDG_CACHE_HOME/swh/fuse/objects/`
-
-```
-
 All caches are persistent (i.e., they survive the restart of the SwhFS process)
 and global (i.e., they are shared by concurrent SwhFS processes).
 

@@ -3,10 +3,15 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import asyncio
 import errno
 import logging
 import os
 from pathlib import Path
+from shutil import rmtree, which
+from subprocess import run
+from tempfile import mkdtemp
+from threading import Thread
 import time
 from typing import Any, Dict, List
 
@@ -16,6 +21,7 @@ import pyfuse3.asyncio
 from swh.fuse import LOGGER_NAME
 from swh.fuse.backends import ContentBackend, GraphBackend
 from swh.fuse.cache import FuseCache
+from swh.fuse.cli import load_config
 from swh.fuse.fs.entry import FuseDirEntry, FuseEntry, FuseFileEntry, FuseSymlinkEntry
 from swh.fuse.fs.mountpoint import Root
 from swh.model.swhids import CoreSWHID, ObjectType
@@ -307,13 +313,12 @@ class Fuse(pyfuse3.Operations):
         """
         This allows someone to get the extend attribute "user.swhid" on entities that
         have one (this is mostly useful when traversing source trees).
-        The attribute value is the object ID, as 20 bytes, so you can
-        reconstruct the SWHID from it.
+        The attribute value is a SWHID string.
         """
         if name == b"user.swhid":
             entry = self.inode2entry(inode)
             try:
-                return entry.swhid.object_id  # type: ignore
+                return str(entry.swhid).encode()  # type: ignore
             except AttributeError:
                 pass
         raise pyfuse3.FUSEError(errno.ENOSYS)
@@ -339,6 +344,59 @@ def obj_backend_factory(conf: Dict[str, Any]) -> ContentBackend:
         from swh.fuse.backends.web_api import WebApiBackend
 
         return WebApiBackend(conf)
+
+
+class SwhFsTmpMount:
+    """
+    This context manager will mount the Software Heritage archive on a temporary
+    folder, in a separate thread running its own asyncio event loop. It returns a
+    `Path <https://docs.python.org/3/library/pathlib.html>`_ object pointing to the
+    mountpoint, that will be deleted when exiting the context.
+    Note that the main thread will likely
+    wait a bit before entering the context, until the mountpoint appears.
+
+    Example:
+
+    ::
+
+        with SwhFsTmpMount() as mountpoint:
+            swhid = "swh:1:cnt:c839dea9e8e6f0528b468214348fee8669b305b2"
+            hello_world_path = mountpoint / "archive" / swhid
+            print(open(hello_world_path).read())
+
+    SwhFS will be configured as if launched via the `swh fs mount` command,
+    so please set the ``SWH_CONFIG_FILE`` environment variable pointing to the relevant
+    configuration file. The ``config`` parameter is intended for unit tests.
+
+    See also :ref:`swh-fuse-parallelization`.
+    """
+
+    def __init__(self, config=None):
+        if config is None:
+            self.config = load_config()
+        else:
+            self.config = config
+        self.mountpoint = Path(mkdtemp())
+        self.loop = asyncio.get_event_loop_policy().get_event_loop()
+        self.swhfuse = self.loop.create_task(main([], self.mountpoint, self.config))
+        self.thread = Thread(target=self.loop.run_until_complete, args=(self.swhfuse,))
+
+    def __enter__(self) -> Path:
+        self.thread.start()
+        for i in range(30000):
+            if (self.mountpoint / "archive").exists():
+                break
+            else:
+                time.sleep(0.01)
+        else:
+            raise RuntimeError("Mountpoint failed to appear after 5 minutes, aborting.")
+        return self.mountpoint
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if (self.mountpoint / "archive").exists():
+            run([which("fusermount3"), "-u", str(self.mountpoint)])
+        rmtree(self.mountpoint, ignore_errors=True)
+        return False
 
 
 async def main(
