@@ -313,13 +313,12 @@ class Fuse(pyfuse3.Operations):
         """
         This allows someone to get the extend attribute "user.swhid" on entities that
         have one (this is mostly useful when traversing source trees).
-        The attribute value is the object ID, as 20 bytes, so you can
-        reconstruct the SWHID from it.
+        The attribute value is a SWHID string.
         """
         if name == b"user.swhid":
             entry = self.inode2entry(inode)
             try:
-                return entry.swhid.to_bytes()  # type: ignore
+                return str(entry.swhid).encode()
             except AttributeError:
                 pass
         raise pyfuse3.FUSEError(errno.ENOSYS)

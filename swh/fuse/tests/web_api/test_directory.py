@@ -2,7 +2,7 @@ import os
 
 import xattr
 
-from swh.model.swhids import CoreSWHID
+from swh.model.swhids import CoreSWHID, ObjectType
 
 from .common import check_dir_name_entries
 from .data.config import (
@@ -22,18 +22,20 @@ def test_access_file(fuse_mntdir):
     file_path = fuse_mntdir / "archive" / ROOT_DIR / "README.md"
     assert file_path.is_file()
 
-    raw_swhid = xattr.getxattr(str(file_path), "user.swhid")
-    swhid = CoreSWHID.from_bytes(raw_swhid)
+    raw_swhid = xattr.getxattr(str(file_path), "user.swhid").decode()
+    swhid = CoreSWHID.from_string(raw_swhid)
     assert swhid.object_id == bytes.fromhex("61d3c9e1157203f0c4ed5165608d92294eaca808")
+    assert swhid.object_type == ObjectType.CONTENT
 
 
 def test_access_subdir(fuse_mntdir):
     dir_path = fuse_mntdir / "archive" / ROOT_DIR / "src"
     assert dir_path.is_dir()
 
-    raw_swhid = xattr.getxattr(str(dir_path), "user.swhid")
-    swhid = CoreSWHID.from_bytes(raw_swhid)
+    raw_swhid = xattr.getxattr(str(dir_path), "user.swhid").decode()
+    swhid = CoreSWHID.from_string(raw_swhid)
     assert swhid.object_id == bytes.fromhex("64df732293e27dee84e495363040af15a5b3a54b")
+    assert swhid.object_type == ObjectType.DIRECTORY
 
 
 def test_access_symlinks(fuse_mntdir):

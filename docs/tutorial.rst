@@ -135,17 +135,17 @@ comments about the antenna during landing:
    # BRANCH IF ANTENNA ALREADY IN POSITION 1
 
 
-When traversing a tree, you can get each directory and file's SWHID in an extended attribute called ``user.swhid``.
-The SWHID can be reconstructed with :py:meth:`swh.model.swhids.CoreSWHID.from_bytes`,
-or use the last 20 bytes as the object ID::
+When traversing a tree, you can get each directory and file's SWHID in an extended attribute called ``user.swhid``:
+
+::
 
    $ getfattr -n user.swhid  --encoding=hex archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
    # file: archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
-   user.swhid=0x0100775f08d911f2c19f1498f1a994a263dbf5adf9e1
+   user.swhid="swh:1:cnt:775f08d911f2c19f1498f1a994a263dbf5adf9e1"
 
    $ getfattr -n user.swhid  --encoding=hex archive/swh:1:rev:1976b1d33ec7c21f1d4009d9153edce2d0c5d801/root
    # file: archive/swh:1:rev:1976b1d33ec7c21f1d4009d9153edce2d0c5d801/root
-   user.swhid=0x01013736f2228bc788f8ade496d0e8fe496cef77d029
+   user.swhid="swh:1:dir:3736f2228bc788f8ade496d0e8fe496cef77d029"
 
 In Python, read this attribute using the ``xattr`` package::
 
@@ -153,11 +153,11 @@ In Python, read this attribute using the ``xattr`` package::
    from swh.model.swhids import CoreSWHID, ObjectType
 
    path = "mountpoint/archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s"
-   swhid = CoreSWHID.from_bytes(xattr.getxattr(path, "user.swhid"))
+   swhid = CoreSWHID.from_string(xattr.getxattr(path, "user.swhid").decode())
    print(f"{path} is {swhid}")
 
    path = "mountpoint/archive/swh:1:rev:1976b1d33ec7c21f1d4009d9153edce2d0c5d801/root"
-   swhid = CoreSWHID.from_bytes(xattr.getxattr(path, "user.swhid"))
+   swhid = CoreSWHID.from_string(xattr.getxattr(path, "user.swhid").decode())
    print(f"{path} is {swhid}")
 
 
