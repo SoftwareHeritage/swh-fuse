@@ -139,11 +139,11 @@ When traversing a tree, you can get each directory and file's SWHID in an extend
 
 ::
 
-   $ getfattr -n user.swhid  --encoding=hex archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
+   $ getfattr -n user.swhid archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
    # file: archive/swh:1:dir:1fee702c7e6d14395bbf5ac3598e73bcbf97b030/THE_LUNAR_LANDING.s
    user.swhid="swh:1:cnt:775f08d911f2c19f1498f1a994a263dbf5adf9e1"
 
-   $ getfattr -n user.swhid  --encoding=hex archive/swh:1:rev:1976b1d33ec7c21f1d4009d9153edce2d0c5d801/root
+   $ getfattr -n user.swhid archive/swh:1:rev:1976b1d33ec7c21f1d4009d9153edce2d0c5d801/root
    # file: archive/swh:1:rev:1976b1d33ec7c21f1d4009d9153edce2d0c5d801/root
    user.swhid="swh:1:dir:3736f2228bc788f8ade496d0e8fe496cef77d029"
 
