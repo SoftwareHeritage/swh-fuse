@@ -377,7 +377,7 @@ class SwhFsTmpMount:
         else:
             self.config = config
         self.mountpoint = Path(mkdtemp())
-        self.loop = asyncio.get_event_loop_policy().get_event_loop()
+        self.loop = asyncio.get_event_loop_policy().new_event_loop()
         self.swhfuse = self.loop.create_task(main([], self.mountpoint, self.config))
         self.thread = Thread(target=self.loop.run_until_complete, args=(self.swhfuse,))
 
