@@ -7,6 +7,7 @@
 # control
 import os
 from pathlib import Path
+import re
 from typing import Any, Dict
 
 import click
@@ -67,7 +68,16 @@ def load_config(config_file=None) -> dict:
 
         # recursive merge not done by config.read
         conf = config.merge_configs(DEFAULT_CONFIG, conf)
-        logger.debug("Active configuration:\n%s", yaml.dump(conf))
+
+        # printing the effective configuration is helpful in complicated environments,
+        # but let's void leaking a token in logs
+        if logger.getEffectiveLevel() <= logging.DEBUG:
+            conf_dump = yaml.dump(conf)
+            remove_token = re.compile("(.+token.*:).+\n", re.MULTILINE | re.IGNORECASE)
+            conf_safe = remove_token.sub(
+                lambda m: m.group(1) + " [redacted]\n", conf_dump
+            )
+            logger.debug("Active configuration:\n%s", conf_safe)
     else:
         logger.info("Using default configuration")
         conf = DEFAULT_CONFIG
