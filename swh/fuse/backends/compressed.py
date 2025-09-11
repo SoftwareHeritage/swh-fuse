@@ -218,24 +218,25 @@ class CompressedGraphBackend(GraphBackend):
             if target_type == ObjectType.CONTENT.value:
                 # complying with swh-web-client.typify_json is hard
                 target_type = "file"
-            name = decode_or_base64(successor.label[0].name)
-            entry = {
-                "dir_id": swhid.object_id.hex(),
-                "name": name,
-                "perms": successor.label[0].permission,
-                "type": target_type,
-                "target": target.object_id.hex(),
-            }
-            if target.object_type == ObjectType.CONTENT:
-                if successor.swhid in cnt_metadata:
-                    entry.update(cnt_metadata[successor.swhid])
-                else:
-                    self.logger.warning(
-                        "%s listed as successor of %s, but not fetched by raw_cnt",
-                        target,
-                        swhid,
-                    )
-            metadata.append(entry)
+            for label in successor.label:
+                name = decode_or_base64(label.name)
+                entry = {
+                    "dir_id": swhid.object_id.hex(),
+                    "name": name,
+                    "perms": label.permission,
+                    "type": target_type,
+                    "target": target.object_id.hex(),
+                }
+                if target.object_type == ObjectType.CONTENT:
+                    if successor.swhid in cnt_metadata:
+                        entry.update(cnt_metadata[successor.swhid])
+                    else:
+                        self.logger.warning(
+                            "%s listed as successor of %s, but not fetched by raw_cnt",
+                            target,
+                            swhid,
+                        )
+                metadata.append(entry)
 
         return metadata
 
