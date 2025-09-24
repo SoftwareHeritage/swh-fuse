@@ -287,14 +287,14 @@ repository first.
 Origin search
 -------------
 
-Origins can be accessed via the ``origin/`` top-level directory using their **encoded**
-URL (the percent-encoding mechanism described in `RFC 3986
-<https://tools.ietf.org/html/rfc3986.html>`_.
+Origins can be accessed via the ``origin/`` top-level directory using their **encoded** URL.
+SwhFS expects the percent-encoding mechanism described in `RFC 3986 <https://tools.ietf.org/html/rfc3986.html>`_.
+In Python, use `urllib.parse.quote_plus <https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote_plus>`_.
 
 ::
 
    $ cd origin/https%3A%2F%2Fgithub.com%2Ftorvalds%2Flinux
-   $ ls # this might take some time...
+   $ ls # this might take some time...
    2015-07-09/  2016-09-14/  2017-09-12/  2018-03-08/  2018-09-06/  ...
 
 Each directory corresponds to a visit, containing metadata and a symlink to the visit’s
