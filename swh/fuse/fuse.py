@@ -137,7 +137,10 @@ class Fuse(pyfuse3.Operations):
         await self.cache.history.set(history)
         # Retrieve it from cache so it is correctly typed
         res = await self.cache.history.get(swhid)
-        return res
+        if res is None:
+            return []
+        else:
+            return res
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
         """Retrieve origin visits given an encoded-URL using Software Heritage API"""
@@ -324,7 +327,7 @@ class Fuse(pyfuse3.Operations):
         raise pyfuse3.FUSEError(errno.ENOSYS)
 
 
-def graph_backend_factory(conf: Dict[str, Any]) -> GraphBackend:
+def graph_backend_factory(conf: Dict[str, Any], cache: FuseCache) -> GraphBackend:
     if "graph" in conf:
         from swh.fuse.backends.compressed import CompressedGraphBackend
 
@@ -332,10 +335,10 @@ def graph_backend_factory(conf: Dict[str, Any]) -> GraphBackend:
     else:
         from swh.fuse.backends.web_api import WebApiBackend
 
-        return WebApiBackend(conf)
+        return WebApiBackend(conf, cache)
 
 
-def obj_backend_factory(conf: Dict[str, Any]) -> ContentBackend:
+def obj_backend_factory(conf: Dict[str, Any], cache: FuseCache) -> ContentBackend:
     if "content" in conf and conf["content"]:
         from swh.fuse.backends.objstorage import ObjStorageBackend
 
@@ -343,7 +346,7 @@ def obj_backend_factory(conf: Dict[str, Any]) -> ContentBackend:
     else:
         from swh.fuse.backends.web_api import WebApiBackend
 
-        return WebApiBackend(conf)
+        return WebApiBackend(conf, cache)
 
 
 class SwhFsTmpMount:
@@ -412,8 +415,9 @@ async def main(
 
     async with FuseCache(conf["cache"]) as cache:
         if content_backend is None:
-            content_backend = obj_backend_factory(conf)
-        fs = Fuse(cache, conf, graph_backend_factory(conf), content_backend)
+            content_backend = obj_backend_factory(conf, cache)
+        graph_backend = graph_backend_factory(conf, cache)
+        fs = Fuse(cache, conf, graph_backend, content_backend)
 
         # Initially populate the cache
         for swhid in swhids:

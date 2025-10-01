@@ -13,7 +13,8 @@ from requests import HTTPError
 
 from swh.fuse import LOGGER_NAME
 from swh.fuse.backends import ContentBackend, GraphBackend
-from swh.model.swhids import CoreSWHID
+from swh.fuse.cache import FuseCache
+from swh.model.swhids import CoreSWHID, ObjectType
 from swh.web.client.client import WebAPIClient
 
 
@@ -22,9 +23,13 @@ class WebApiBackend(GraphBackend, ContentBackend):
     A Backend querying everything via Software Heritage's public API.
 
     This is simpler to configure and deploy, but expect long response times.
+
+    It gets a pointer to the cache because some endpoints are more verbose than needed,
+    but it allows to pre-cache data for further use. That's not elegant, but can avoid
+    being rate-limited because of a simple `ls archive/rev.../history` .
     """
 
-    def __init__(self, conf: Dict):
+    def __init__(self, conf: Dict, cache: FuseCache):
         """
         Only needs the ``web-api`` key of ``conf``, searching for ``url`` and maybe
         ``auth-token`` keys.
@@ -33,6 +38,7 @@ class WebApiBackend(GraphBackend, ContentBackend):
             conf["web-api"]["url"], conf["web-api"]["auth-token"]
         )
         self.logger = logging.getLogger(LOGGER_NAME)
+        self.cache = cache
 
     async def get_metadata(self, swhid: CoreSWHID) -> Dict | List:
         try:
@@ -56,29 +62,38 @@ class WebApiBackend(GraphBackend, ContentBackend):
             raise
 
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
+        """
+        Fetch a thousand ``(entry, parent)`` edges from ``swhid``.
+
+        As the ``/log`` endpoint provides complete metadata objects, we pre-fill the
+        cache by the way: it will be used afterwards by ``RevisionHistoryShardBy*``
+        artifacts.
+        """
+        edges = []
+        limit = 1000
         try:
-            # Use the swh-graph API to retrieve the full history very fast
-            self.logger.debug("Retrieving history of %s via graph API...", swhid)
-            call = f"graph/visit/edges/{swhid}?edges=rev:rev"
+            self.logger.debug(
+                "Retrieving %d revs before %s via Web API...", limit, swhid
+            )
+            call = f"revision/{swhid.object_id.hex()}/log/?limit={limit}"
             loop = asyncio.get_event_loop()
             request = await loop.run_in_executor(None, self.web_api._call, call)
-            history = request.text.strip()
-            if history:
-                edges = []
-                for edge in history.split("\n"):
-                    split = edge.split(" ")
-                    if len(split) == 2:
-                        edges.append((split[0], split[1]))
-                return edges
-            else:
-                return []
+            history = request.json()
+            for revision in history:
+                entry_swhid = CoreSWHID(
+                    object_type=ObjectType.REVISION,
+                    object_id=bytes.fromhex(revision["id"]),
+                )
+                await self.cache.metadata.set(entry_swhid, revision)
+                for parent in revision["parents"]:
+                    parent_swhid = CoreSWHID(
+                        object_type=ObjectType.REVISION,
+                        object_id=bytes.fromhex(parent["id"]),
+                    )
+                    edges.append((str(entry_swhid), str(parent_swhid)))
         except HTTPError as err:
             self.logger.error("Cannot fetch history for object %s: %s", swhid, err)
-            # Ignore exception since swh-graph does not necessarily contain the
-            # most recent artifacts from the archive. Computing the full history
-            # from the Web API is too computationally intensive so simply return
-            # an empty list.
-            return []
+        return edges
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
         try:

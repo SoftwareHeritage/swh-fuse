@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import asyncio
 from dataclasses import dataclass, field
 import json
 import logging
@@ -223,23 +222,6 @@ class RevisionHistory(FuseDirEntry):
 
     swhid: CoreSWHID
 
-    async def prefill_by_date_cache(self, by_date_dir: FuseDirEntry) -> None:
-        history = await self.fuse.get_history(self.swhid)
-        nb_api_calls = 0
-        for swhid in history:
-            cache = await self.fuse.cache.metadata.get(swhid)
-            if cache:
-                continue
-
-            await self.fuse.get_metadata(swhid)
-            # The by-date/ directory is cached temporarily in direntry, and
-            # invalidated + updated every 100 API calls
-            nb_api_calls += 1
-            if nb_api_calls % 100 == 0:
-                self.fuse.cache.direntry.invalidate(by_date_dir)
-        # Make sure to have the latest entries once the prefilling is done
-        self.fuse.cache.direntry.invalidate(by_date_dir)
-
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
         by_date_dir = cast(
             RevisionHistoryShardByDate,
@@ -250,9 +232,6 @@ class RevisionHistory(FuseDirEntry):
                 history_swhid=self.swhid,
             ),
         )
-
-        # Run it concurrently because of the many API calls necessary
-        asyncio.create_task(self.prefill_by_date_cache(by_date_dir))
 
         yield by_date_dir
 
@@ -277,45 +256,13 @@ class RevisionHistoryShardByDate(FuseDirEntry):
 
     history_swhid: CoreSWHID
     prefix: str = field(default="")
-    is_status_done: bool = field(default=False)
 
     DATE_FMT = "{year:04d}/{month:02d}/{day:02d}/"
     ENTRIES_REGEXP = re.compile(r"^([0-9]{2,4})|(" + SWHID_REGEXP + ")$")
 
-    @dataclass
-    class StatusFile(FuseFileEntry):
-        """Temporary file used to indicate loading progress in by-date/"""
-
-        name: str = field(init=False, default=".status")
-        mode: int = field(init=False, default=int(EntryMode.RDONLY_FILE))
-        history_swhid: CoreSWHID
-
-        def __post_init__(self):
-            super().__post_init__()
-            # This is the only case where we do not want the kernel to cache the file
-            self.file_info_attrs["keep_cache"] = False
-            self.file_info_attrs["direct_io"] = True
-
-        async def get_content(self) -> bytes:
-            history_full = await self.fuse.get_history(self.history_swhid)
-            history_cached = await self.fuse.cache.history.get_with_date_prefix(
-                self.history_swhid, date_prefix=""
-            )
-            fmt = f"Done: {len(history_cached)}/{len(history_full)}\n"
-            return fmt.encode()
-
-    def __post_init__(self):
-        super().__post_init__()
-        # Create the status file only once so we can easily remove it when the
-        # entire history is fetched
-        self.status_file = self.create_child(
-            RevisionHistoryShardByDate.StatusFile, history_swhid=self.history_swhid
-        )
-
     async def compute_entries(self) -> AsyncIterator[FuseEntry]:
-        history_full = await self.fuse.get_history(self.history_swhid)
-        # Only check for cached revisions with the appropriate prefix, since
-        # fetching all of them with the Web API would take too long
+        # ensure cache is loaded
+        await self.fuse.get_history(self.history_swhid)
         history_cached = await self.fuse.cache.history.get_with_date_prefix(
             self.history_swhid, date_prefix=self.prefix
         )
@@ -346,12 +293,6 @@ class RevisionHistoryShardByDate(FuseDirEntry):
                         prefix=f"{self.prefix}{next_prefix}/",
                         history_swhid=self.history_swhid,
                     )
-
-        self.is_status_done = len(history_cached) == len(history_full)
-        if self.is_status_done:
-            self.fuse._remove_inode(self.status_file.inode)
-        elif not self.is_status_done and depth == 0:
-            yield self.status_file
 
 
 @dataclass

@@ -206,7 +206,7 @@ class MetadataCache(AbstractCache):
                 )
 
         await self.conn.execute(
-            "insert into metadata_cache values (?, ?, ?)",
+            "insert or ignore into metadata_cache values (?, ?, ?)",
             (str(swhid), json.dumps(metadata), swhid_date),
         )
         await self.conn.commit()

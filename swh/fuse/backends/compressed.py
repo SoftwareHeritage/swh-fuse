@@ -258,8 +258,13 @@ class CompressedGraphBackend(GraphBackend):
                     mask=FieldMask(paths=["swhid"]),
                 ),
             )
-        str_swhid = str(swhid)
-        return [(str_swhid, str(entry.swhid)) for entry in raw_cnt]
+        child_str = str(swhid)
+        result = []
+        for entry in raw_cnt:
+            entry_str = str(entry.swhid)
+            result.append((child_str, entry_str))
+            child_str = entry_str
+        return result
 
     async def get_visits(self, url_encoded: str) -> List[Dict[str, Any]]:
         url = unquote_plus(url_encoded)

@@ -8,12 +8,7 @@ from swh.fuse.fs.artifact import RevisionHistoryShardByDate, RevisionHistoryShar
 from swh.model.hashutil import hash_to_hex
 from swh.model.swhids import CoreSWHID
 
-from .api_url import GRAPH_API_REQUEST
-from .common import (
-    check_dir_name_entries,
-    get_data_from_graph_archive,
-    get_data_from_web_archive,
-)
+from .common import check_dir_name_entries, get_data_from_web_archive, get_history_data
 from .data.config import REV_SMALL_HISTORY, ROOT_DIR, ROOT_REV
 
 
@@ -61,14 +56,11 @@ def test_list_history(fuse_mntdir):
     dir_path = fuse_mntdir / "archive" / REV_SMALL_HISTORY / "history"
     assert os.listdir(dir_path) == ["by-date", "by-hash", "by-page"]
 
-    history_meta = get_data_from_graph_archive(
-        REV_SMALL_HISTORY, GRAPH_API_REQUEST.HISTORY
-    )
-    history = history_meta.strip()
-    # Only keep second node in the edge because first node is redundant
-    # information or the root node (hence not an ancestor)
+    # skip the first item which is the "root" SWHID itself, it's not listed in history/
+    history = get_history_data(REV_SMALL_HISTORY)[1:]
+
     expected = set(
-        map(CoreSWHID.from_string, [edge.split(" ")[1] for edge in history.split("\n")])
+        CoreSWHID.from_string("swh:1:rev:" + entry["id"]) for entry in history
     )
 
     dir_by_hash = dir_path / "by-hash"

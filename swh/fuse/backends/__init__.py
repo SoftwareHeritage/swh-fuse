@@ -65,7 +65,7 @@ class GraphBackend(ABC):
     @abstractmethod
     async def get_history(self, swhid: CoreSWHID) -> List[Tuple[str, str]]:
         """
-        Return a list of tuples ``(swhid, revision swhid)``
+        Return a list of tuples ``(rev swhid, parent swhid)``
         """
 
     @abstractmethod
