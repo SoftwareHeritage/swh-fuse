@@ -391,10 +391,10 @@ Those can be downloaded from S3, so we also install ``awscli``:
 ::
 
    $ pip install awscli
-   $ mkdir -p swhdata/2025-05-18-popular1k/compressed swhdata/2025-05-18-popular1k/digestmap swhdata/objstore
-   $ aws s3 cp --no-sign-request --recursive s3://softwareheritagecompressed  swhdata/2025-05-18-popular1k/compressed/
-   $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/derived_datasets/2025-05-18-popular-1k/digestmap/ swhdata/2025-05-18-popular1k/digestmap/
-   $ aws s3 cp --no-sign-request s3://softwareheritage/content_shards/2025-05-18-popular-1k/2025-05-18-popular1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/
+   $ mkdir -p swhdata/2025-05-18-popular-1k/compressed swhdata/2025-05-18-popular-1k/digestmap swhdata/objstore
+   $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/graph/2025-05-18-popular-1k/compressed/ swhdata/2025-05-18-popular-1k/compressed/
+   $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/derived_datasets/2025-05-18-popular-1k/digestmap/ swhdata/2025-05-18-popular-1k/digestmap/
+   $ aws s3 cp --no-sign-request s3://softwareheritage/content_shards/2025-05-18-popular-1k/2025-05-18-popular-1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/
 
 .. note::
 
@@ -413,14 +413,14 @@ We have to mount the SquashFS first:
 
 ::
 
-   sudo mount -t squashfs -o loop swhdata/2025-05-18-popular1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/objstore/
+   sudo mount -t squashfs -o loop swhdata/2025-05-18-popular-1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/objstore/
 
 Then we start the graph's gRPC server, in another terminal.
 We only load the "forward" graph because SwhFS always follow edges in their forward direction.
 
 ::
 
-   RUST_LOG=WARN swh-graph-grpc-serve --direction=forward  ~/swhdata/2025-05-18-popular1k/compressed/graph
+   RUST_LOG=WARN swh-graph-grpc-serve --direction=forward  ~/swhdata/2025-05-18-popular-1k/compressed/graph
 
 
 Configure SwhFS to use these services and data by
@@ -443,13 +443,13 @@ replacing ``HOME`` with your own ``$HOME`` folder:
          content:
             storage:
                cls: digestmap
-               path: "HOME/swhdata/2025-05-18-popular1k/digestmap/"
+               path: "HOME/swhdata/2025-05-18-popular-1k/digestmap/"
             objstorage:
                cls: multiplexer
                readonly: true
                objstorages:
                   - cls: pathslicing
-                    root: HOME/oswhdata/objstore/
+                    root: HOME/swhdata/objstore/
                     slicing: 0:2/0:5
                     compression: none
                   - cls: http
@@ -502,6 +502,6 @@ like ``grep`` in a bigger repository like the Rust source, in 3 minutes:
    32inputs+40outputs (0major+1207minor)pagefaults 0swaps
    3523
 
-Note that a few files are missing: they are missing both in the SquashFS and in S3.
+Note that a few files are missing: they are missing from both the SquashFS and S3.
 Those cases are very rare, but should be expected when scanning repositories thoroughly.
 This will hopefully be fixed in future releases.
