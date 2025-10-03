@@ -161,13 +161,15 @@ class MetadataCache(AbstractCache):
         cache = await cursor.fetchone()
         if cache:
             metadata = json.loads(cache[0])
-            return (
-                typify_json(metadata, swhid.object_type.name.lower())
-                if typify
-                else metadata
-            )
-        else:
-            return None
+            try:
+                return (
+                    typify_json(metadata, swhid.object_type.name.lower())
+                    if typify
+                    else metadata
+                )
+            except Exception as e:
+                logging.exception("error with metadata=%r", metadata)
+        return None
 
     async def get_visits(self, url_encoded: str) -> Optional[List[Dict[str, Any]]]:
         cursor = await self.conn.execute(
