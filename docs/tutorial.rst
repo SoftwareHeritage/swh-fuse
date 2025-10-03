@@ -5,7 +5,13 @@ Installation
 ------------
 
 The Software Heritage virtual filesystem (SwhFS) is available from PyPI as `swh.fuse
-<https://pypi.org/project/swh.fuse/>`_. It can be installed from there using ``pip``:
+<https://pypi.org/project/swh.fuse/>`_.
+It requires ``libfuse3``, that can be installed on a Debian-like system with::
+
+   $ apt-get install fuse3 libfuse3-dev python3-dev build-essential pkg-config
+
+Then SwhFS itself can be installed using ``pip`` -
+you'll probably want to do this in `a virtual environment <https://docs.python.org/3/library/venv.html>`_.
 
 ::
 
@@ -334,23 +340,168 @@ The ``search`` tool is also useful to escape URL:
    https%3A%2F%2Fgithub.com%2Ftorvalds%2Flinux
 
 
-Speed up the access with local data
------------------------------------
+Going faster with local data
+----------------------------
 
 The default configuration uses Software Heritage's public Web API.
-Although easier to set up, this is slow.
-For example, you might have to wait one hour to count
-JavaScript lines of code (SLOC) in a jQuery revision:
+Although easier to set up, this is slow and rate-limited.
+For example, you would have to wait one hour to count Markdown lines
+in this revision of Git::
+
+   $ cd archive/swh:1:rev:1a8a4971cc6c179c4dd711f4a7f5d7178f4b3ab7
+
+   $ find root/ -type f -name '*.md' | xargs cat | wc -l
+   1300
+
+But there are only 11 Markdown files in this repository.
+Thanks to its cache, SwhFS is slow only on first access.
+But this means that the default configuration is usable only for repeated accesses
+to a small subset of the archive.
+
+You can speed up SwhFS significantly by using local data:
+
+* a :ref:`compressed graph <swh-graph>`, available via its gRPC server. It will provide
+  the repositories' structure, that SwhFS turns into folders and meta-data files.
+* an :ref:`object storage <swh-objstorage>` that will provide files contents.
+* a :ref:`digestmap <swh-digestmap>`, because the graph identifies contents by SWHIDs
+  whereas most of our object stores identify contents by ``sha1`` or ``sha256`` (as of
+  2025). The digestmap will help SwhFS to match identifiers.
+
+Instructions below will guide you through the installation of these programs and the
+download of sample data. This requires 550GB of storage available.
+
+First, we need to install SwhFS with the ``hpc`` optional dependency::
+
+   $ pip install swh.fuse[hpc]
+
+Install the graph (cf. :ref:`swh-graph's instructions <swh-graph-quickstart>` for more options)::
+
+   $ apt install cargo openssl-dev protobuf-compiler
+   $ RUSTFLAGS="-C target-cpu=native" cargo install --locked --git https://gitlab.softwareheritage.org/swh/devel/swh-graph.git swh-graph-grpc-server
+
+Now we need to download data:
+
+* the :ref:`2025-05-18-popular-1k <graph-dataset-2025-05-18-popular-1k>` compressed graph,
+* its corresponding digestmap,
+* and a `SquashFS <https://www.kernel.org/doc/html/v6.15/filesystems/squashfs.html>`_ file
+  that contains and compresses files referenced from that graph.
+
+Those can be downloaded from S3, so we also install ``awscli``:
 
 ::
 
-   $ cd archive/swh:1:rev:9d76c0b163675505d1a901e5fe5249a2c55609bc
+   $ pip install awscli
+   $ mkdir -p swhdata/2025-05-18-popular1k/compressed swhdata/2025-05-18-popular1k/digestmap swhdata/objstore
+   $ aws s3 cp --no-sign-request --recursive s3://softwareheritagecompressed  swhdata/2025-05-18-popular1k/compressed/
+   $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/derived_datasets/2025-05-18-popular-1k/digestmap/ swhdata/2025-05-18-popular1k/digestmap/
+   $ aws s3 cp --no-sign-request s3://softwareheritage/content_shards/2025-05-18-popular-1k/2025-05-18-popular1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/
 
-   $ find root/src/ -type f -name '*.js' | xargs cat | wc -l
-   10136
+.. note::
+
+   Origins included in that teaser graph are listed in the graph's parent folder, in
+   `origins.txt <https://softwareheritage.s3.amazonaws.com/graph/2025-05-18-popular-1k/origins.txt>`_.
 
 
-Therefore, the default configuration is usable only for repeated accesses
-to a small subset of the archive (thanks to its cache, SwhFS is slow only on first access).
-For larger traversals, we recommend to at least connect to a local compressed graph,
-as described in the next section.
+The SquashFS file has been created for the purpose of this tutorial. To keep it in a
+tractable size range, it does not contain files bigger than 100kb (uncompressed).
+This filtering removes only 8% of files while cutting the container's size by 4. As we'll see
+below, we can still connect to the Internet to fetch missing files on the fly.
+It contains objects organized in files and folders as does the ``pathslicing``
+objstorage class, that we will use as a reader (cf. :py:class:`swh.objstorage.backends.pathslicing.PathSlicer`).
+
+We have to mount the SquashFS first:
+
+::
+
+   sudo mount -t squashfs -o loop swhdata/2025-05-18-popular1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/objstore/
+
+Then we start the graph's gRPC server, in another terminal.
+We only load the "forward" graph because SwhFS always follow edges in their forward direction.
+
+::
+
+   RUST_LOG=WARN swh-graph-grpc-serve --direction=forward  ~/swhdata/2025-05-18-popular1k/compressed/graph
+
+
+Configure SwhFS to use these services and data by
+editing ``$HOME/.config/swh/global.yml`` as follows,
+replacing ``HOME`` with your own ``$HOME`` folder:
+
+::
+
+   swh:
+      fuse:
+         cache:
+            metadata:
+               in-memory: true
+            blob:
+               bypass: true
+            direntry:
+               maxram: "10%"
+         graph:
+            grpc-url: localhost:50091
+         content:
+            storage:
+               cls: digestmap
+               path: "HOME/swhdata/2025-05-18-popular1k/digestmap/"
+            objstorage:
+               cls: multiplexer
+               readonly: true
+               objstorages:
+                  - cls: pathslicing
+                    root: HOME/oswhdata/objstore/
+                    slicing: 0:2/0:5
+                    compression: none
+                  - cls: http
+                    url: https://softwareheritage.s3.amazonaws.com/content/
+                    compression: gzip
+                    retry:
+                    total: 3
+                    backoff_factor: 0.2
+                    status_forcelist:
+                        - 404
+                        - 500
+
+
+.. note::
+
+  This configuration minimizes caching and makes it non-persistent, as we will almost
+  always use local data.
+
+
+Finally, we can mount SwhFS:
+
+::
+
+   swh fs mount ~/swhfs
+
+
+Looking back at our example, with this configuration counting Markdown lines in Git
+now only takes a second on a laptop. This allows you to run more I/O-hungry tasks,
+like ``grep`` in a bigger repository like the Rust source, in 3 minutes:
+
+::
+
+   ~/swhfs $ /usr/bin/time grep -rl panic archive/swh:1:dir:c1cededa300478e23f6065a9fe8df8a3c14563ca | wc -l
+   grep: ./tests/ui/associated-type-bounds/name-same-as-generic-type-issue-128249.stderr: No such file or directory
+   grep: ./tests/ui/generic-associated-types/gat-trait-path-missing-lifetime.rs: No such file or directory
+   grep: ./tests/ui/async-await/in-trait/generics-mismatch.rs: No such file or directory
+   grep: ./tests/ui/type-alias-impl-trait/generic-not-strictly-equal.basic.stderr: No such file or directory
+   grep: ./tests/ui/type-alias-impl-trait/nested-tait-inference2.next.stderr: No such file or directory
+   grep: ./tests/ui/consts/const-eval/panic-never-type.stderr: No such file or directory
+   grep: ./tests/ui/lint/unaligned_references.rs: No such file or directory
+   grep: ./tests/rustdoc-ui/intra-doc/.gitattributes: No such file or directory
+   grep: ./tests/run-make/raw-dylib-c/rmake.rs: No such file or directory
+   grep: ./tests/run-make/cross-lang-lto-upstream-rlibs/rmake.rs: No such file or directory
+   grep: ./tests/run-make/zero-extend-abi-param-passing/rmake.rs: No such file or directory
+   grep: ./src/librustdoc/html/render/sorted_template/tests.rs: No such file or directory
+   grep: ./src/doc/rustc-dev-guide/src/building/compiler-documenting.md: No such file or directory
+   grep: ./library/test/src/types.rs: No such file or directory
+   Command exited with non-zero status 2
+   0.31user 1.27system 3:13.14elapsed 0%CPU (0avgtext+0avgdata 4260maxresident)
+   32inputs+40outputs (0major+1207minor)pagefaults 0swaps
+   3523
+
+Note that a few files are missing: they are missing both in the SquashFS and in S3.
+Those cases are very rare, but should be expected when scanning repositories thoroughly.
+This will hopefully be fixed in future releases.

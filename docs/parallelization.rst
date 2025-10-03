@@ -19,8 +19,6 @@ This section collects advice and tips for large deployments.
     If you do not need to read files' contents at all, we advise you instead use
     the :ref:`compressed graph <swh-graph>` directly.
 
-.. _swh-fuse-unshare:
-
 Use local and fast data sources
 -------------------------------
 
@@ -76,6 +74,8 @@ that forks to subprocesses thanks to a
     ``SwhFsTmpMount``, whose worker processes avoid Python startups entirely:
     `examples/parallel_processing.py <https://gitlab.softwareheritage.org/swh/devel/swh-fuse/-/blob/d82bf52/examples/parallel_processor.py>`_.
 
+
+.. _swh-fuse-unshare:
 
 Workaround missing permissions
 ------------------------------
