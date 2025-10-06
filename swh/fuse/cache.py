@@ -167,7 +167,7 @@ class MetadataCache(AbstractCache):
                     if typify
                     else metadata
                 )
-            except Exception as e:
+            except Exception:
                 logging.exception("error with metadata=%r", metadata)
         return None
 
