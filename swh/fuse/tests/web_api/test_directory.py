@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import xattr
 
 from swh.model.swhids import CoreSWHID, ObjectType
@@ -21,6 +22,11 @@ def test_list_dir(fuse_mntdir):
 def test_access_file(fuse_mntdir):
     file_path = fuse_mntdir / "archive" / ROOT_DIR / "README.md"
     assert file_path.is_file()
+
+    # Accessing an extended attribute that does not exist should not break further
+    # attempts to read user.swhid
+    with pytest.raises(OSError):
+        _ = xattr.getxattr(str(file_path), "user.something")
 
     raw_swhid = xattr.getxattr(str(file_path), "user.swhid").decode()
     swhid = CoreSWHID.from_string(raw_swhid)

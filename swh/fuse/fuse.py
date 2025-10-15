@@ -324,7 +324,7 @@ class Fuse(pyfuse3.Operations):
                 return str(entry.swhid).encode()  # type: ignore
             except AttributeError:
                 pass
-        raise pyfuse3.FUSEError(errno.ENOSYS)
+        raise pyfuse3.FUSEError(pyfuse3.ENOATTR)
 
 
 def graph_backend_factory(conf: Dict[str, Any], cache: FuseCache) -> GraphBackend:
