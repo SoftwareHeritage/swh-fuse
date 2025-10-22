@@ -60,9 +60,9 @@ class CompressedGraphBackend(GraphBackend):
         self.time_tracker = TimedContextManagerDecorator(
             Statsd(), "swhfuse_waiting_graph"
         )
-        self._connectivity_check()
+        self._check_connectivity()
 
-    def _connectivity_check(self):
+    def _check_connectivity(self):
         """
         Connection errors have been observed, especially when spawning many swh.fuse
         instances against a single swh.graph.grpc-server over HPC. This pre-mount check
