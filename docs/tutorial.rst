@@ -370,6 +370,15 @@ You can speed up SwhFS significantly by using local data:
 Instructions below will guide you through the installation of these programs and the
 download of sample data. This requires 550GB of storage available.
 
+.. warning::
+
+   The compressed graph is faster, also because it shows the raw data. This raw data may
+   differ from the WebAPI when traversing the archive by
+   origin or revisions. For example, the graph does not provide
+   ``origin/YYYY-MM-DD/HEAD``, nor it hides missing references (this may happen with
+   git submodules).
+
+
 First, we need to install SwhFS with the ``hpc`` optional dependency::
 
    $ pip install swh.fuse[hpc]
@@ -505,3 +514,34 @@ like ``grep`` in a bigger repository like the Rust source, in 3 minutes:
 Note that a few files are missing: they are missing from both the SquashFS and S3.
 Those cases are very rare, but should be expected when scanning repositories thoroughly.
 This will hopefully be fixed in future releases.
+
+
+Simulate a writable filesystem with overlayfs
+---------------------------------------------
+
+SwhFS is read-only, but some applications might need writable source code trees
+in order to modify files, rename directories, run `make`, etc.
+Assuming SwhFS is mounted (as explained above) in `~/swhfs`,
+one can use the kernel's `overlay` module to simulate a writable SwhFS:
+
+::
+
+   mkdir overlay_upper
+   mkdir overlay_workdir
+   mkdir swhfs_writable
+   sudo mount -t overlay -o user=$USER,lowerdir=swhfs,upperdir=overlay_upper,workdir=overlay_workdir overlay swhfs_writable
+
+
+TODO WHY OH WHY
+$ sudo ls -l overlay_workdir/
+total 0
+d--------- 1 martin martin 0 17 oct.  18:10 work
+
+
+
+If you don't need to persist your changes, you can use temporary (in-memory) filesystems
+for overlay's folders:
+
+::
+   sudo mount -t tmpfs none overlay_upper
+   sudo mount -t tmpfs none overlay_workdir

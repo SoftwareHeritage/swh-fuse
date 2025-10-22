@@ -8,11 +8,13 @@ import base64
 from datetime import date, datetime, timedelta, timezone
 import hashlib
 import logging
+from time import sleep
 from typing import Any, Dict, List, Tuple
 from urllib.parse import unquote_plus
 
 from google.protobuf.field_mask_pb2 import FieldMask
 import grpc
+from grpc_health.v1 import health_pb2, health_pb2_grpc
 
 from swh.core.statsd import Statsd, TimedContextManagerDecorator
 from swh.fuse import LOGGER_NAME
@@ -42,25 +44,53 @@ class CompressedGraphBackend(GraphBackend):
         """
         Only needs ``graph.grpc-url``.
         """
-        self.grpc_stub = swhgraph_grpc.TraversalServiceStub(
-            grpc.insecure_channel(
-                conf["graph"]["grpc-url"],
-                [
-                    # advanced options are listed in
-                    # github.com/grpc/grpc/blob/master/include/grpc/impl/channel_arg_names.h
-                    #
-                    # disable the limit on message length, because listing some folders
-                    # may exceed the default value
-                    ("grpc.max_receive_message_length", -1),
-                ],
-            )
+        self.grpc_channel = grpc.insecure_channel(
+            conf["graph"]["grpc-url"],
+            [
+                # advanced options are listed in
+                # github.com/grpc/grpc/blob/master/include/grpc/impl/channel_arg_names.h
+                #
+                # disable the limit on message length, because listing some folders
+                # may exceed the default value
+                ("grpc.max_receive_message_length", -1),
+            ],
         )
+        self.grpc_stub = swhgraph_grpc.TraversalServiceStub(self.grpc_channel)
         self.logger = logging.getLogger(LOGGER_NAME)
         self.time_tracker = TimedContextManagerDecorator(
             Statsd(), "swhfuse_waiting_graph"
         )
+        self._connectivity_check()
+
+    def _connectivity_check(self):
+        """
+        Connection errors have been observed, especially when spawning many swh.fuse
+        instances against a single swh.graph.grpc-server over HPC. This pre-mount check
+        avoids showing a mountpoint that's not yet ready.
+        """
+        health_stub = health_pb2_grpc.HealthStub(self.grpc_channel)
+        for i in range(30):
+            try:
+                request = health_pb2.HealthCheckRequest(
+                    service="swh.graph.TraversalService"
+                )
+                resp = health_stub.Check(request)
+                if resp.status == health_pb2.HealthCheckResponse.SERVING:
+                    if i > 0:
+                        self.logger.info(
+                            "Received a positive health-check from the graph server "
+                            "only after %d attempts",
+                            i + 1,
+                        )
+                    return
+            except grpc.RpcError as rpc_error:
+                if rpc_error.code() != grpc.StatusCode.UNAVAILABLE:
+                    raise
+            sleep(1)
+        raise RuntimeError("swh-graph-grpc-server does not seem active.")
 
     def shutdown(self) -> None:
+        self.grpc_channel.close()
         self.logger.info(
             "Spent %f ms waiting for graph server",
             self.time_tracker.total_elapsed,

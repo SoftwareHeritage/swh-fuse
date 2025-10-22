@@ -4,3 +4,4 @@ swh.storage>=3.1.1
 swh.digestmap
 protobuf >=5.29.3
 grpc-stubs
+grpcio-health-checking >= 1.76.0
