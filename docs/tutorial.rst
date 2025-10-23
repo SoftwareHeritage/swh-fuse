@@ -370,6 +370,14 @@ You can speed up SwhFS significantly by using local data:
 Instructions below will guide you through the installation of these programs and the
 download of sample data. This requires 550GB of storage available.
 
+.. warning::
+
+   The compressed graph is faster, also because it shows the raw data. This raw data may
+   differ from the WebAPI when traversing the archive by
+   origin or revisions. For example, the graph does not provide
+   ``origin/YYYY-MM-DD/HEAD``, nor hides missing references (this may happen with
+   git submodules).
+
 First, we need to install SwhFS with the ``hpc`` optional dependency::
 
    $ pip install swh.fuse[hpc]
