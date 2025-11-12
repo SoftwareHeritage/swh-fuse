@@ -113,8 +113,8 @@ implementation:
    }
 
 
-Source code trees
------------------
+Finding back SWHIDs when browsing directories
+---------------------------------------------
 
 We can also browse entire source code directories.
 Here is the historical Apollo 11 source code, where we can find interesting
