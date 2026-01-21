@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# Copyright (C) 2025  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
 """
 Launch WORKERS_N sub-process in parallel, to count *.py files in a dir list (SWH dir
 20-bytes IDs, concatenated in concatenated_dir_ids.bin).
