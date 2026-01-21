@@ -1,3 +1,8 @@
+# Copyright (C) 2025  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
 """
 This module provides mock data like ``data.api_data``, but only to simulate graph's edge
 cases, in particular missing dates that might interfere with ``by-date`` folders.
