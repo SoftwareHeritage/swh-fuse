@@ -14,6 +14,10 @@ Demo
 A live demo of SwhFS in action is available as a `screencast
 <https://www.youtube.com/watch?v=2L4ANVlICaE>`_.
 
+First expriments of large-scale use of SwhFS on HPC were presented at
+`PyConFR'25 <https://indymotion.fr/w/uiD5uX2WFe9kagAvL5yR9D>`_
+(slides `here <https://gitlab.softwareheritage.org/teams/staff/slides/-/raw/master/talks-public/2025-11-02-PyConFR-swh-fuse/2025-11-02-PyConFR-swh-fuse.odp>`_).
+
 
 Bibliography
 ------------
