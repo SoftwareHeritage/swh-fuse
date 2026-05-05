@@ -79,46 +79,20 @@ Faster file system traversal with a local compressed graph
 ----------------------------------------------------------
 
 In order to traverse the folder hierarchy much faster,
-connect to a :ref:`compressed graph <swh-graph>`
-via its :ref:`gRPC API <swh-graph-grpc-api>`.
-To do so, install with the ``hpc`` dependency group::
+launch a :ref:`compressed graph <swh-graph>` server
+and connect to its :ref:`gRPC API <swh-graph-grpc-api>`.
+To save at least 5TB (when using the complete graph),
+download it with
+``aws s3 cp ... --exclude graph-transposed s3://...``
+and start the server with
+``swh-graph-grpc-serve --direction=forward graph-folder/graph``.
+
+Then install ``swh-fuse`` with the ``hpc`` dependency group::
 
     $ pip install swh-fuse[hpc]
 
-Then, this can be enabled with the following configuration section:
+And set ``grpc-url`` in the configuration file as examples below.
 
-- ``graph``:
-
-  - ``grpc-url``: URL to the graph's :ref:`gRPC server <swh-graph-grpc-api>`.
-
-If that server instance will only be used for ``swh-fuse``,
-since version 6.7.2 of ``swh-graph``
-you can use the ``--direction=forward`` option when starting the gRPC server
-and you do not need any ``graph*transposed*`` files.
-
-.. note::
-
-  If you don't need to read revision and releases information (that we usually put in
-  ``meta.json``),
-  then you also do not need to download/store the whole compressed graph.
-  The following files are enough, halving the required storage:
-
-  * graph.ef
-  * graph.graph
-  * graph-labelled.ef
-  * graph-labelled.labeloffsets
-  * graph-labelled.labels
-  * graph-labelled.properties
-  * graph.labels.fcl.bytearray
-  * graph.labels.fcl.pointers
-  * graph.labels.fcl.properties
-  * graph.node2swhid.bin
-  * graph.node2type.bin
-  * graph.properties
-  * graph.property.content.is_skipped.bits
-  * graph.property.content.length.bin
-  * graph.pthash
-  * graph.pthash.order
 
 .. _swh-fuse-config-teaser-graph-webapi:
 
