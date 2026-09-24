@@ -53,7 +53,7 @@ Lazy loading
 
 Once mounted, the archive can be navigated as if it were locally available on-disk.
 Archived objects are referenced by
-:ref:`Software Heritage identifiers <persistent-identifiers>` (SWHIDs).
+:ref:`SoftWare Hash IDentifiers <persistent-identifiers>` (SWHIDs).
 They are loaded on-demand in the ``archive/`` sub-directory.
 
 SWHIDs for source code that is not locally available can be obtained in various ways:
