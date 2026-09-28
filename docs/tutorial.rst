@@ -363,9 +363,6 @@ You can speed up SwhFS significantly by using local data:
 * a :ref:`compressed graph <swh-graph>`, available via its gRPC server. It will provide
   the repositories' structure, that SwhFS turns into folders and meta-data files.
 * an :ref:`object storage <swh-objstorage>` that will provide files contents.
-* a :ref:`digestmap <swh-digestmap>`, because the graph identifies contents by SWHIDs
-  whereas most of our object stores identify contents by ``sha1`` or ``sha256`` (as of
-  2025). The digestmap will help SwhFS to match identifiers.
 
 Instructions below will guide you through the installation of these programs and the
 download of sample data. This requires 550GB of storage available.
@@ -387,43 +384,32 @@ Install the graph (cf. :ref:`swh-graph's instructions <swh-graph-quickstart>` fo
    $ apt install cargo openssl-dev protobuf-compiler
    $ RUSTFLAGS="-C target-cpu=native" cargo install --locked --git https://gitlab.softwareheritage.org/swh/devel/swh-graph.git swh-graph-grpc-server
 
+Install :ref:`swh-mosaic <https://docs.softwareheritage.org/devel/swh-mosaic/index.html>` to be able to read the data::
+
+   $ pip install swh.mosaic
+
 Now we need to download data:
 
 * the :ref:`2025-05-18-popular-1k <graph-dataset-2025-05-18-popular-1k>` compressed graph,
-* its corresponding digestmap,
-* and a `SquashFS <https://www.kernel.org/doc/html/v6.15/filesystems/squashfs.html>`_ file
-  that contains and compresses files referenced from that graph.
+* and a `MOSAIC <https://docs.softwareheritage.org/devel/swh-mosaic/index.html>`_ file
+  that contains and compresses files referenced from that graph and will serve
+  as an object storage.
 
 Those can be downloaded from S3, so we also install ``awscli``:
 
 ::
 
    $ pip install awscli
-   $ mkdir -p swhdata/2025-05-18-popular-1k/compressed swhdata/2025-05-18-popular-1k/digestmap swhdata/objstore
+   $ mkdir -p swhdata/2025-05-18-popular-1k/compressed
    $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/graph/2025-05-18-popular-1k/compressed/ swhdata/2025-05-18-popular-1k/compressed/
-   $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/derived_datasets/2025-05-18-popular-1k/digestmap/ swhdata/2025-05-18-popular-1k/digestmap/
-   $ aws s3 cp --no-sign-request s3://softwareheritage/content_shards/2025-05-18-popular-1k/2025-05-18-popular-1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/
+   $ aws s3 cp --no-sign-request s3://softwareheritage/content_shards/2025-05-18-popular-1k-X-theStackV2.mosaic swhdata/2025-05-18-popular-1k/
 
 .. note::
 
    Origins included in that teaser graph are listed in the graph's parent folder, in
    `origins.txt <https://softwareheritage.s3.amazonaws.com/graph/2025-05-18-popular-1k/origins.txt>`_.
 
-
-The SquashFS file has been created for the purpose of this tutorial. To keep it in a
-tractable size range, it does not contain files bigger than 100kb (uncompressed).
-This filtering removes only 8% of files while cutting the container's size by 4. As we'll see
-below, we can still connect to the Internet to fetch missing files on the fly.
-It contains objects organized in files and folders as does the ``pathslicing``
-objstorage class, that we will use as a reader (cf. :py:class:`swh.objstorage.backends.pathslicing.PathSlicer`).
-
-We have to mount the SquashFS first:
-
-::
-
-   sudo mount -t squashfs -o loop swhdata/2025-05-18-popular-1k-contents-Max100Kb-pathsliced-02-05.sqfs swhdata/objstore/
-
-Then we start the graph's gRPC server, in another terminal.
+First, we need to start the graph's gRPC server, in another terminal.
 We only load the "forward" graph because SwhFS always follow edges in their forward direction.
 
 ::
@@ -431,9 +417,9 @@ We only load the "forward" graph because SwhFS always follow edges in their forw
    RUST_LOG=WARN swh-graph-grpc-serve --direction=forward  ~/swhdata/2025-05-18-popular-1k/compressed/graph
 
 
-Configure SwhFS to use these services and data by
-editing ``$HOME/.config/swh/global.yml`` as follows,
-replacing ``HOME`` with your own ``$HOME`` folder:
+Configure SwhFS to use the service and data by editing
+``$HOME/.config/swh/global.yml`` as follows, replacing ``HOME`` with your own
+``$HOME`` folder:
 
 ::
 
@@ -449,27 +435,9 @@ replacing ``HOME`` with your own ``$HOME`` folder:
          graph:
             grpc-url: localhost:50091
          content:
-            storage:
-               cls: digestmap
-               path: "HOME/swhdata/2025-05-18-popular-1k/digestmap/"
             objstorage:
-               cls: multiplexer
-               readonly: true
-               objstorages:
-                  - cls: pathslicing
-                    root: HOME/swhdata/objstore/
-                    slicing: 0:2/0:5
-                    compression: none
-                  - cls: http
-                    url: https://softwareheritage.s3.amazonaws.com/content/
-                    compression: gzip
-                    retry:
-                    total: 3
-                    backoff_factor: 0.2
-                    status_forcelist:
-                        - 404
-                        - 500
-
+               cls: mosaic
+               path: HOME/swhdata/2025-05-18-popular-1k/2025-05-18-popular-1k-X-theStackV2.mosaic
 
 .. note::
 
