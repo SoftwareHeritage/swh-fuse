@@ -12,3 +12,4 @@ types-requests
 # HPC dependencies are tested too
 swh.graph >= 6.7.1
 swh.objstorage >= 3.4.0
+swh.mosaic >= 0.6.0
