@@ -1,4 +1,4 @@
-# Copyright (C) 2025  The Software Heritage developers
+# Copyright (C) 2025-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -8,6 +8,7 @@ import typing
 
 from swh.core.statsd import Statsd, TimedContextManagerDecorator
 from swh.fuse import LOGGER_NAME
+from swh.model.hashutil import HashDict
 from swh.model.swhids import CoreSWHID
 from swh.objstorage.factory import get_objstorage
 from swh.objstorage.interface import objid_from_dict
@@ -30,9 +31,13 @@ class ObjStorageBackend(ContentBackend):
 
     def __init__(self, conf: dict):
         self.logger = logging.getLogger(LOGGER_NAME)
+        storage_config = conf["content"].get("storage")
 
         try:
-            self.storage: StorageInterface = get_storage(**conf["content"]["storage"])
+            if storage_config is None:
+                self.storage: StorageInterface | None = None
+            else:
+                self.storage = get_storage(**storage_config)
         except KeyError:
             raise ValueError(
                 "`content` configuration block should contain at least a `storage` object"
@@ -44,6 +49,8 @@ class ObjStorageBackend(ContentBackend):
             )
         except KeyError:
             self.objstorage = None
+
+        assert not (self.storage is None and self.objstorage is None)
 
         self.statsd = Statsd()
         self.storage_tracker = TimedContextManagerDecorator(
@@ -68,16 +75,20 @@ class ObjStorageBackend(ContentBackend):
         Fetch the content of a ``cnt`` object.
         """
         self.statsd.increment("swhfuse_get_blob")
-        hashes = None
+        hashes: HashDict | None = None
         try:
             with self.storage_tracker:
-                found = self.storage.content_get([swhid.object_id], algo="sha1_git")
-                if found and found[0]:
-                    hashes = objid_from_dict(found[0].hashes())
+                if self.storage is None:
+                    hashes = {"sha1_git": swhid.object_id}
+                else:
+                    found = self.storage.content_get([swhid.object_id], algo="sha1_git")
+                    if found and found[0]:
+                        hashes = objid_from_dict(found[0].hashes())
             if hashes:
                 if self.objstorage is None:
                     self.logger.debug("downloading %s from storage", hashes)
                     with self.storage_tracker:
+                        assert self.storage is not None  # make mypy happy
                         content = self.storage.content_get_data(hashes)
                         if content:
                             return content
