@@ -375,18 +375,17 @@ download of sample data. This requires 550GB of storage available.
    ``origin/YYYY-MM-DD/HEAD``, nor hides missing references (this may happen with
    git submodules).
 
-First, we need to install SwhFS with the ``hpc`` optional dependency::
+First, we need to install SwhFS with the ``hpc`` optional dependency and
+:ref:`swh-mosaic
+<https://docs.softwareheritage.org/devel/swh-mosaic/index.html>` to be able to
+read the data::
 
-   $ pip install swh.fuse[hpc]
+   $ pip install swh.fuse[hpc] swh.mosaic
 
-Install the graph (cf. :ref:`swh-graph's instructions <swh-graph-quickstart>` for more options)::
+Then, install the graph (cf. :ref:`swh-graph's instructions <swh-graph-quickstart>` for more options)::
 
    $ apt install cargo openssl-dev protobuf-compiler
    $ RUSTFLAGS="-C target-cpu=native" cargo install --locked --git https://gitlab.softwareheritage.org/swh/devel/swh-graph.git swh-graph-grpc-server
-
-Install :ref:`swh-mosaic <https://docs.softwareheritage.org/devel/swh-mosaic/index.html>` to be able to read the data::
-
-   $ pip install swh.mosaic
 
 Now we need to download data:
 
@@ -410,18 +409,14 @@ Those can be downloaded from S3, so we also install ``awscli``:
    `origins.txt <https://softwareheritage.s3.amazonaws.com/graph/2025-05-18-popular-1k/origins.txt>`_.
 
 First, we need to start the graph's gRPC server, in another terminal.
-We only load the "forward" graph because SwhFS always follow edges in their forward direction.
-
-::
+We only load the "forward" graph because SwhFS always follow edges in their forward direction.::
 
    RUST_LOG=WARN swh-graph-grpc-serve --direction=forward  ~/swhdata/2025-05-18-popular-1k/compressed/graph
 
 
 Configure SwhFS to use the service and data by editing
 ``$HOME/.config/swh/global.yml`` as follows, replacing ``HOME`` with your own
-``$HOME`` folder:
-
-::
+``$HOME`` folder::
 
    swh:
       fuse:
@@ -445,18 +440,15 @@ Configure SwhFS to use the service and data by editing
   always use local data.
 
 
-Finally, we can mount SwhFS:
-
-::
+Finally, we can mount SwhFS::
 
    swh fs mount ~/swhfs
 
+.. TODO: provide actually useful examples
 
 Looking back at our example, with this configuration counting Markdown lines in Git
 now only takes a second on a laptop. This allows you to run more I/O-hungry tasks,
-like ``grep`` in a bigger repository like the Rust source, in 3 minutes:
-
-::
+like ``grep`` in a bigger repository like the Rust source, in 3 minutes::
 
    ~/swhfs $ /usr/bin/time grep -rl panic archive/swh:1:dir:c1cededa300478e23f6065a9fe8df8a3c14563ca | wc -l
    grep: ./tests/ui/associated-type-bounds/name-same-as-generic-type-issue-128249.stderr: No such file or directory
