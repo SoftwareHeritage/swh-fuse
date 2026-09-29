@@ -1,4 +1,4 @@
-# Copyright (C) 2025  The Software Heritage developers
+# Copyright (C) 2025-2026  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -30,7 +30,7 @@ from swh.fuse.backends.objstorage import ObjStorageBackend
 import swh.fuse.cli as cli
 from swh.graph.pytest_plugin import *  # noqa ; this provides the graph_grpc_server fixture
 from swh.model.model import Content
-from swh.objstorage.interface import objid_from_dict
+from swh.mosaic import IdxDescription, MosaicCreator
 
 
 @pytest.fixture(scope="module")
@@ -38,32 +38,16 @@ def fuse_graph_mountpoint(
     graph_grpc_server, example_content: Content
 ) -> Generator[Path, None, None]:
     with TemporaryDirectory(suffix=".swh-fuse-test") as tmpdir:
+        mosaic_path = Path(tmpdir) / "test.mosaic"
+        with MosaicCreator(mosaic_path, [IdxDescription.SHA1GITFMPHGO]) as creator:
+            assert example_content.data is not None  # make mypy happy
+            creator.add([example_content.sha1_git], example_content.data)
         content_backend = ObjStorageBackend(
-            {
-                "content": {
-                    "storage": {
-                        "cls": "memory",
-                        "journal_writer": {
-                            "cls": "memory",
-                        },
-                    },
-                    "objstorage": {
-                        "cls": "memory",
-                    },
-                }
-            }
+            {"content": {"objstorage": {"cls": "mosaic", "path": mosaic_path}}}
         )
-        if content_backend.storage is not None:
-            content_backend.storage.content_add([example_content])
-        if content_backend.objstorage:
-            if example_content.data:
-                content_backend.objstorage.add(
-                    example_content.data, objid_from_dict(example_content.hashes())
-                )
-        else:
-            raise AssertionError("ObjStorageBackend should yield an objstorage")
 
-        mountpoint = Path(tmpdir)
+        mountpoint = Path(tmpdir) / "mount"
+        mountpoint.mkdir()
         config = {
             "graph": {
                 "grpc-url": graph_grpc_server,
@@ -93,19 +77,19 @@ def fuse_graph_mountpoint(
 
         for i in range(30):
             try:
-                root = os.listdir(tmpdir)
+                root = os.listdir(mountpoint)
                 if root:
                     break
             except FileNotFoundError:
                 pass
             time.sleep(0.1)
         else:
-            raise FileNotFoundError(f"Could not mount FUSE in {tmpdir}")
+            raise FileNotFoundError(f"Could not mount FUSE in {mountpoint}")
 
         try:
             yield mountpoint
         finally:
-            CliRunner().invoke(cli.umount, [tmpdir])
+            CliRunner().invoke(cli.umount, [str(mountpoint)])
 
 
 @pytest.fixture()
