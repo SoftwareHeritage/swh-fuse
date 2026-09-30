@@ -389,7 +389,7 @@ Then, install the graph (cf. :ref:`swh-graph's instructions <swh-graph-quickstar
 
 Now we need to download data:
 
-* the :ref:`2025-05-18-popular-1k <graph-dataset-2025-05-18-popular-1k>` compressed graph,
+* the :ref:`2024-08-23_popular-4-shell <graph-dataset-2024-08-23_popular-4-shell>` compressed graph,
 * and a `MOSAIC <https://docs.softwareheritage.org/devel/swh-mosaic/index.html>`_ file
   that contains and compresses files referenced from that graph and will serve
   as an object storage.
@@ -399,19 +399,22 @@ Those can be downloaded from S3, so we also install ``awscli``:
 ::
 
    $ pip install awscli
-   $ mkdir -p swhdata/2025-05-18-popular-1k/compressed
-   $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/graph/2025-05-18-popular-1k/compressed/ swhdata/2025-05-18-popular-1k/compressed/
-   $ aws s3 cp --no-sign-request s3://softwareheritage/content_shards/2025-05-18-popular-1k-X-theStackV2.mosaic swhdata/2025-05-18-popular-1k/
+   $ mkdir -p swhdata/2024-08-23_popular-4-shell/compressed
+   $ aws s3 cp --no-sign-request --recursive s3://softwareheritage/graph/2024-08-23_popular-4-shell/compressed/ swhdata/2024-08-23_popular-4-shell/compressed/
+   $ unzstd swhdata/2024-08-23_popular-4-shell/compressed/*.zst
+   $ aws s3 cp --no-sign-request s3://softwareheritage/content_shards/2024-08-23_popular-4-shell.mosaic swhdata/2024-08-23_popular-4-shell/
 
 .. note::
-
-   Origins included in that teaser graph are listed in the graph's parent folder, in
-   `origins.txt <https://softwareheritage.s3.amazonaws.com/graph/2025-05-18-popular-1k/origins.txt>`_.
+   Origins included in that teaser graph are:
+     - `github.com/d3/d3 <https://github.com/d3/d3>`_
+     - `github.com/nvm-sh/nvm <https://github.com/nvm-sh/nvm>`_
+     - `github.com/ohmyzsh/ohmyzsh <https://github.com/ohmyzsh/ohmyzsh>`_
+     - `github.com/papers-we-love/papers-we-love <https://github.com/papers-we-love/papers-we-love>`_
 
 First, we need to start the graph's gRPC server, in another terminal.
 We only load the "forward" graph because SwhFS always follow edges in their forward direction.::
 
-   RUST_LOG=WARN swh-graph-grpc-serve --direction=forward  ~/swhdata/2025-05-18-popular-1k/compressed/graph
+   RUST_LOG=WARN swh-graph-grpc-serve --direction=forward  ~/swhdata/2024-08-23_popular-4-shell/compressed/graph
 
 
 Configure SwhFS to use the service and data by editing
@@ -432,7 +435,7 @@ Configure SwhFS to use the service and data by editing
          content:
             objstorage:
                cls: mosaic
-               path: HOME/swhdata/2025-05-18-popular-1k/2025-05-18-popular-1k-X-theStackV2.mosaic
+               path: HOME/swhdata/2024-08-23_popular-4-shell/2024-08-23_popular-4-shell.mosaic
 
 .. note::
 
@@ -444,11 +447,34 @@ Finally, we can mount SwhFS::
 
    swh fs mount ~/swhfs
 
-.. TODO: provide actually useful examples
+With this configuration counting Markdown lines in Git now only takes a second
+on a laptop. This allows you to run more I/O-hungry tasks, like ``grep`` in a
+bigger repository like the `ohmyzsh <https://github.com/ohmyzsh/ohmyzsh>`_
+source, in less than a second::
 
-Looking back at our example, with this configuration counting Markdown lines in Git
-now only takes a second on a laptop. This allows you to run more I/O-hungry tasks,
-like ``grep`` in a bigger repository like the Rust source, in 3 minutes::
+   ~/swhfs $ /usr/bin/time grep -rl for archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc | wc -l
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/lib/nvm.zsh: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/.github/workflows/dependencies/.gitignore: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/.github/workflows/dependencies/requirements.txt: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/docker/docker.plugin.zsh: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/docker/README.md: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/docker/completions/_docker: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/chucknorris/fortunes/chucknorris: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/chucknorris/README.md: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/heroku-alias/README.md: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/heroku-alias/heroku-alias.plugin.zsh: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/microk8s/microk8s.plugin.zsh: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/microk8s/README.md: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/yii/README.md: Input/output error
+   grep: archive/swh:1:dir:99bf4696e6182172384a6a9519debfb615a62bcc/plugins/jhbuild/jhbuild.plugin.zsh: Input/output error
+   ...
+   Command exited with non-zero status 2
+   0.00user 0.03system 0:00.26elapsed 12%CPU (0avgtext+0avgdata 2804maxresident)k
+   0inputs+0outputs (0major+190minor)pagefaults 0swaps
+   488
+
+Or, when configured with the proper graph and MOSAIC file, running ``grep`` in
+a bigger repository like the Rust source, in 3 minutes::
 
    ~/swhfs $ /usr/bin/time grep -rl panic archive/swh:1:dir:c1cededa300478e23f6065a9fe8df8a3c14563ca | wc -l
    grep: ./tests/ui/associated-type-bounds/name-same-as-generic-type-issue-128249.stderr: No such file or directory
@@ -470,6 +496,7 @@ like ``grep`` in a bigger repository like the Rust source, in 3 minutes::
    32inputs+40outputs (0major+1207minor)pagefaults 0swaps
    3523
 
-Note that a few files are missing: they are missing from both the SquashFS and S3.
-Those cases are very rare, but should be expected when scanning repositories thoroughly.
-This will hopefully be fixed in future releases.
+.. note::
+   In both examples, a few files appear as missing: they are missing from the MOSAIC.
+   Those cases are very rare, but should be expected when scanning repositories thoroughly.
+   This will hopefully be fixed in future releases.
