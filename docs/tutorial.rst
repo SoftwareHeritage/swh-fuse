@@ -376,8 +376,7 @@ download of sample data. This requires 550GB of storage available.
    git submodules).
 
 First, we need to install SwhFS with the ``hpc`` optional dependency and
-:ref:`swh-mosaic
-<https://docs.softwareheritage.org/devel/swh-mosaic/index.html>` to be able to
+:ref:`swh-mosaic` to be able to
 read the data::
 
    $ pip install swh.fuse[hpc] swh.mosaic
@@ -389,7 +388,7 @@ Then, install the graph (cf. :ref:`swh-graph's instructions <swh-graph-quickstar
 
 Now we need to download data:
 
-* the :ref:`2024-08-23_popular-4-shell <graph-dataset-2024-08-23_popular-4-shell>` compressed graph,
+* the `2024-08-23_popular-4-shell <https://datasets.softwareheritage.org/datasets/2024-08-23-popular-4-shell-compressed/>`_ compressed graph,
 * and a `MOSAIC <https://docs.softwareheritage.org/devel/swh-mosaic/index.html>`_ file
   that contains and compresses files referenced from that graph and will serve
   as an object storage.
